@@ -1,0 +1,244 @@
+# backend/app/crud.py
+# --------------------------------------------------------------
+# Contains all database helper functions for employees, inventory,
+# transactions, and reports. Each function receives a SQLAlchemy
+# session and performs the necessary DB operation.
+# --------------------------------------------------------------
+
+from xml.parsers.expat import model
+from sqlalchemy.orm import Session
+from . import models, schemas
+from datetime import date, timedelta
+
+# ---------------- Employee ----------------
+def create_employee(db: Session, emp: schemas.EmployeeCreate, hashed_pw: str):
+    """Create a new employee record."""
+    new_emp = models.Employee(
+        employee_badge_number=emp.employee_badge_number,
+        employee_name=emp.employee_name,
+        employee_designation=emp.employee_designation,
+        employee_shift=emp.employee_shift,
+        employee_access_level=emp.employee_access_level,
+        employee_username=emp.employee_username,
+        employee_password=hashed_pw
+    )
+    db.add(new_emp)
+    db.commit()
+    db.refresh(new_emp)
+    return new_emp
+
+def get_employee_by_username(db: Session, username: str):
+    """Find employee by username for login."""
+    return db.query(models.Employee).filter(models.Employee.employee_username == username).first()
+
+# ---------------- Inventory ----------------
+def get_all_inventory(db: Session):
+    """Return the entire inventory list."""
+    return db.query(models.Inventory).order_by(models.Inventory.item_name).all()
+
+def get_filtered_inventory(db: Session, project: str | None, test_area: str | None):
+    """Return inventory filtered by project and/or test area."""
+    query = db.query(models.Inventory)
+
+    if project:
+        query = query.filter(models.Inventory.project_name == project)
+
+    if test_area:
+        query = query.filter(models.Inventory.test_area == test_area)
+
+    return query.order_by(models.Inventory.item_name).all()
+ 
+
+def get_item(db: Session, item_id: int):
+    """Return a single inventory item."""
+    return db.query(models.Inventory).filter(models.Inventory.item_id == item_id).first()
+
+def create_or_update_inventory(db: Session, item: schemas.InventoryBase):
+    """If item exists (same name), update quantity; else, insert new."""
+    db_item = db.query(models.Inventory).filter(models.Inventory.item_name == item.item_name).first()
+    if db_item:
+        db_item.item_current_quantity += item.item_current_quantity
+    else:
+        db_item = models.Inventory(**item.dict())
+        db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+def subtract_item_quantity(db: Session, item_id: int, qty: int):
+    """Decrease item quantity atomically (for Request)."""
+    item = get_item(db, item_id)
+    if not item or item.item_current_quantity < qty:
+        return None
+    item.item_current_quantity -= qty
+    db.commit()
+    db.refresh(item)
+    return item
+
+def add_item_quantity(db: Session, item_id: int, qty: int):
+    """Increase item quantity atomically (for Return)."""
+    item = get_item(db, item_id)
+    if not item:
+        return None
+    item.item_current_quantity += qty
+    db.commit()
+    db.refresh(item)
+    return item
+
+def get_low_stock_items(db: Session):
+    """List items below their minimum count."""
+    return db.query(models.Inventory).filter(models.Inventory.item_current_quantity < models.Inventory.item_min_count).all()
+
+# ---------------- Transactions ----------------
+def create_transaction(db: Session, t: schemas.TransactionBase):
+    """Create a transaction record."""
+    tx = models.Transaction(
+        item_id=t.item_id,
+        employee_id=t.employee_id,
+        fixture_id=t.fixture_id,
+        quantity_used=t.quantity_used,
+        transaction_type=t.transaction_type,
+        remarks=t.remarks,
+        test_area=t.test_area,
+        project_name=t.project_name
+    )
+    db.add(tx)
+    db.commit()
+    db.refresh(tx)
+    return tx
+
+def get_all_transactions(db: Session):
+    result = (
+        db.query(
+            models.Transaction.transaction_id,
+            models.Transaction.transaction_type,
+            models.Transaction.quantity_used,
+            models.Transaction.created_at,
+            models.Inventory.item_name,
+            models.Inventory.item_part_number,
+            models.Inventory.item_description,
+            models.Inventory.item_manufacturer,
+            models.Inventory.test_area,
+            models.Inventory.project_name,
+            models.Fixture.fixture_name,
+            models.Employee.employee_name,
+            models.Transaction.fixture_id,
+            models.Transaction.item_id,
+        )
+        .join(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)
+        .join(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)
+        .join(models.Employee, models.Transaction.employee_id == models.Employee.employee_id)
+        .order_by(models.Transaction.created_at.desc())
+        .all()
+    )
+
+    # Convert row tuples to dicts
+    transactions = []
+    for row in result:
+        transactions.append({
+            "transaction_id": row[0],
+            "transaction_type": row[1],
+            "quantity_used": row[2],
+            "created_at": row[3],
+            "item_name": row[4],
+            "item_part_number": row[5],
+            "item_description": row[6],
+            "item_manufacturer": row[7],
+            "test_area": row[8],
+            "project_name": row[9],
+            "fixture_name": row[10],
+            "employee_name": row[11],
+        })
+
+    return transactions
+
+
+
+def get_transactions_by_employee(db: Session, emp_id: int):
+    rows = (
+        db.query(
+            models.Transaction.transaction_id.label("transaction_id"),
+            models.Transaction.item_id.label("item_id"),
+            models.Transaction.fixture_id.label("fixture_id"),
+            models.Transaction.employee_id.label("employee_id"),
+            models.Transaction.transaction_type.label("transaction_type"),
+            models.Transaction.quantity_used.label("quantity_used"),
+            models.Transaction.created_at.label("created_at"),
+
+            models.Inventory.item_name.label("item_name"),
+            models.Inventory.item_part_number.label("item_part_number"),
+            models.Inventory.item_description.label("item_description"),
+            models.Inventory.item_manufacturer.label("item_manufacturer"),
+            models.Inventory.test_area.label("test_area"),
+            models.Inventory.project_name.label("project_name"),
+
+            models.Fixture.fixture_name.label("fixture_name"),
+            models.Employee.employee_name.label("employee_name"),
+        )
+        .join(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)
+        .join(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)
+        .join(models.Employee, models.Transaction.employee_id == models.Employee.employee_id)
+        .filter(models.Transaction.employee_id == emp_id)
+        .filter(models.Transaction.transaction_type == "request")
+        .order_by(models.Transaction.created_at.desc())
+        .all()
+    )
+
+    # Convert tuple rows to dictionaries
+    transactions = []
+    for row in rows:
+        transactions.append({
+            "transaction_id": row.transaction_id,
+            "item_id": row.item_id,
+            "fixture_id": row.fixture_id,
+            "employee_id": row.employee_id,
+            "transaction_type": row.transaction_type,
+            "quantity_used": row.quantity_used,
+            "created_at": row.created_at,
+            "item_name": row.item_name,
+            "item_part_number": row.item_part_number,
+            "item_description": row.item_description,
+            "item_manufacturer": row.item_manufacturer,
+            "test_area": row.test_area,
+            "project_name": row.project_name,
+            "fixture_name": row.fixture_name,
+            "employee_name": row.employee_name,
+        })
+
+    return transactions
+
+
+
+
+
+# ---------------- Fixtures ----------------
+def get_all_fixtures(db: Session):
+    return db.query(models.Fixture).order_by(models.Fixture.fixture_name).all()
+
+def create_fixture(db: Session, fx: schemas.FixtureBase):
+    new_fx = models.Fixture(**fx.dict())
+    db.add(new_fx)
+    db.commit()
+    db.refresh(new_fx)
+    return new_fx
+
+# ---------------- Reports ----------------
+def generate_weekly_report(db: Session):
+    """Aggregate transactions of the past week for reporting."""
+    end_date = date.today()
+    start_date = end_date - timedelta(days=7)
+    txs = db.query(models.Transaction).filter(models.Transaction.created_at >= start_date).all()
+
+    for t in txs:
+        rep = models.Report(
+            week_start_date=start_date,
+            week_end_date=end_date,
+            item_id=t.item_id,
+            item_name=t.item.item_name,
+            item_description=t.item.item_description,
+            quantity_used=t.quantity_used,
+            current_quantity=t.item.item_current_quantity
+        )
+        db.add(rep)
+    db.commit()
+    return db.query(models.Report).filter(models.Report.week_start_date == start_date).all()

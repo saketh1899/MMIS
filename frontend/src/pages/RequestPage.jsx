@@ -1,0 +1,153 @@
+// src/pages/RequestPage.jsx
+import { useEffect, useState, useRef } from "react";
+import API from "../api";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
+export default function RequestPage() {
+  const [items, setItems] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [userName, setUserName] = useState("");
+  const searchRef = useRef(null);
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const project = params.get("project");
+  const test_area = params.get("test_area");
+
+  // Load username
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setUserName(payload.employee_username || "");
+    }
+  }, []);
+
+  // Load items from backend with filtering
+  useEffect(() => {
+    API.get(`/inventory?project=${project}&test_area=${test_area}`)
+      .then((res) => {
+        setItems(res.data);
+        setFilteredItems(res.data);
+      })
+      .catch((err) => console.error("Failed to load items", err));
+  }, [project, test_area]);
+
+  const handleSearch = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchInput(query);
+    setFilteredItems(
+      items.filter((item) =>
+        item.item_name.toLowerCase().includes(query)
+      )
+    );
+  };
+
+  const handleSelect = (item) => {
+    navigate(`/dashboard/request/item/${item.item_id}?project=${project}&test_area=${test_area}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+
+      {/* TOP BAR */}
+      <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center">
+        <span className="text-2xl font-bold text-blue-600 cursor-pointer" onClick={() => navigate("/dashboard")}>MMIS</span>
+        <span className="text-lg font-semibold text-gray-700">{userName}</span>
+      </div>
+
+      {/* BLUE HEADER */}
+      <div className="w-full bg-blue-600 text-white text-center py-4 shadow-md">
+        <h1 className="text-3xl font-bold">Search Inventory</h1>
+      </div>
+
+      <p className="text-center mt-4 text-gray-700 font-semibold text-lg">
+        Project: <span className="text-blue-600">{project}</span> — Test Area:{" "}
+        <span className="text-blue-600">{test_area}</span>
+      </p>
+
+      <div className="p-6 rounded-lg w-full max-w-4xl mx-auto mt-6">
+
+        {/* SEARCH BAR */}
+        <div className="relative w-full">
+          <input
+            ref={searchRef}
+            type="text"
+            className="w-full p-3 pl-3 pr-10 border rounded shadow-sm"
+            placeholder="Search or select by item name..."
+            value={searchInput}
+            onChange={handleSearch}
+            onFocus={() => setShowDropdown(true)}
+          />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDropdown(prev => !prev);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black transition"
+          >
+            <svg
+              className={`w-5 h-5 transform transition-transform duration-200 ${
+              showDropdown ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+
+
+          {/* Dropdown results */}
+          {/* DROPDOWN RESULTS (Works with search + arrow click) */}
+          {showDropdown && (
+            <div
+              className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-[500px] overflow-y-auto z-50"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+            >
+            {(searchInput ? filteredItems : items).map((item) => (
+            <div
+              key={item.item_id}
+              onClick={() => {
+                handleSelect(item);
+                setShowDropdown(false);
+              }}
+              className="p-3 border-b hover:bg-blue-50 cursor-pointer"
+            >
+              <div className="font-semibold">{item.item_name}</div>
+              <div className="text-sm text-gray-700">
+                {item.item_description}
+              </div>
+              <div className="text-xs text-gray-500">
+                Qty: {item.item_current_quantity} | Part #: {item.item_part_number}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}  
+    </div>  
+
+    {/* Back Button */}
+    <div className="flex justify-center mt-10">
+      <button
+        className="px-8 py-2 bg-gray-300 rounded hover:bg-gray-400 shadow"
+        onClick={() =>
+            navigate(`/dashboard/request/test-area?project=${project}`)
+          }
+        >
+          Back
+        </button>
+      </div>
+  </div>
+</div> 
+);
+}   
+   
+
+
