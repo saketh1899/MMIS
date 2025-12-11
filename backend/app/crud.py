@@ -188,19 +188,38 @@ def get_transactions_by_employee(db: Session, emp_id: int):
     # Convert tuple rows to dictionaries and filter out fully returned transactions
     transactions = []
     for row in rows:
-        # Calculate total returned quantity for this request
-        # Match returns by: same item_id, employee_id, fixture_id, and created after the request
-        total_returned = (
+        # Calculate total returned quantity for this SPECIFIC request transaction
+        # First, try to match returns that explicitly reference this request_transaction_id in remarks
+        # Format: "REQUEST_TX_ID:123|remarks" or "REQUEST_TX_ID:123"
+        explicit_returns = (
             db.query(
                 func.coalesce(func.sum(models.Transaction.quantity_used), 0)
             )
-            .filter(models.Transaction.item_id == row.item_id)
-            .filter(models.Transaction.employee_id == row.employee_id)
-            .filter(models.Transaction.fixture_id == row.fixture_id)
             .filter(models.Transaction.transaction_type == "return")
-            .filter(models.Transaction.created_at >= row.created_at)
+            .filter(models.Transaction.remarks.like(f"REQUEST_TX_ID:{row.transaction_id}%"))
             .scalar() or 0
         )
+        
+        # If no explicit returns found, fall back to the old matching logic
+        # but only for returns that don't have a REQUEST_TX_ID in remarks (backward compatibility)
+        if explicit_returns == 0:
+            total_returned = (
+                db.query(
+                    func.coalesce(func.sum(models.Transaction.quantity_used), 0)
+                )
+                .filter(models.Transaction.item_id == row.item_id)
+                .filter(models.Transaction.employee_id == row.employee_id)
+                .filter(models.Transaction.fixture_id == row.fixture_id)
+                .filter(models.Transaction.transaction_type == "return")
+                .filter(models.Transaction.created_at >= row.created_at)
+                # Exclude returns that are already linked to other requests
+                .filter(
+                    ~models.Transaction.remarks.like("REQUEST_TX_ID:%")
+                )
+                .scalar() or 0
+            )
+        else:
+            total_returned = explicit_returns
         
         # Convert to int to ensure proper type
         total_returned = int(total_returned) if total_returned else 0

@@ -102,10 +102,12 @@ export default function ReturnItemPage() {
       transaction_type: "return",
       test_area: tx.test_area,
       project_name: tx.project_name,
+      request_transaction_id: tx.transaction_id, // Link this return to the specific request transaction
     });
 
     try {
-      await API.post("/transactions/return", {
+      // Send request_transaction_id as a query parameter to link the return to the specific request
+      await API.post(`/transactions/return?request_transaction_id=${tx.transaction_id}`, {
         item_id: tx.item_id,
         employee_id: employeeId,
         fixture_id: tx.fixture_id,

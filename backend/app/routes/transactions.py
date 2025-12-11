@@ -1,5 +1,5 @@
 # backend/app/routes/transactions.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from .. import crud, schemas, models
 from ..database import get_db
@@ -145,17 +145,36 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
     # Calculate remaining returnable quantity if this is a request transaction
     remaining_quantity = None
     if tx.transaction_type == "request":
-        total_returned = (
+        # First, try to match returns that explicitly reference this request_transaction_id
+        explicit_returns = (
             db.query(
                 func.coalesce(func.sum(models.Transaction.quantity_used), 0)
             )
-            .filter(models.Transaction.item_id == tx.item_id)
-            .filter(models.Transaction.employee_id == tx.employee_id)
-            .filter(models.Transaction.fixture_id == tx.fixture_id)
             .filter(models.Transaction.transaction_type == "return")
-            .filter(models.Transaction.created_at >= tx.created_at)
+            .filter(models.Transaction.remarks.like(f"REQUEST_TX_ID:{tx.transaction_id}%"))
             .scalar() or 0
         )
+        
+        # If no explicit returns found, fall back to old matching logic (backward compatibility)
+        if explicit_returns == 0:
+            total_returned = (
+                db.query(
+                    func.coalesce(func.sum(models.Transaction.quantity_used), 0)
+                )
+                .filter(models.Transaction.item_id == tx.item_id)
+                .filter(models.Transaction.employee_id == tx.employee_id)
+                .filter(models.Transaction.fixture_id == tx.fixture_id)
+                .filter(models.Transaction.transaction_type == "return")
+                .filter(models.Transaction.created_at >= tx.created_at)
+                # Exclude returns that are already linked to other requests
+                .filter(
+                    ~models.Transaction.remarks.like("REQUEST_TX_ID:%")
+                )
+                .scalar() or 0
+            )
+        else:
+            total_returned = explicit_returns
+            
         remaining_quantity = tx.quantity_used - total_returned
 
     result = {
@@ -190,13 +209,33 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
     return result
 
 @router.post("/return")
-def return_item(t: schemas.TransactionBase, db: Session = Depends(get_db)):
-    """Employee returns an item (increase quantity)."""
-    print("recieving")
+def return_item(
+    t: schemas.TransactionBase,
+    request_transaction_id: int = Query(None, description="The transaction_id of the original request this return belongs to"),
+    db: Session = Depends(get_db)
+):
+    """Employee returns an item (increase quantity).
+    
+    Args:
+        t: Transaction data including item_id, employee_id, fixture_id, quantity, etc.
+        request_transaction_id: The transaction_id of the original request this return belongs to.
+    """
+    print("receiving return request")
+    print(f"Request transaction ID: {request_transaction_id}")
     print(t)
     print("end-----------")
+    
     # Add quantity back
     crud.add_item_quantity(db, t.item_id, t.quantity_used)
+
+    # Store request_transaction_id in remarks if provided, so we can link returns to specific requests
+    # Format: "REQUEST_TX_ID:123|user remarks" or just "REQUEST_TX_ID:123" if no remarks
+    remarks_with_tx_id = t.remarks or ""
+    if request_transaction_id:
+        if remarks_with_tx_id:
+            remarks_with_tx_id = f"REQUEST_TX_ID:{request_transaction_id}|{remarks_with_tx_id}"
+        else:
+            remarks_with_tx_id = f"REQUEST_TX_ID:{request_transaction_id}"
 
     # Create the return transaction
     new_tx = models.Transaction(
@@ -205,7 +244,7 @@ def return_item(t: schemas.TransactionBase, db: Session = Depends(get_db)):
         fixture_id=t.fixture_id,
         quantity_used=t.quantity_used,
         transaction_type="return",
-        remarks=t.remarks,
+        remarks=remarks_with_tx_id,
         test_area=t.test_area,
         project_name=t.project_name
     )
