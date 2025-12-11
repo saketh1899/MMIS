@@ -2,12 +2,12 @@
 import { useEffect, useState, useRef } from "react";
 import API from "../api";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Header from "../components/Header";
 
 export default function RequestPage() {
   const [items, setItems] = useState([]);
   const [searchInput, setSearchInput] = useState("");
   const [filteredItems, setFilteredItems] = useState([]);
-  const [userName, setUserName] = useState("");
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -15,15 +15,6 @@ export default function RequestPage() {
 
   const project = params.get("project");
   const test_area = params.get("test_area");
-
-  // Load username
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      setUserName(payload.employee_username || "");
-    }
-  }, []);
 
   // Load items from backend with filtering
   useEffect(() => {
@@ -51,12 +42,7 @@ export default function RequestPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* TOP BAR */}
-      <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center">
-        <span className="text-2xl font-bold text-blue-600 cursor-pointer" onClick={() => navigate("/dashboard")}>MMIS</span>
-        <span className="text-lg font-semibold text-gray-700">{userName}</span>
-      </div>
+      <Header />
 
       {/* BLUE HEADER */}
       <div className="w-full bg-blue-600 text-white text-center py-4 shadow-md">

@@ -1,7 +1,31 @@
 // src/components/Layout.jsx
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import Header from "./Header";
 
 export default function Layout({ children }) {
+  const location = useLocation();
+
+  // Check if a path is active
+  const isActive = (path) => {
+    if (path === "/dashboard") {
+      // For dashboard, only match exact path
+      return location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+    }
+    // For other paths, check if current path starts with the link path
+    return location.pathname.startsWith(path);
+  };
+
+  // Navigation items
+  const navItems = [
+    { path: "/dashboard", label: "Dashboard" },
+    { path: "/dashboard/request", label: "Request" },
+    { path: "/dashboard/return", label: "Return" },
+    { path: "/dashboard/restock", label: "Restock" },
+    { path: "/dashboard/alerts", label: "Low Stock Alerts" },
+    { path: "/dashboard/reports", label: "Reports" },
+    { path: "/dashboard/activity", label: "Activity History" },
+  ];
+
   return (
     <div className="flex h-screen bg-gray-100">
       
@@ -9,29 +33,23 @@ export default function Layout({ children }) {
       <aside className="w-64 bg-white shadow-md p-6 space-y-4">
         <h1 className="text-2xl font-bold text-blue-600 mb-6">MMIS</h1>
 
-        <nav className="space-y-3">
-          <Link className="block text-gray-700 hover:text-blue-600" to="/dashboard">
-            Dashboard
-          </Link>
-          <Link className="block text-gray-700 hover:text-blue-600" to="/dashboard/request">
-            Request
-          </Link>
-          <Link className="block text-gray-700 hover:text-blue-600" to="/dashboard/return">
-            Return
-          </Link>
-          <Link className="block text-gray-700 hover:text-blue-600" to="/dashboard/restock">
-            Restock
-          </Link>
-          <Link className="block text-gray-700 hover:text-blue-600" to="/dashboard/alerts">
-            Low Stock Alerts
-          </Link>
-          <Link className="block text-gray-700 hover:text-blue-600" to="/dashboard/reports">
-            Reports
-          </Link>
-          <Link className="block text-gray-700 hover:text-blue-600" to="/dashboard/activity">
-            Activity History
-          </Link>
-
+        <nav className="space-y-2">
+          {navItems.map((item) => {
+            const active = isActive(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block px-4 py-3 rounded-lg transition-all duration-200 ${
+                  active
+                    ? "bg-blue-600 text-white font-semibold shadow-md"
+                    : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
@@ -39,17 +57,7 @@ export default function Layout({ children }) {
       <div className="flex-1 flex flex-col">
         
         {/* Top Bar */}
-        <header className="bg-white shadow p-4 flex justify-end">
-          <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              window.location.href = "/";
-            }}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-          >
-            Logout
-          </button>
-        </header>
+        <Header showMMIS={false} />
 
         {/* Page Body */}
         <main className="p-6 overflow-auto">

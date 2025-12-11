@@ -7,6 +7,7 @@
 
 from xml.parsers.expat import model
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from . import models, schemas
 from datetime import date, timedelta
 
@@ -184,26 +185,47 @@ def get_transactions_by_employee(db: Session, emp_id: int):
         .all()
     )
 
-    # Convert tuple rows to dictionaries
+    # Convert tuple rows to dictionaries and filter out fully returned transactions
     transactions = []
     for row in rows:
-        transactions.append({
-            "transaction_id": row.transaction_id,
-            "item_id": row.item_id,
-            "fixture_id": row.fixture_id,
-            "employee_id": row.employee_id,
-            "transaction_type": row.transaction_type,
-            "quantity_used": row.quantity_used,
-            "created_at": row.created_at,
-            "item_name": row.item_name,
-            "item_part_number": row.item_part_number,
-            "item_description": row.item_description,
-            "item_manufacturer": row.item_manufacturer,
-            "test_area": row.test_area,
-            "project_name": row.project_name,
-            "fixture_name": row.fixture_name,
-            "employee_name": row.employee_name,
-        })
+        # Calculate total returned quantity for this request
+        # Match returns by: same item_id, employee_id, fixture_id, and created after the request
+        total_returned = (
+            db.query(
+                func.coalesce(func.sum(models.Transaction.quantity_used), 0)
+            )
+            .filter(models.Transaction.item_id == row.item_id)
+            .filter(models.Transaction.employee_id == row.employee_id)
+            .filter(models.Transaction.fixture_id == row.fixture_id)
+            .filter(models.Transaction.transaction_type == "return")
+            .filter(models.Transaction.created_at >= row.created_at)
+            .scalar() or 0
+        )
+        
+        # Convert to int to ensure proper type
+        total_returned = int(total_returned) if total_returned else 0
+        
+        # Only include if not fully returned (total_returned < quantity_used)
+        if total_returned < row.quantity_used:
+            remaining_quantity = row.quantity_used - total_returned
+            transactions.append({
+                "transaction_id": row.transaction_id,
+                "item_id": row.item_id,
+                "fixture_id": row.fixture_id,
+                "employee_id": row.employee_id,
+                "transaction_type": row.transaction_type,
+                "quantity_used": row.quantity_used,  # Original requested quantity
+                "remaining_quantity": remaining_quantity,  # Quantity that can still be returned
+                "created_at": row.created_at,
+                "item_name": row.item_name,
+                "item_part_number": row.item_part_number,
+                "item_description": row.item_description,
+                "item_manufacturer": row.item_manufacturer,
+                "test_area": row.test_area,
+                "project_name": row.project_name,
+                "fixture_name": row.fixture_name,
+                "employee_name": row.employee_name,
+            })
 
     return transactions
 

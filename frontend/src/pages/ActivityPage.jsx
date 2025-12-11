@@ -1,100 +1,511 @@
 // src/pages/ActivityPage.jsx
-import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
+import { useEffect, useState, useRef } from "react";
 import API from "../api";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 
 export default function ActivityPage() {
   const [history, setHistory] = useState([]);
+  const [filteredHistory, setFilteredHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedTestArea, setSelectedTestArea] = useState("");
+  
+  // Dropdown states
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const [showTestAreaDropdown, setShowTestAreaDropdown] = useState(false);
+  const [projectSearch, setProjectSearch] = useState("");
+  const [testAreaSearch, setTestAreaSearch] = useState("");
+  const projectRef = useRef(null);
+  const testAreaRef = useRef(null);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const userName = payload.employee_name;
-    setUserName(userName);
-
     API.get(`/transactions/all`)
-      .then((res) => setHistory(res.data))
+      .then((res) => {
+        setHistory(res.data);
+        setFilteredHistory(res.data);
+      })
       .finally(() => setLoading(false));
   }, []);
 
+  // Predefined test areas
+  const testAreas = [
+    "ICT_Mobo",
+    "BSI_Mobo",
+    "FBT_Mobo",
+    "ICT_Agora",
+    "FBT_Agora",
+    "TOOLS"
+  ];
 
-  const formatQuantity = (type,qty) => {
-    if(type.toLowerCase() === "request") {
+  // Get unique projects from history
+  const uniqueProjects = [...new Set(history.map(h => h.project_name).filter(Boolean))].sort();
+
+  // Filtered options for dropdowns
+  const filteredProjects = uniqueProjects.filter(project =>
+    project.toLowerCase().includes(projectSearch.toLowerCase())
+  );
+
+  const filteredTestAreas = testAreas.filter(area =>
+    area.toLowerCase().includes(testAreaSearch.toLowerCase())
+  );
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (projectRef.current && !projectRef.current.contains(event.target)) {
+        setShowProjectDropdown(false);
+      }
+      if (testAreaRef.current && !testAreaRef.current.contains(event.target)) {
+        setShowTestAreaDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Sync search with selected values
+  useEffect(() => {
+    if (selectedProject) {
+      setProjectSearch(selectedProject);
+    }
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (selectedTestArea) {
+      setTestAreaSearch(selectedTestArea);
+    }
+  }, [selectedTestArea]);
+
+  // Filter by transaction type, project, and test area
+  useEffect(() => {
+    let filtered = history;
+
+    // Filter by transaction type
+    if (selectedType !== "all") {
+      filtered = filtered.filter((row) => row.transaction_type?.toLowerCase() === selectedType.toLowerCase());
+    }
+
+    // Filter by project
+    if (selectedProject) {
+      filtered = filtered.filter((row) => row.project_name === selectedProject);
+    }
+
+    // Filter by test area
+    if (selectedTestArea) {
+      filtered = filtered.filter((row) => row.test_area === selectedTestArea);
+    }
+
+    setFilteredHistory(filtered);
+  }, [selectedType, selectedProject, selectedTestArea, history]);
+
+  const formatQuantity = (type, qty) => {
+    if (type?.toLowerCase() === "request") {
       return <span className="text-red-600 font-semibold">-{qty}</span>;
-  }
-  if(type.toLowerCase() === "return") {
+    }
+    if (type?.toLowerCase() === "return") {
       return <span className="text-green-600 font-semibold">+{qty}</span>;
-  }
-  return <span className="text-blue-600 font-semibold">+{qty}</span>;
-};
+    }
+    if (type?.toLowerCase() === "restock") {
+      return <span className="text-blue-600 font-semibold">+{qty}</span>;
+    }
+    return <span className="text-blue-600 font-semibold">+{qty}</span>;
+  };
+
+  const getTransactionTypeBadge = (type) => {
+    const typeLower = type?.toLowerCase() || "";
+    if (typeLower === "request") {
+      return <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">REQUEST</span>;
+    }
+    if (typeLower === "return") {
+      return <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">RETURN</span>;
+    }
+    if (typeLower === "restock") {
+      return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">RESTOCK</span>;
+    }
+    return <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">{type?.toUpperCase() || "N/A"}</span>;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const year = date.getFullYear().toString().slice(-2);
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`;
+  };
+
+  // Calculate statistics
+  const stats = {
+    total: history.length,
+    requests: history.filter((h) => h.transaction_type?.toLowerCase() === "request").length,
+    returns: history.filter((h) => h.transaction_type?.toLowerCase() === "return").length,
+    restocks: history.filter((h) => h.transaction_type?.toLowerCase() === "restock").length,
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* TOP WHITE BAR */}
-      <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center">
-        <span 
-          className="text-2xl font-bold text-blue-600 cursor-pointer" 
-          onClick={() => navigate("/dashboard")}
-        >
-          MMIS
-        </span>
-        <span className="text-lg font-semibold text-gray-700">{userName}</span>
-      </div>
+      <Header />
 
       {/* BLUE HEADER */}
       <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
         <h1 className="text-3xl font-bold">Recent Activity History</h1>
       </div>
 
-      {/* MAIN TABLE */}
-      <div className="max-w-6xl mx-auto bg-white shadow rounded-lg p-6">
-
-        {loading ? (
-          <p className="text-gray-500">Loading...</p>
-        ) : history.length === 0 ? (
-          <p className="text-gray-500">No activity yet.</p>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-100 border-b">
-                <th className="p-3 text-left">Employee</th>
-                <th className="p-3 text-left">Item</th>
-                <th className="p-3 text-left">Description</th>
-                <th className="p-3 text-left">Fixture</th>
-                <th className="p-3 text-left">Quantity</th>
-                <th className="p-3 text-left">Date</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {history.map((row) => (
-                <tr key={row.transaction_id} className="border-b hover:bg-gray-50">
-                  <td className="p-3">{row.employee_name}</td>
-                  <td className="p-3">{row.item_name}</td>
-                  <td className="p-3 max-w-xs truncate">{row.item_description}</td>
-                  <td className="p-3">{row.fixture_name}</td>
-                  <td className="p-3">{formatQuantity(row.transaction_type, row.quantity_used)}</td>
-                  <td className="p-3">{new Date(row.created_at).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* STATISTICS CARDS */}
+        {!loading && history.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+              <div className="text-sm text-gray-600 font-medium">Total Transactions</div>
+              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+              <div className="text-sm text-gray-600 font-medium">Requests</div>
+              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.requests}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+              <div className="text-sm text-gray-600 font-medium">Returns</div>
+              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.returns}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+              <div className="text-sm text-gray-600 font-medium">Restocks</div>
+              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.restocks}</div>
+            </div>
+          </div>
         )}
-      </div>
 
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-10 mb-6">
-        <button
-          className="px-8 py-2 bg-gray-300 rounded hover:bg-gray-400 shadow"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back
-        </button>
+        {/* FILTER SECTION */}
+        {!loading && history.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Filters</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              {/* Transaction Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Transaction Type</label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedType("all")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                      selectedType === "all"
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setSelectedType("request")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                      selectedType === "request"
+                        ? "bg-red-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Requests
+                  </button>
+                  <button
+                    onClick={() => setSelectedType("return")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                      selectedType === "return"
+                        ? "bg-green-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Returns
+                  </button>
+                  <button
+                    onClick={() => setSelectedType("restock")}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                      selectedType === "restock"
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Restocks
+                  </button>
+                </div>
+              </div>
+
+              {/* Project Name Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                <div className="relative" ref={projectRef}>
+                  <input
+                    type="text"
+                    value={projectSearch}
+                    onChange={(e) => {
+                      setProjectSearch(e.target.value);
+                      setShowProjectDropdown(true);
+                    }}
+                    onFocus={() => setShowProjectDropdown(true)}
+                    placeholder="Search or select project"
+                    className="w-full p-2 border-2 border-gray-300 rounded-lg shadow-sm pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {selectedProject && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProject("");
+                          setProjectSearch("");
+                          setShowProjectDropdown(false);
+                        }}
+                        className="text-gray-400 hover:text-red-600"
+                        title="Clear selection"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+                      className="text-gray-600 hover:text-black"
+                    >
+                      <svg
+                        className={`w-5 h-5 transform transition-transform duration-200 ${
+                          showProjectDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  {showProjectDropdown && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                      {filteredProjects.length === 0 ? (
+                        <div className="p-3 text-gray-500">No matches found</div>
+                      ) : (
+                        filteredProjects.map((project) => (
+                          <div
+                            key={project}
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setProjectSearch(project);
+                              setShowProjectDropdown(false);
+                            }}
+                            className={`p-3 border-b hover:bg-blue-50 cursor-pointer ${
+                              selectedProject === project ? "bg-blue-100" : ""
+                            }`}
+                          >
+                            {project}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Test Area Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Test Area</label>
+                <div className="relative" ref={testAreaRef}>
+                  <input
+                    type="text"
+                    value={testAreaSearch}
+                    onChange={(e) => {
+                      setTestAreaSearch(e.target.value);
+                      setShowTestAreaDropdown(true);
+                    }}
+                    onFocus={() => setShowTestAreaDropdown(true)}
+                    placeholder="Search or select test area"
+                    className="w-full p-2 border-2 border-gray-300 rounded-lg shadow-sm pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {selectedTestArea && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedTestArea("");
+                          setTestAreaSearch("");
+                          setShowTestAreaDropdown(false);
+                        }}
+                        className="text-gray-400 hover:text-red-600"
+                        title="Clear selection"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowTestAreaDropdown(!showTestAreaDropdown)}
+                      className="text-gray-600 hover:text-black"
+                    >
+                      <svg
+                        className={`w-5 h-5 transform transition-transform duration-200 ${
+                          showTestAreaDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  {showTestAreaDropdown && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                      {filteredTestAreas.length === 0 ? (
+                        <div className="p-3 text-gray-500">No matches found</div>
+                      ) : (
+                        filteredTestAreas.map((area) => (
+                          <div
+                            key={area}
+                            onClick={() => {
+                              setSelectedTestArea(area);
+                              setTestAreaSearch(area);
+                              setShowTestAreaDropdown(false);
+                            }}
+                            className={`p-3 border-b hover:bg-blue-50 cursor-pointer ${
+                              selectedTestArea === area ? "bg-blue-100" : ""
+                            }`}
+                          >
+                            {area}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Clear All Filters Button */}
+            {(selectedType !== "all" || selectedProject || selectedTestArea) && (
+              <button
+                onClick={() => {
+                  setSelectedType("all");
+                  setSelectedProject("");
+                  setSelectedTestArea("");
+                  setProjectSearch("");
+                  setTestAreaSearch("");
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* MAIN TABLE */}
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="text-gray-500 mt-4">Loading activity history...</p>
+            </div>
+          ) : filteredHistory.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="text-6xl mb-4">📋</div>
+              <p className="text-gray-500 text-lg font-medium">
+                {history.length === 0 ? "No activity yet." : `No ${selectedType === "all" ? "" : selectedType} transactions found.`}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b-2 border-gray-200">
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Employee</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Part Number</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Description</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Project</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Test Area</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Fixture</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                  </tr>
+                </thead>
+
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredHistory.map((row, index) => (
+                    <tr
+                      key={row.transaction_id}
+                      className={`hover:bg-blue-50 transition-colors ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                    >
+                      <td className="p-4 whitespace-nowrap">{getTransactionTypeBadge(row.transaction_type)}</td>
+                      <td className="p-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{row.employee_name}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-sm font-medium text-gray-900">{row.item_name}</div>
+                      </td>
+                      <td className="p-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700">{row.item_part_number || "N/A"}</div>
+                      </td>
+                      <td className="p-4 max-w-xs">
+                        <div className="text-sm text-gray-700 truncate" title={row.item_description}>
+                          {row.item_description || "N/A"}
+                        </div>
+                      </td>
+                      <td className="p-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700">{row.project_name || "N/A"}</div>
+                      </td>
+                      <td className="p-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700">{row.test_area || "N/A"}</div>
+                      </td>
+                      <td className="p-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700">
+                          {row.transaction_type?.toLowerCase() === "restock" ? "N/A" : (row.fixture_name || "N/A")}
+                        </div>
+                      </td>
+                      <td className="p-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold">{formatQuantity(row.transaction_type, row.quantity_used)}</div>
+                      </td>
+                      <td className="p-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700">{formatDate(row.created_at)}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* RESULTS COUNT */}
+        {!loading && filteredHistory.length > 0 && (
+          <div className="mt-4 text-sm text-gray-600 text-center">
+            Showing {filteredHistory.length} of {history.length} transaction{history.length !== 1 ? "s" : ""}
+          </div>
+        )}
+
+        {/* BACK BUTTON */}
+        <div className="flex justify-center mt-8 mb-6">
+          <button
+            className="px-8 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 shadow transition-colors font-medium"
+            onClick={() => navigate("/dashboard")}
+          >
+            Back
+          </button>
+        </div>
       </div>
     </div>
   );

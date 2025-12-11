@@ -1,20 +1,11 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { use, useEffect, useState } from "react";
+import Header from "../components/Header";
 
 export default function RequestTestAreaPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [userName, setUserName] = useState("");
 
   const project = params.get("project");
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      setUserName(payload.user_name || "");
-    }
-  }, []);
 
   const testAreas = [
     "ICT_Mobo",
@@ -27,12 +18,7 @@ export default function RequestTestAreaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* TOP BAR */}
-      <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center">
-        <span className="text-2xl font-bold text-blue-600 cursor-pointer" onClick={() => navigate("/dashboard")}>MMIS</span>
-        <span className="text-lg font-semibold text-gray-700">{userName}</span>
-      </div>
+      <Header />
 
       {/* BLUE HEADER */}
       <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">

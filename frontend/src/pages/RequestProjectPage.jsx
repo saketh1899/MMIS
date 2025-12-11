@@ -1,19 +1,11 @@
 // src/pages/RequestProjectPage.jsx
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Header from "../components/Header";
 
 export default function RequestProjectPage() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState("");
-
-  //Load username from token
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      setUserName(payload.user_name || "");
-    }
-  }, []);
+  const [searchInput, setSearchInput] = useState("");
 
   const projects = [
     "Astoria",
@@ -28,14 +20,14 @@ export default function RequestProjectPage() {
     "Humu Beach",
   ];
 
+  // Filter projects based on search input
+  const filteredProjects = projects.filter((project) =>
+    project.toLowerCase().includes(searchInput.toLowerCase().trim())
+  );
+
     return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* TOP BAR */}
-      <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center">
-        <span className="text-2xl font-bold text-blue-600 cursor-pointer" onClick={() => navigate("/dashboard")}>MMIS</span>
-        <span className="text-lg font-semibold text-gray-700">{userName}</span>
-      </div>
+      <Header />
 
       {/* BLUE HEADER */}
       <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
@@ -46,18 +38,35 @@ export default function RequestProjectPage() {
         Select Project Name
       </p>
 
+      {/* SEARCH BOX */}
+      <div className="max-w-5xl mx-auto mb-6 px-8">
+        <input
+          type="text"
+          placeholder="Project Names"
+          className="w-full p-3 border rounded shadow-sm"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+      </div>
+
       {/* PROJECT GRID */}
-      <div className="grid grid-cols-4 gap-6 justify-center mx-auto max-w-5xl">
-        {projects.map((p) => (
-          <div
-            key={p}
-            onClick={() => navigate(`/dashboard/request/test-area?project=${p}`)}
-            className="border p-8 text-center rounded-xl bg-white cursor-pointer 
-                       hover:bg-blue-100 hover:shadow-lg transition-all shadow-md"
-          >
-            <span className="font-semibold text-gray-800 text-lg">{p}</span>
+      <div className="grid grid-cols-4 gap-6 justify-center mx-auto max-w-5xl px-8">
+        {filteredProjects.length === 0 ? (
+          <div className="col-span-4 text-center text-gray-500 py-8">
+            <p>No projects found matching "{searchInput}"</p>
           </div>
-        ))}
+        ) : (
+          filteredProjects.map((p) => (
+            <div
+              key={p}
+              onClick={() => navigate(`/dashboard/request/test-area?project=${p}`)}
+              className="border p-8 text-center rounded-xl bg-white cursor-pointer 
+                         hover:bg-blue-100 hover:shadow-lg transition-all shadow-md"
+            >
+              <span className="font-semibold text-gray-800 text-lg">{p}</span>
+            </div>
+          ))
+        )}
       </div>
 
       {/* BACK BUTTON */}

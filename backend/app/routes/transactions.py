@@ -20,9 +20,90 @@ def request_item(t: schemas.TransactionBase, db: Session = Depends(get_db)):
 
 
 @router.get("/all")
-def get_all(db: Session = Depends(get_db)):
-    """View all transactions."""
-    return crud.get_all_transactions(db)
+def get_all(
+    test_area: str | None = None,
+    project: str | None = None,
+    transaction_type: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    """View all transactions with optional filters."""
+    from datetime import datetime
+    
+    result = (
+        db.query(
+            models.Transaction.transaction_id,
+            models.Transaction.transaction_type,
+            models.Transaction.quantity_used,
+            models.Transaction.created_at,
+            models.Inventory.item_name,
+            models.Inventory.item_part_number,
+            models.Inventory.item_description,
+            models.Inventory.item_manufacturer,
+            models.Inventory.test_area,
+            models.Inventory.project_name,
+            models.Fixture.fixture_name,
+            models.Employee.employee_name,
+            models.Transaction.fixture_id,
+            models.Transaction.item_id,
+        )
+        .join(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)
+        .join(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)
+        .join(models.Employee, models.Transaction.employee_id == models.Employee.employee_id)
+    )
+
+    # Apply filters
+    if test_area:
+        result = result.filter(models.Inventory.test_area == test_area)
+    
+    if project:
+        result = result.filter(models.Inventory.project_name == project)
+    
+    if transaction_type:
+        result = result.filter(models.Transaction.transaction_type == transaction_type.lower())
+    
+    if start_date:
+        try:
+            # Parse date string (format: YYYY-MM-DD)
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            result = result.filter(models.Transaction.created_at >= start_dt)
+        except Exception as e:
+            print(f"Error parsing start_date: {e}")
+            pass
+    
+    if end_date:
+        try:
+            # Parse date string and add one day to include the entire end date
+            from datetime import timedelta
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            end_dt = end_dt + timedelta(days=1)
+            result = result.filter(models.Transaction.created_at < end_dt)
+        except Exception as e:
+            print(f"Error parsing end_date: {e}")
+            pass
+
+    result = result.order_by(models.Transaction.created_at.desc()).all()
+
+    # Convert row tuples to dicts
+    transactions = []
+    for row in result:
+        transactions.append({
+            "transaction_id": row[0],
+            "transaction_type": row[1],
+            "quantity_used": row[2],
+            "created_at": row[3],
+            "item_name": row[4],
+            "item_part_number": row[5],
+            "item_description": row[6],
+            "item_manufacturer": row[7],
+            "test_area": row[8],
+            "project_name": row[9],
+            "fixture_name": row[10],
+            "employee_name": row[11],
+        })
+
+    return transactions
 
 """
 @router.get("/user/{employee_id}", response_model=list[schemas.TransactionOut])
@@ -47,6 +128,8 @@ def get_user_transactions_full(employee_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{transaction_id}", response_model=schemas.TransactionOut)
 def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
+    from sqlalchemy import func
+    
     tx = (
         db.query(models.Transaction)
         .join(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)
@@ -59,7 +142,23 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    return {
+    # Calculate remaining returnable quantity if this is a request transaction
+    remaining_quantity = None
+    if tx.transaction_type == "request":
+        total_returned = (
+            db.query(
+                func.coalesce(func.sum(models.Transaction.quantity_used), 0)
+            )
+            .filter(models.Transaction.item_id == tx.item_id)
+            .filter(models.Transaction.employee_id == tx.employee_id)
+            .filter(models.Transaction.fixture_id == tx.fixture_id)
+            .filter(models.Transaction.transaction_type == "return")
+            .filter(models.Transaction.created_at >= tx.created_at)
+            .scalar() or 0
+        )
+        remaining_quantity = tx.quantity_used - total_returned
+
+    result = {
         "transaction_id": tx.transaction_id,
         "item_id": tx.item_id,
         "fixture_id": tx.fixture_id,
@@ -82,10 +181,13 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
         # Employee info
         "employee_name": tx.employee.employee_name,
-
-        
-
     }
+    
+    # Add remaining_quantity if it's a request transaction
+    if remaining_quantity is not None:
+        result["remaining_quantity"] = remaining_quantity
+
+    return result
 
 @router.post("/return")
 def return_item(t: schemas.TransactionBase, db: Session = Depends(get_db)):

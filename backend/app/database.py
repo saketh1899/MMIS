@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker        # Factory for creating new databa
 import os                                      # Used to access environment variables
 
 # --- Database Configuration ---
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:Rutgers%402025@localhost:5432/MMIS")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:foxconn123@localhost:5432/MMIS")
 
 # Create a SQLAlchemy engine that manages the connection pool to the PostgreSQL database
 engine = create_engine(DATABASE_URL)

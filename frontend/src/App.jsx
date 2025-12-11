@@ -13,6 +13,14 @@ import RequestProjectPage from "./pages/RequestProjectPage";
 import RequestTestAreaPage from "./pages/RequestTestAreaPage";
 import ItemRequestPage from "./pages/ItemRequestPage";
 import ItemReturnPage from "./pages/ItemReturnPage";
+import RestockProjectPage from "./pages/RestockProjectPage";
+import RestockTestAreaPage from "./pages/RestockTestAreaPage";
+import RestockItemPage from "./pages/RestockItemPage";
+import RestockEditItemPage from "./pages/RestockEditItemPage";
+import RestockNewStockPage from "./pages/RestockNewStockPage";
+import CurrentInventoryReportPage from "./pages/CurrentInventoryReportPage";
+import LowStockReportPage from "./pages/LowStockReportPage";
+import CustomizedReportPage from "./pages/CustomizedReportPage";
 
 export default function App() {
   return (
@@ -106,10 +114,82 @@ export default function App() {
         />
 
         <Route
-          path="/dashboard/reports"
+          path="/dashboard/restock/project"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockProjectPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/restock/test-area"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockTestAreaPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/restock/items"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockItemPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/restock/item/:item_id/edit"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockEditItemPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/restock/project/add-new-stock"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockNewStockPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/reports"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
               <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/reports/current-inventory"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <CurrentInventoryReportPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/reports/low-stock"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <LowStockReportPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/reports/customized"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <CustomizedReportPage />
             </ProtectedRoute>
           }
         />

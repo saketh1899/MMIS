@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api";
+import Header from "../components/Header";
 
 export default function ReturnItemPage() {
   const { transaction_id } = useParams();
@@ -9,15 +10,14 @@ export default function ReturnItemPage() {
   const [tx, setTx] = useState(null);
   const [quantity, setQuantity] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [userName, setUserName] = useState("");
   const [employeeId, setEmployeeId] = useState(null);
+  const [quantityError, setQuantityError] = useState("");
 
   // Load token info
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      setUserName(payload.user_name);
       setEmployeeId(payload.employee_id);
     }
   }, []);
@@ -32,9 +32,64 @@ export default function ReturnItemPage() {
       .catch((err) => console.error("Error loading transaction details:", err));
   }, [transaction_id]);
 
+  const handleQuantityChange = (e) => {
+    const value = e.target.value;
+    const numValue = parseFloat(value);
+    // Use remaining_quantity if available, otherwise fall back to quantity_used
+    const maxQuantity = tx ? (tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used) : 0;
+
+    if (value === "") {
+      setQuantity("");
+      setQuantityError("");
+      return;
+    }
+
+    if (isNaN(numValue) || numValue <= 0) {
+      setQuantityError("Quantity must be greater than 0");
+      setQuantity(value);
+      return;
+    }
+
+    if (numValue > maxQuantity) {
+      setQuantityError(`Cannot return more than ${maxQuantity} (quantity taken)`);
+      setQuantity(value); // Allow typing but show error
+      return;
+    }
+
+    setQuantity(value);
+    setQuantityError("");
+  };
+
+  const handleQuantityBlur = (e) => {
+    const value = e.target.value;
+    const numValue = parseFloat(value);
+    // Use remaining_quantity if available, otherwise fall back to quantity_used
+    const maxQuantity = tx ? (tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used) : 0;
+
+    // Clamp value to max when user leaves the field
+    if (value && numValue > maxQuantity) {
+      setQuantity(maxQuantity.toString());
+      setQuantityError("");
+    }
+  };
+
   const submitReturn = async () => {
     if (!quantity) {
       alert("Enter return quantity");
+      return;
+    }
+
+    const numQuantity = parseFloat(quantity);
+    // Use remaining_quantity if available, otherwise fall back to quantity_used
+    const maxQuantity = tx ? (tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used) : 0;
+
+    if (isNaN(numQuantity) || numQuantity <= 0) {
+      alert("Please enter a valid quantity greater than 0");
+      return;
+    }
+
+    if (numQuantity > maxQuantity) {
+      alert(`Cannot return more than ${maxQuantity} items. You only took ${maxQuantity} items.`);
       return;
     }
 
@@ -47,10 +102,7 @@ export default function ReturnItemPage() {
       transaction_type: "return",
       test_area: tx.test_area,
       project_name: tx.project_name,
-
     });
-
-    
 
     try {
       await API.post("/transactions/return", {
@@ -77,19 +129,7 @@ export default function ReturnItemPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* TOP BAR */}
-      <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center">
-        <span
-          className="text-2xl font-bold text-blue-600 cursor-pointer"
-          onClick={() => navigate("/dashboard")}
-        >
-          MMIS
-        </span>
-        <span className="text-lg font-semibold text-gray-700">
-          {userName}
-        </span>
-      </div>
+      <Header />
 
       {/* BLUE HEADER */}
       <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
@@ -108,6 +148,9 @@ export default function ReturnItemPage() {
 
             <p><strong>Fixture:</strong> {tx.fixture_name || "N/A"}</p>
             <p><strong>Quantity Taken:</strong> {tx.quantity_used}</p>
+            {tx.remaining_quantity !== undefined && tx.remaining_quantity !== tx.quantity_used && (
+              <p><strong>Remaining to Return:</strong> {tx.remaining_quantity}</p>
+            )}
             <p><strong>Date Requested:</strong> {tx.created_at.substring(0, 10)}</p>
         </div>
 
@@ -116,12 +159,22 @@ export default function ReturnItemPage() {
         <input
           type="number"
           min="1"
-          max={tx.quantity_used}
-          className="border p-2 rounded w-full mb-6"
+          max={tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used}
+          step="1"
+          className={`border p-2 rounded w-full mb-2 ${quantityError ? "border-red-500" : ""}`}
           value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          placeholder={`Enter quantity (max ${tx.quantity_used})`}
+          onChange={handleQuantityChange}
+          onBlur={handleQuantityBlur}
+          placeholder={`Enter quantity (max ${tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used})`}
         />
+        {quantityError && (
+          <p className="text-red-500 text-sm mb-4">{quantityError}</p>
+        )}
+        {!quantityError && (
+          <p className="text-gray-500 text-sm mb-4">
+            Maximum returnable: {tx.quantity_used} items
+          </p>
+        )}
 
         {/* REMARKS */}
         <label className="font-semibold text-gray-700">Remarks (Optional)</label>

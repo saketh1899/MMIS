@@ -81,6 +81,7 @@ class TransactionOut(BaseModel):
 
     fixture_name: Optional[str] = None
     employee_name: Optional[str] = None
+    remaining_quantity: Optional[int] = None  # For request transactions: quantity that can still be returned
     class Config:
         from_attributes = True
 #-----------------------------------------------------------------------------------------------------------------------------------------
