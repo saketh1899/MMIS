@@ -145,8 +145,15 @@ export default function ChangePasswordPage() {
                   type="password"
                   value={newPassword}
                   onChange={(e) => {
-                    setNewPassword(e.target.value);
+                    const newValue = e.target.value;
+                    setNewPassword(newValue);
                     setErrors({ ...errors, newPassword: "" });
+                    // Real-time validation: check if confirm password matches when new password changes
+                    if (confirmPassword && newValue && confirmPassword !== newValue) {
+                      setErrors((prev) => ({ ...prev, confirmPassword: "Passwords do not match" }));
+                    } else if (confirmPassword && newValue && confirmPassword === newValue) {
+                      setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                    }
                   }}
                   className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
                     errors.newPassword ? "border-red-500" : "border-gray-300"
@@ -176,8 +183,20 @@ export default function ChangePasswordPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setErrors({ ...errors, confirmPassword: "" });
+                    const confirmValue = e.target.value;
+                    setConfirmPassword(confirmValue);
+                    // Real-time validation: check if passwords match
+                    if (confirmValue && newPassword && confirmValue !== newPassword) {
+                      setErrors({ ...errors, confirmPassword: "Passwords do not match" });
+                    } else {
+                      setErrors({ ...errors, confirmPassword: "" });
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate on blur as well
+                    if (e.target.value && newPassword && e.target.value !== newPassword) {
+                      setErrors({ ...errors, confirmPassword: "Passwords do not match" });
+                    }
                   }}
                   className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
                     errors.confirmPassword ? "border-red-500" : "border-gray-300"
