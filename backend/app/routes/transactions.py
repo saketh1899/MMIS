@@ -41,24 +41,24 @@ def get_all(
             models.Inventory.item_part_number,
             models.Inventory.item_description,
             models.Inventory.item_manufacturer,
-            models.Inventory.test_area,
-            models.Inventory.project_name,
+            models.Transaction.test_area,  # Use test_area from Transaction (works for both inventory and fixtures)
+            models.Transaction.project_name,  # Use project_name from Transaction (works for both inventory and fixtures)
             models.Fixture.fixture_name,
             models.Employee.employee_name,
             models.Transaction.fixture_id,
             models.Transaction.item_id,
         )
-        .join(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)
-        .join(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)
+        .outerjoin(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)  # LEFT JOIN for inventory
+        .outerjoin(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)  # LEFT JOIN for fixture
         .join(models.Employee, models.Transaction.employee_id == models.Employee.employee_id)
     )
 
     # Apply filters
     if test_area:
-        result = result.filter(models.Inventory.test_area == test_area)
+        result = result.filter(models.Transaction.test_area == test_area)
     
     if project:
-        result = result.filter(models.Inventory.project_name == project)
+        result = result.filter(models.Transaction.project_name == project)
     
     if transaction_type:
         result = result.filter(models.Transaction.transaction_type == transaction_type.lower())

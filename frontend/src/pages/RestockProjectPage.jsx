@@ -79,7 +79,7 @@ export default function RestockProjectPage() {
           />
         </div>
         <button
-          onClick={() => navigate("/dashboard/restock/project/add-new-stock")}
+          onClick={() => navigate("/dashboard/restock/project/add-new")}
           className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 shadow"
         >
           Add New Stock

@@ -455,7 +455,9 @@ export default function ActivityPage() {
                         <div className="text-sm font-medium text-gray-900">{row.employee_name}</div>
                       </td>
                       <td className="p-4">
-                        <div className="text-sm font-medium text-gray-900">{row.item_name}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {row.item_name || row.fixture_name || "N/A"}
+                        </div>
                       </td>
                       <td className="p-4 whitespace-nowrap">
                         <div className="text-sm text-gray-700">{row.item_part_number || "N/A"}</div>

@@ -18,9 +18,13 @@ import RestockTestAreaPage from "./pages/RestockTestAreaPage";
 import RestockItemPage from "./pages/RestockItemPage";
 import RestockEditItemPage from "./pages/RestockEditItemPage";
 import RestockNewStockPage from "./pages/RestockNewStockPage";
+import RestockAddNewPage from "./pages/RestockAddNewPage";
+import RestockNewFixturePage from "./pages/RestockNewFixturePage";
 import CurrentInventoryReportPage from "./pages/CurrentInventoryReportPage";
 import LowStockReportPage from "./pages/LowStockReportPage";
 import CustomizedReportPage from "./pages/CustomizedReportPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
+import ProfilePage from "./pages/ProfilePage";
 
 export default function App() {
   return (
@@ -150,10 +154,28 @@ export default function App() {
         />
 
         <Route
+          path="/dashboard/restock/project/add-new"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockAddNewPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/restock/project/add-new-stock"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <RestockNewStockPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/restock/project/add-new-fixture"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockNewFixturePage />
             </ProtectedRoute>
           }
         />
@@ -201,7 +223,25 @@ export default function App() {
               <ActivityPage />
             </ProtectedRoute>
           }
-/>
+        />
+
+        <Route
+          path="/dashboard/change-password"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <ChangePasswordPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

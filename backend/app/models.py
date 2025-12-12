@@ -56,7 +56,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     transaction_id = Column(Integer, primary_key=True, index=True)
-    item_id = Column(Integer, ForeignKey("inventory.item_id"))
+    item_id = Column(Integer, ForeignKey("inventory.item_id"), nullable=True)
     employee_id = Column(Integer, ForeignKey("employees.employee_id"))
     fixture_id = Column(Integer, ForeignKey("fixtures.fixture_id"))
     quantity_used = Column(Integer, nullable=False)

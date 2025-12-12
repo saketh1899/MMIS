@@ -291,7 +291,7 @@ export default function RestockNewStockPage() {
         <div className="flex justify-center gap-6 mb-8">
           <button
             className="px-8 py-2 bg-blue-200 rounded hover:bg-blue-300 shadow"
-            onClick={() => navigate("/dashboard/restock")}
+            onClick={() => navigate("/dashboard/restock/project/add-new")}
           >
             Back
           </button>

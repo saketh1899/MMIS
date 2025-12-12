@@ -19,6 +19,10 @@ class EmployeeOut(BaseModel):
     employee_id: int
     employee_name: str
     employee_access_level: str
+    employee_badge_number: Optional[str] = None
+    employee_designation: Optional[str] = None
+    employee_shift: Optional[str] = None
+    employee_username: Optional[str] = None
     class Config:
         from_attributes = True
 #-----------------------------------------------------------------------------------------------------------------------------------------
@@ -101,8 +105,8 @@ class ReportOut(BaseModel):
 # Schema for reporting fixture data
 class FixtureBase(BaseModel):
     fixture_name: str
-    test_area: str | None = None
-    project_name: str | None = None
+    test_area: str
+    project_name: str
 
 class FixtureOut(FixtureBase):
     fixture_id: int
