@@ -26,8 +26,10 @@ class Fixture(Base):
 
     fixture_id = Column(Integer, primary_key=True, index=True)
     fixture_name = Column(String(100), nullable=False)
-    test_area = Column(String(20))
-    project_name = Column(String(100))
+    test_area = Column(String(20), nullable=False)
+    project_name = Column(String(100), nullable=False)
+    asset_tag = Column(String(50), nullable=False)
+    fixture_serial_number = Column(String(50), nullable=False)
 
     # Relationship: one fixture → many transactions
     transactions = relationship("Transaction", back_populates="fixture")
@@ -42,6 +44,7 @@ class Inventory(Base):
     item_current_quantity = Column(Integer, default=0)
     item_min_count = Column(Integer, default=0)
     item_unit = Column(String(20))
+    item_unit_price = Column(String(50), nullable=True)
     item_manufacturer = Column(String(100))
     item_type = Column(String(20))
     test_area = Column(String(20))

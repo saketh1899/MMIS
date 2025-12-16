@@ -41,8 +41,11 @@ export default function ActivityPage() {
     "TOOLS"
   ];
 
-  // Get unique projects from history
-  const uniqueProjects = [...new Set(history.map(h => h.project_name).filter(Boolean))].sort();
+  // Get unique projects from history and add "Common" if not present
+  const uniqueProjectsFromData = [...new Set(history.map(h => h.project_name).filter(Boolean))].sort();
+  const uniqueProjects = uniqueProjectsFromData.includes("Common") 
+    ? ["Common", ...uniqueProjectsFromData.filter(p => p !== "Common")] 
+    : ["Common", ...uniqueProjectsFromData];
 
   // Filtered options for dropdowns
   const filteredProjects = uniqueProjects.filter(project =>
@@ -121,15 +124,15 @@ export default function ActivityPage() {
   const getTransactionTypeBadge = (type) => {
     const typeLower = type?.toLowerCase() || "";
     if (typeLower === "request") {
-      return <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">REQUEST</span>;
+      return <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-semibold">REQUEST</span>;
     }
     if (typeLower === "return") {
-      return <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">RETURN</span>;
+      return <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-semibold">RETURN</span>;
     }
     if (typeLower === "restock") {
-      return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">RESTOCK</span>;
+      return <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-semibold">RESTOCK</span>;
     }
-    return <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">{type?.toUpperCase() || "N/A"}</span>;
+    return <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-semibold">{type?.toUpperCase() || "N/A"}</span>;
   };
 
   const formatDate = (dateString) => {
@@ -153,53 +156,53 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Recent Activity History</h1>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[95%] mx-auto px-10">
         {/* STATISTICS CARDS */}
         {!loading && history.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-              <div className="text-sm text-gray-600 font-medium">Total Transactions</div>
-              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border-l-4 border-blue-500 transition-colors">
+              <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total Transactions</div>
+              <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-1">{stats.total}</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
-              <div className="text-sm text-gray-600 font-medium">Requests</div>
-              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.requests}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border-l-4 border-red-500 transition-colors">
+              <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Requests</div>
+              <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-1">{stats.requests}</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-              <div className="text-sm text-gray-600 font-medium">Returns</div>
-              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.returns}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border-l-4 border-green-500 transition-colors">
+              <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Returns</div>
+              <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-1">{stats.returns}</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-              <div className="text-sm text-gray-600 font-medium">Restocks</div>
-              <div className="text-2xl font-bold text-gray-800 mt-1">{stats.restocks}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border-l-4 border-blue-500 transition-colors">
+              <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Restocks</div>
+              <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-1">{stats.restocks}</div>
             </div>
           </div>
         )}
 
         {/* FILTER SECTION */}
         {!loading && history.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Filters</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 transition-colors">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Filters</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               {/* Transaction Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Transaction Type</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transaction Type</label>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedType("all")}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                       selectedType === "all"
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-blue-600 dark:bg-blue-700 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
                     All
@@ -208,8 +211,8 @@ export default function ActivityPage() {
                     onClick={() => setSelectedType("request")}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                       selectedType === "request"
-                        ? "bg-red-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-red-600 dark:bg-red-700 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
                     Requests
@@ -218,8 +221,8 @@ export default function ActivityPage() {
                     onClick={() => setSelectedType("return")}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                       selectedType === "return"
-                        ? "bg-green-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-green-600 dark:bg-green-700 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
                     Returns
@@ -228,8 +231,8 @@ export default function ActivityPage() {
                     onClick={() => setSelectedType("restock")}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                       selectedType === "restock"
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-blue-600 dark:bg-blue-700 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
                     Restocks
@@ -239,7 +242,7 @@ export default function ActivityPage() {
 
               {/* Project Name Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Name</label>
                 <div className="relative" ref={projectRef}>
                   <input
                     type="text"
@@ -250,7 +253,7 @@ export default function ActivityPage() {
                     }}
                     onFocus={() => setShowProjectDropdown(true)}
                     placeholder="Search or select project"
-                    className="w-full p-2 border-2 border-gray-300 rounded-lg shadow-sm pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg shadow-sm pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     {selectedProject && (
@@ -289,9 +292,9 @@ export default function ActivityPage() {
                     </button>
                   </div>
                   {showProjectDropdown && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                    <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
                       {filteredProjects.length === 0 ? (
-                        <div className="p-3 text-gray-500">No matches found</div>
+                        <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
                       ) : (
                         filteredProjects.map((project) => (
                           <div
@@ -301,8 +304,8 @@ export default function ActivityPage() {
                               setProjectSearch(project);
                               setShowProjectDropdown(false);
                             }}
-                            className={`p-3 border-b hover:bg-blue-50 cursor-pointer ${
-                              selectedProject === project ? "bg-blue-100" : ""
+                            className={`p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-gray-200 ${
+                              selectedProject === project ? "bg-blue-100 dark:bg-gray-600" : ""
                             }`}
                           >
                             {project}
@@ -316,7 +319,7 @@ export default function ActivityPage() {
 
               {/* Test Area Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Test Area</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Test Area</label>
                 <div className="relative" ref={testAreaRef}>
                   <input
                     type="text"
@@ -327,7 +330,7 @@ export default function ActivityPage() {
                     }}
                     onFocus={() => setShowTestAreaDropdown(true)}
                     placeholder="Search or select test area"
-                    className="w-full p-2 border-2 border-gray-300 rounded-lg shadow-sm pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg shadow-sm pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     {selectedTestArea && (
@@ -339,7 +342,7 @@ export default function ActivityPage() {
                           setTestAreaSearch("");
                           setShowTestAreaDropdown(false);
                         }}
-                        className="text-gray-400 hover:text-red-600"
+                        className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
                         title="Clear selection"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,7 +353,7 @@ export default function ActivityPage() {
                     <button
                       type="button"
                       onClick={() => setShowTestAreaDropdown(!showTestAreaDropdown)}
-                      className="text-gray-600 hover:text-black"
+                      className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                     >
                       <svg
                         className={`w-5 h-5 transform transition-transform duration-200 ${
@@ -366,9 +369,9 @@ export default function ActivityPage() {
                     </button>
                   </div>
                   {showTestAreaDropdown && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                    <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
                       {filteredTestAreas.length === 0 ? (
-                        <div className="p-3 text-gray-500">No matches found</div>
+                        <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
                       ) : (
                         filteredTestAreas.map((area) => (
                           <div
@@ -378,8 +381,8 @@ export default function ActivityPage() {
                               setTestAreaSearch(area);
                               setShowTestAreaDropdown(false);
                             }}
-                            className={`p-3 border-b hover:bg-blue-50 cursor-pointer ${
-                              selectedTestArea === area ? "bg-blue-100" : ""
+                            className={`p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-gray-200 ${
+                              selectedTestArea === area ? "bg-blue-100 dark:bg-gray-600" : ""
                             }`}
                           >
                             {area}
@@ -402,7 +405,7 @@ export default function ActivityPage() {
                   setProjectSearch("");
                   setTestAreaSearch("");
                 }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
               >
                 Clear all filters
               </button>
@@ -411,16 +414,16 @@ export default function ActivityPage() {
         )}
 
         {/* MAIN TABLE */}
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden transition-colors">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="text-gray-500 mt-4">Loading activity history...</p>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+              <p className="text-gray-500 dark:text-gray-400 mt-4">Loading activity history...</p>
             </div>
           ) : filteredHistory.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-6xl mb-4">📋</div>
-              <p className="text-gray-500 text-lg font-medium">
+              <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">
                 {history.length === 0 ? "No activity yet." : `No ${selectedType === "all" ? "" : selectedType} transactions found.`}
               </p>
             </div>
@@ -428,53 +431,53 @@ export default function ActivityPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b-2 border-gray-200">
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Employee</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Part Number</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Description</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Project</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Test Area</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Fixture</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
-                    <th className="p-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                  <tr className="bg-gray-50 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600">
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Employee</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Part Number</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Description</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Project</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Test Area</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Fixture</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Quantity</th>
+                    <th className="p-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Date</th>
                   </tr>
                 </thead>
 
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredHistory.map((row, index) => (
                     <tr
                       key={row.transaction_id}
-                      className={`hover:bg-blue-50 transition-colors ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      className={`hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors ${
+                        index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-800/50"
                       }`}
                     >
                       <td className="p-4 whitespace-nowrap">{getTransactionTypeBadge(row.transaction_type)}</td>
                       <td className="p-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{row.employee_name}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-200">{row.employee_name}</div>
                       </td>
                       <td className="p-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-200">
                           {row.item_name || row.fixture_name || "N/A"}
                         </div>
                       </td>
                       <td className="p-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">{row.item_part_number || "N/A"}</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300">{row.item_part_number || "N/A"}</div>
                       </td>
                       <td className="p-4 max-w-xs">
-                        <div className="text-sm text-gray-700 truncate" title={row.item_description}>
+                        <div className="text-sm text-gray-700 dark:text-gray-300 truncate" title={row.item_description}>
                           {row.item_description || "N/A"}
                         </div>
                       </td>
                       <td className="p-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">{row.project_name || "N/A"}</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300">{row.project_name || "N/A"}</div>
                       </td>
                       <td className="p-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">{row.test_area || "N/A"}</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300">{row.test_area || "N/A"}</div>
                       </td>
                       <td className="p-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">
+                        <div className="text-sm text-gray-700 dark:text-gray-300">
                           {row.transaction_type?.toLowerCase() === "restock" ? "N/A" : (row.fixture_name || "N/A")}
                         </div>
                       </td>
@@ -482,7 +485,7 @@ export default function ActivityPage() {
                         <div className="text-sm font-semibold">{formatQuantity(row.transaction_type, row.quantity_used)}</div>
                       </td>
                       <td className="p-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">{formatDate(row.created_at)}</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300">{formatDate(row.created_at)}</div>
                       </td>
                     </tr>
                   ))}

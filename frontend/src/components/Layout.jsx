@@ -27,11 +27,11 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-blue-600 mb-6">MMIS</h1>
+      <aside className="w-64 bg-white dark:bg-gray-800 shadow-md p-6 space-y-4 transition-colors">
+        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-6">MMIS</h1>
 
         <nav className="space-y-2">
           {navItems.map((item) => {
@@ -42,8 +42,8 @@ export default function Layout({ children }) {
                 to={item.path}
                 className={`block px-4 py-3 rounded-lg transition-all duration-200 ${
                   active
-                    ? "bg-blue-600 text-white font-semibold shadow-md"
-                    : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                    ? "bg-blue-600 dark:bg-blue-700 text-white font-semibold shadow-md"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
                 }`}
               >
                 {item.label}
@@ -60,7 +60,7 @@ export default function Layout({ children }) {
         <Header showMMIS={false} />
 
         {/* Page Body */}
-        <main className="p-6 overflow-auto">
+        <main className="p-6 overflow-auto bg-gray-50 dark:bg-gray-900 transition-colors">
           {children}
         </main>
       </div>

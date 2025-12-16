@@ -39,23 +39,23 @@ export default function ReturnPage() {
   }, [employeeId, location.pathname]); // Refetch when location changes (e.g., navigating back)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Return</h1>
       </div>
 
       <div className="max-w-xl mx-auto px-4">
 
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">
+        <h2 className="text-xl font-semibold mb-6 text-gray-700 dark:text-gray-300">
           Select an Item to Return
         </h2>
 
         {/* NO TRANSACTIONS */}
         {transactions.length === 0 && (
-          <p className="text-center text-gray-500">
+          <p className="text-center text-gray-500 dark:text-gray-400">
             You have no active items to return.
           </p>
         )}
@@ -66,22 +66,22 @@ export default function ReturnPage() {
             <div
               key={tx.transaction_id}
               onClick={() => navigate(`/dashboard/return/item/${tx.transaction_id}`)}
-              className="p-4 bg-white border rounded-xl shadow cursor-pointer hover:bg-blue-100 transition"
+              className="p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors"
             >
-              <div className="font-semibold text-lg">{tx.item_name || `Item #${tx.item_id}`}</div>
+              <div className="font-semibold text-lg text-gray-800 dark:text-gray-200">{tx.item_name || `Item #${tx.item_id}`}</div>
 
-              <div className="text-gray-600 text-sm">
+              <div className="text-gray-600 dark:text-gray-400 text-sm">
                 {tx.remaining_quantity !== undefined && tx.remaining_quantity !== tx.quantity_used ? (
                   <>
                     <span className="font-semibold">Remaining to Return: {tx.remaining_quantity}</span>
-                    <span className="text-gray-500 ml-2">(of {tx.quantity_used} requested)</span>
+                    <span className="text-gray-500 dark:text-gray-500 ml-2">(of {tx.quantity_used} requested)</span>
                   </>
                 ) : (
                   <span>Quantity: {tx.quantity_used}</span>
                 )}
               </div>
 
-              <div className="text-gray-500 text-sm">
+              <div className="text-gray-500 dark:text-gray-400 text-sm">
                 Requested on: {tx.created_at.substring(0, 10)}
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function ReturnPage() {
 
         <div className="flex justify-center mt-12">
           <button
-            className="px-8 py-2 bg-gray-300 rounded hover:bg-gray-400 shadow"
+            className="px-8 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 shadow transition-colors"
             onClick={() => navigate(`/dashboard`)}
           >
             Back

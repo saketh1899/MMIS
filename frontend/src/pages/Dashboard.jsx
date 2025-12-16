@@ -191,7 +191,7 @@ export default function Dashboard() {
   return (
     <Layout>
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-8 shadow-lg mb-8">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white rounded-xl p-8 shadow-lg mb-8 transition-colors">
         <div>
           <h1 className="text-4xl font-bold tracking-wide mb-2">MMIS Dashboard</h1>
           <p className="text-lg opacity-90">
@@ -213,55 +213,55 @@ export default function Dashboard() {
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Total Inventory Items */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Items</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-2">{stats.totalItems}</p>
-                  <p className="text-xs text-gray-500 mt-1">Active inventory</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Items</p>
+                  <p className="text-3xl font-bold text-gray-800 dark:text-gray-200 mt-2">{stats.totalItems}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Active inventory</p>
                 </div>
                 <div className="text-4xl opacity-20">📦</div>
               </div>
             </div>
 
             {/* Low Stock Alerts */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500 hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate("/dashboard/alerts")}>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-red-500 hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate("/dashboard/alerts")}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Low Stock</p>
-                  <p className="text-3xl font-bold text-red-600 mt-2">{stats.lowStockCount}</p>
-                  <p className="text-xs text-gray-500 mt-1">{lowStockPercentage}% of total</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Low Stock</p>
+                  <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">{stats.lowStockCount}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{lowStockPercentage}% of total</p>
                 </div>
                 <div className="text-4xl opacity-20">⚠️</div>
               </div>
               {stats.lowStockCount > 0 && (
-                <div className="mt-3 bg-red-50 rounded p-2 text-xs text-red-700">
+                <div className="mt-3 bg-red-50 dark:bg-red-900/20 rounded p-2 text-xs text-red-700 dark:text-red-400">
                   Action required
                 </div>
               )}
             </div>
 
             {/* Total Transactions */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate("/dashboard/activity")}>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate("/dashboard/activity")}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Transactions</p>
-                  <p className="text-3xl font-bold text-purple-600 mt-2">{stats.totalTransactions}</p>
-                  <p className="text-xs text-gray-500 mt-1">All time</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Transactions</p>
+                  <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{stats.totalTransactions}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">All time</p>
                 </div>
                 <div className="text-4xl opacity-20">📊</div>
               </div>
             </div>
 
             {/* Active Requests */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Today's Activity</p>
-                        <p className="text-3xl font-bold text-green-600 mt-2">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Today's Activity</p>
+                        <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">
                           {stats.todayActivity}
                         </p>
-                  <p className="text-xs text-gray-500 mt-1">Today's transactions</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Today's transactions</p>
                 </div>
                 <div className="text-4xl opacity-20">⚡</div>
               </div>
@@ -271,30 +271,30 @@ export default function Dashboard() {
           {/* Recent Activity & Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800">Recent Activity</h3>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">Recent Activity</h3>
                 <button
                   onClick={() => navigate("/dashboard/activity")}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                 >
                   View All →
                 </button>
               </div>
               {recentActivity.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No recent activity</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">No recent activity</p>
               ) : (
                 <div className="space-y-3">
                   {recentActivity.map((activity) => (
                     <div
                       key={activity.transaction_id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{getTransactionTypeIcon(activity.transaction_type)}</span>
                         <div>
-                          <p className="text-sm font-medium text-gray-800">{activity.item_name}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{activity.item_name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {activity.employee_name} • {formatDate(activity.created_at)}
                           </p>
                         </div>
@@ -310,36 +310,36 @@ export default function Dashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => navigate("/dashboard/request")}
-                  className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-center transition"
+                  className="p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-center transition"
                 >
                   <div className="text-3xl mb-2">📤</div>
-                  <div className="text-sm font-semibold text-blue-700">Request Item</div>
+                  <div className="text-sm font-semibold text-blue-700 dark:text-blue-400">Request Item</div>
                 </button>
                 <button
                   onClick={() => navigate("/dashboard/return")}
-                  className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-center transition"
+                  className="p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg text-center transition"
                 >
                   <div className="text-3xl mb-2">📥</div>
-                  <div className="text-sm font-semibold text-green-700">Return Item</div>
+                  <div className="text-sm font-semibold text-green-700 dark:text-green-400">Return Item</div>
                 </button>
                 <button
                   onClick={() => navigate("/dashboard/restock")}
-                  className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-center transition"
+                  className="p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg text-center transition"
                 >
                   <div className="text-3xl mb-2">📦</div>
-                  <div className="text-sm font-semibold text-purple-700">Restock</div>
+                  <div className="text-sm font-semibold text-purple-700 dark:text-purple-400">Restock</div>
                 </button>
                 <button
                   onClick={() => navigate("/dashboard/reports")}
-                  className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-center transition"
+                  className="p-4 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg text-center transition"
                 >
                   <div className="text-3xl mb-2">📊</div>
-                  <div className="text-sm font-semibold text-orange-700">Reports</div>
+                  <div className="text-sm font-semibold text-orange-700 dark:text-orange-400">Reports</div>
                 </button>
               </div>
             </div>

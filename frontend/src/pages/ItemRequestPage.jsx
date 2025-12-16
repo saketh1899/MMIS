@@ -62,37 +62,37 @@ export default function ItemRequestPage() {
   };
 
   // MUST COME AFTER HOOKS
-  if (!item) return <h2 className="text-center mt-10">Loading...</h2>;
+  if (!item) return <h2 className="text-center mt-10 text-gray-500 dark:text-gray-400">Loading...</h2>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Request Item</h1>
       </div>
 
       <div className="max-w-3xl mx-auto">
 
         {/* ITEM CARD */}
-        <div className="bg-white border rounded-xl shadow p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-2">{item.item_name}</h2>
-          <p><strong>Part Number:</strong> {item.item_part_number}</p>
-          <p><strong>Description:</strong> {item.item_description}</p>
-          <p><strong>Manufacturer:</strong> {item.item_manufacturer}</p>
+        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-6 mb-8 transition-colors">
+          <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-gray-200">{item.item_name}</h2>
+          <p className="text-gray-700 dark:text-gray-300"><strong>Part Number:</strong> {item.item_part_number}</p>
+          <p className="text-gray-700 dark:text-gray-300"><strong>Description:</strong> {item.item_description}</p>
+          <p className="text-gray-700 dark:text-gray-300"><strong>Manufacturer:</strong> {item.item_manufacturer}</p>
 
-          <p className="mt-3 font-bold text-green-600 text-lg">
+          <p className="mt-3 font-bold text-green-600 dark:text-green-400 text-lg">
             Current Quantity: {item.item_current_quantity}
           </p>
         </div>
 
         {/* FORM */}
-        <div className="bg-white border rounded-xl shadow p-6 flex flex-col gap-4">
+        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-6 flex flex-col gap-4 transition-colors">
 
-          <label className="font-semibold">Fixture</label>
+          <label className="font-semibold text-gray-700 dark:text-gray-300">Fixture</label>
           <select
-            className="border p-2 rounded"
+            className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded transition-colors"
             value={fixture}
             onChange={(e) => setFixture(e.target.value)}
           >
@@ -104,33 +104,33 @@ export default function ItemRequestPage() {
             ))}
           </select>
 
-          <label className="font-semibold">Quantity</label>
+          <label className="font-semibold text-gray-700 dark:text-gray-300">Quantity</label>
           <input
             type="number"
             min="1"
-            className="border p-2 rounded"
+            className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded transition-colors"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             placeholder="Enter quantity"
           />
 
-          <label className="font-semibold">Remarks (Optional)</label>
+          <label className="font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
           <input
             type="text"
-            className="border p-2 rounded"
+            className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded transition-colors"
             placeholder="Any notes..."
           />
 
           <div className="flex justify-center gap-6 mt-6">
             <button
-              className="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              className="px-6 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
               onClick={() => navigate(-1)}
             >
               Back
             </button>
 
             <button
-              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
               onClick={submitRequest}
             >
               Submit Request

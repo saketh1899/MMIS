@@ -224,9 +224,11 @@ def get_transactions_by_employee(db: Session, emp_id: int):
         # Convert to int to ensure proper type
         total_returned = int(total_returned) if total_returned else 0
         
-        # Only include if not fully returned (total_returned < quantity_used)
-        if total_returned < row.quantity_used:
-            remaining_quantity = row.quantity_used - total_returned
+        # Calculate remaining quantity
+        remaining_quantity = row.quantity_used - total_returned
+        
+        # Only include if not fully returned (remaining_quantity > 0)
+        if remaining_quantity > 0:
             transactions.append({
                 "transaction_id": row.transaction_id,
                 "item_id": row.item_id,

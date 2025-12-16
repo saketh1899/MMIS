@@ -1,7 +1,8 @@
 # backend/app/schemas.py
-from pydantic import BaseModel   # Base class for creating Pydantic data validation models
+from pydantic import BaseModel, validator   # Base class for creating Pydantic data validation models
 from datetime import datetime, date
-from typing import Optional  # Allows defining optional (nullable) fields
+from typing import Optional, Union  # Allows defining optional (nullable) fields
+from decimal import Decimal
 
 # ===== Employee =====
 # Schema for creating a new employee (used for POST requests)
@@ -34,11 +35,22 @@ class InventoryBase(BaseModel):
     item_current_quantity: int
     item_min_count: int
     item_unit: Optional[str]
+    item_unit_price: Optional[Union[str, Decimal, float]] = None
     item_manufacturer: Optional[str]
     item_type: Optional[str]
     test_area: Optional[str]
     project_name: Optional[str]
     item_life_cycle: Optional[int]
+
+    @validator('item_unit_price', pre=True)
+    def convert_decimal_to_string(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, Decimal):
+            return str(v)
+        if isinstance(v, (int, float)):
+            return str(v)
+        return v
 
 
 class RequestCreate(BaseModel):
@@ -53,6 +65,7 @@ class InventoryOut(InventoryBase):
     created_at: datetime
     class Config:
         from_attributes = True
+    
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # ===== Transaction =====
 # Base schema for creating or updating a transaction
@@ -80,6 +93,7 @@ class TransactionOut(BaseModel):
     item_part_number: Optional[str] = None
     item_description: Optional[str] = None
     item_manufacturer: Optional[str] = None
+    item_unit_price: Optional[str] = None
     test_area: Optional[str] = None
     project_name: Optional[str] = None
 
@@ -107,6 +121,8 @@ class FixtureBase(BaseModel):
     fixture_name: str
     test_area: str
     project_name: str
+    asset_tag: str
+    fixture_serial_number: str
 
 class FixtureOut(FixtureBase):
     fixture_id: int

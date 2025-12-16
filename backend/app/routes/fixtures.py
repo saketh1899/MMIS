@@ -36,6 +36,32 @@ def filter_fixtures(
     return query.order_by(models.Fixture.fixture_name).all()
 
 
+@router.get("/{fixture_id}", response_model=schemas.FixtureOut)
+def get_single_fixture(fixture_id: int, db: Session = Depends(get_db)):
+    """Get a single fixture by ID."""
+    fixture = db.query(models.Fixture).filter(models.Fixture.fixture_id == fixture_id).first()
+    if not fixture:
+        raise HTTPException(status_code=404, detail="Fixture not found")
+    return fixture
+
+
+@router.put("/{fixture_id}", response_model=schemas.FixtureOut)
+def update_fixture(fixture_id: int, fixture: schemas.FixtureBase, db: Session = Depends(get_db)):
+    """Update an existing fixture by ID."""
+    db_fixture = db.query(models.Fixture).filter(models.Fixture.fixture_id == fixture_id).first()
+    if not db_fixture:
+        raise HTTPException(status_code=404, detail="Fixture not found")
+    
+    # Update all fields
+    update_data = fixture.dict()
+    for key, value in update_data.items():
+        setattr(db_fixture, key, value)
+    
+    db.commit()
+    db.refresh(db_fixture)
+    return db_fixture
+
+
 @router.post("/", response_model=schemas.FixtureOut)
 def add_fixture(data: dict, db: Session = Depends(get_db)):
     """Add a new fixture and create transaction record if employee_id provided."""

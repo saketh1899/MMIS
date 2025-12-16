@@ -27,8 +27,8 @@ export default function RestockTestAreaPage() {
 
   // Check if user is admin
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+      <p className="text-gray-500 dark:text-gray-400">Loading...</p>
     </div>;
   }
 
@@ -36,7 +36,8 @@ export default function RestockTestAreaPage() {
     return <AccessDenied feature="the Restock feature" />;
   }
 
-  const testAreas = [
+  // Regular test areas
+  const regularTestAreas = [
     "ICT_Mobo",
     "BSI_Mobo",
     "FBT_Mobo",
@@ -45,21 +46,31 @@ export default function RestockTestAreaPage() {
     "TOOLS",
   ];
 
+  // Test areas for Common project
+  const commonTestAreas = [
+    "Hi-Lo",
+    "Flying Probe",
+    "Development",
+  ];
+
+  // Select test areas based on project
+  const testAreas = project === "Common" ? commonTestAreas : regularTestAreas;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Restock</h1>
       </div>
 
       {/* SUBTITLE */}
-      <p className="text-center font-semibold text-gray-700 mb-2 text-lg">
-        Project: <span className="text-blue-600">{project}</span>
+      <p className="text-center font-semibold text-gray-700 dark:text-gray-300 mb-2 text-lg">
+        Project: <span className="text-blue-600 dark:text-blue-400">{project}</span>
       </p>
 
-      <p className="text-center font-semibold text-gray-700 mb-6 text-lg">
+      <p className="text-center font-semibold text-gray-700 dark:text-gray-300 mb-6 text-lg">
         Select Test Area
       </p>
 
@@ -71,10 +82,10 @@ export default function RestockTestAreaPage() {
             onClick={() =>
               navigate(`/dashboard/restock/items?project=${project}&test_area=${area}`)
             }
-            className="border p-8 text-center rounded-xl bg-white cursor-pointer 
-                       hover:bg-blue-100 hover:shadow-lg transition-all shadow-md"
+            className="border dark:border-gray-700 p-8 text-center rounded-xl bg-white dark:bg-gray-800 cursor-pointer 
+                       hover:bg-blue-100 dark:hover:bg-gray-700 hover:shadow-lg transition-all shadow-md"
           >
-            <span className="font-semibold text-gray-800 text-lg">{area}</span>
+            <span className="font-semibold text-gray-800 dark:text-gray-200 text-lg">{area}</span>
           </div>
         ))}
       </div>
@@ -82,7 +93,7 @@ export default function RestockTestAreaPage() {
       {/* BACK BUTTON */}
       <div className="flex justify-center mt-12 mb-8">
         <button
-          className="px-8 py-2 bg-blue-200 rounded hover:bg-blue-300 shadow"
+          className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
           onClick={() => navigate("/dashboard/restock")}
         >
           Back

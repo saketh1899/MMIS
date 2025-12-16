@@ -108,8 +108,8 @@ export default function RestockItemPage() {
   // Check if user is admin
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+        <p className="text-gray-500 dark:text-gray-400">Loading...</p>
       </div>
     );
   }
@@ -121,12 +121,12 @@ export default function RestockItemPage() {
   // Show error if missing parameters
   if (!project || !test_area) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Missing project or test area parameters</p>
+          <p className="text-red-500 dark:text-red-400 mb-4">Missing project or test area parameters</p>
           <button
             onClick={() => navigate("/dashboard/restock/project")}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
             Go Back to Projects
           </button>
@@ -147,17 +147,17 @@ export default function RestockItemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors" style={{ minHeight: '100vh' }}>
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Search Inventory</h1>
       </div>
 
-      <p className="text-center mt-4 text-gray-700 font-semibold text-lg">
-        Project: <span className="text-blue-600">{project}</span> — Test Area:{" "}
-        <span className="text-blue-600">{test_area}</span>
+      <p className="text-center mt-4 text-gray-700 dark:text-gray-300 font-semibold text-lg">
+        Project: <span className="text-blue-600 dark:text-blue-400">{project}</span> — Test Area:{" "}
+        <span className="text-blue-600 dark:text-blue-400">{test_area}</span>
       </p>
 
       <div className="p-6 rounded-lg w-full max-w-4xl mx-auto mt-6">
@@ -167,7 +167,7 @@ export default function RestockItemPage() {
           <input
             ref={searchRef}
             type="text"
-            className="w-full p-3 pl-3 pr-10 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 pl-3 pr-10 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
             placeholder="Search Bar with dropdown"
             value={searchInput}
             onChange={handleSearch}
@@ -183,7 +183,7 @@ export default function RestockItemPage() {
               e.stopPropagation();
               setShowDropdown(prev => !prev);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black transition"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition"
           >
             <svg
               className={`w-5 h-5 transform transition-transform duration-200 ${
@@ -202,11 +202,11 @@ export default function RestockItemPage() {
           {showDropdown && items.length > 0 && (
             <div
               ref={dropdownRef}
-              className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-[400px] overflow-y-auto z-50"
+              className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-[400px] overflow-y-auto z-50 transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {filteredItems.length === 0 ? (
-                <div className="p-3 text-center text-gray-500">
+                <div className="p-3 text-center text-gray-500 dark:text-gray-400">
                   No items found matching "{searchInput}"
                 </div>
               ) : (
@@ -218,13 +218,13 @@ export default function RestockItemPage() {
                       setShowDropdown(false);
                       setSearchInput("");
                     }}
-                    className="p-3 border-b hover:bg-blue-50 cursor-pointer transition"
+                    className="p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer transition-colors"
                   >
-                    <div className="font-semibold text-gray-900">{item.item_name}</div>
-                    <div className="text-sm text-gray-700 mt-1">
+                    <div className="font-semibold text-gray-900 dark:text-gray-200">{item.item_name}</div>
+                    <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
                       {item.item_description || "No description"}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1 flex gap-4">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex gap-4">
                       <span>ID: {item.item_id}</span>
                       <span>Part #: {item.item_part_number || "N/A"}</span>
                       <span>Qty: {item.item_current_quantity}</span>
@@ -240,11 +240,11 @@ export default function RestockItemPage() {
       {/* ITEM INFORMATION BLOCKS */}
       <div className="mt-4 max-w-5xl mx-auto px-6">
         {itemsLoading ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
             <p>Loading items...</p>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
             <p className="text-lg font-semibold mb-2">
               {searchInput ? `No items found matching "${searchInput}"` : "No items found for this project and test area."}
             </p>
@@ -254,7 +254,7 @@ export default function RestockItemPage() {
                   setSearchInput("");
                   setFilteredItems(items);
                 }}
-                className="text-blue-600 hover:text-blue-800 underline"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
               >
                 Clear search
               </button>
@@ -262,26 +262,26 @@ export default function RestockItemPage() {
           </div>
         ) : (
           <>
-            <div className="mb-4 text-sm text-gray-600">
+            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
               Showing {filteredItems.length} of {items.length} item{items.length !== 1 ? 's' : ''}
             </div>
             {filteredItems.map((item) => (
               <div
                 key={item.item_id}
                 onClick={() => handleSelect(item)}
-                className="bg-white border rounded-lg p-4 shadow-md cursor-pointer hover:bg-blue-50 transition mb-3"
+                className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4 shadow-md cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors mb-3"
               >
-                <h3 className="text-lg font-bold mb-2">{item.item_name}</h3>
+                <h3 className="text-lg font-bold mb-2 text-gray-800 dark:text-gray-200">{item.item_name}</h3>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div><strong>Description:</strong> <span className="text-gray-700">{item.item_description || "N/A"}</span></div>
-                  <div><strong>ID:</strong> <span className="text-gray-700">{item.item_id}</span></div>
-                  <div><strong>Part Number:</strong> <span className="text-gray-700">{item.item_part_number || "N/A"}</span></div>
-                  <div><strong>Current Quantity:</strong> <span className="text-gray-700 font-semibold">{item.item_current_quantity}</span></div>
-                  <div><strong>Test Area:</strong> <span className="text-gray-700">{item.test_area || "N/A"}</span></div>
-                  <div><strong>Unit:</strong> <span className="text-gray-700">{item.item_unit || "N/A"}</span></div>
-                  <div><strong>Minimum Count:</strong> <span className="text-gray-700">{item.item_min_count}</span></div>
-                  <div><strong>Manufacturer:</strong> <span className="text-gray-700">{item.item_manufacturer || "N/A"}</span></div>
-                  <div className="col-span-2"><strong>Project Name:</strong> <span className="text-gray-700">{item.project_name || "N/A"}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">Description:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_description || "N/A"}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">ID:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_id}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">Part Number:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_part_number || "N/A"}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">Current Quantity:</strong> <span className="text-gray-700 dark:text-gray-300 font-semibold">{item.item_current_quantity}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">Test Area:</strong> <span className="text-gray-700 dark:text-gray-300">{item.test_area || "N/A"}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">Unit:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_unit || "N/A"}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">Minimum Count:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_min_count}</span></div>
+                  <div><strong className="text-gray-700 dark:text-gray-300">Manufacturer:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_manufacturer || "N/A"}</span></div>
+                  <div className="col-span-2"><strong className="text-gray-700 dark:text-gray-300">Project Name:</strong> <span className="text-gray-700 dark:text-gray-300">{item.project_name || "N/A"}</span></div>
                 </div>
               </div>
             ))}
@@ -292,14 +292,14 @@ export default function RestockItemPage() {
       {/* Back Button */}
       <div className="flex justify-center mt-10 mb-8">
         <button
-          className="px-8 py-2 bg-blue-200 rounded hover:bg-blue-300 shadow"
+          className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
           onClick={() =>
               navigate(`/dashboard/restock/test-area?project=${project}`)
-            }
-          >
-            Back
-          </button>
-        </div>
+          }
+        >
+          Back
+        </button>
+      </div>
       </div>
   );
 }

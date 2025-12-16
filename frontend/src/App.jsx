@@ -20,9 +20,11 @@ import RestockEditItemPage from "./pages/RestockEditItemPage";
 import RestockNewStockPage from "./pages/RestockNewStockPage";
 import RestockAddNewPage from "./pages/RestockAddNewPage";
 import RestockNewFixturePage from "./pages/RestockNewFixturePage";
+import RestockEditFixturePage from "./pages/RestockEditFixturePage";
 import CurrentInventoryReportPage from "./pages/CurrentInventoryReportPage";
 import LowStockReportPage from "./pages/LowStockReportPage";
 import CustomizedReportPage from "./pages/CustomizedReportPage";
+import SpendingReportPage from "./pages/SpendingReportPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 
@@ -181,6 +183,15 @@ export default function App() {
         />
 
         <Route
+          path="/dashboard/restock/fixture/:fixture_id/edit"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RestockEditFixturePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/reports"
           element={
             <ProtectedRoute allowedRoles={["admin", "user"]}>
@@ -212,6 +223,15 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["admin", "user"]}>
               <CustomizedReportPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/reports/spending"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <SpendingReportPage />
             </ProtectedRoute>
           }
         />

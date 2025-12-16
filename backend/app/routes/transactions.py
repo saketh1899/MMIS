@@ -41,6 +41,7 @@ def get_all(
             models.Inventory.item_part_number,
             models.Inventory.item_description,
             models.Inventory.item_manufacturer,
+            models.Inventory.item_unit_price,
             models.Transaction.test_area,  # Use test_area from Transaction (works for both inventory and fixtures)
             models.Transaction.project_name,  # Use project_name from Transaction (works for both inventory and fixtures)
             models.Fixture.fixture_name,
@@ -97,28 +98,22 @@ def get_all(
             "item_part_number": row[5],
             "item_description": row[6],
             "item_manufacturer": row[7],
-            "test_area": row[8],
-            "project_name": row[9],
-            "fixture_name": row[10],
-            "employee_name": row[11],
+            "item_unit_price": str(row[8]) if row[8] is not None else None,  # Convert Decimal to string
+            "test_area": row[9],
+            "project_name": row[10],
+            "fixture_name": row[11],
+            "employee_name": row[12],
         })
 
     return transactions
 
-"""
-@router.get("/user/{employee_id}", response_model=list[schemas.TransactionOut])
+@router.get("/user/{employee_id}")
 def get_user_transactions(employee_id: int, db: Session = Depends(get_db)):
-    
-    Returns all active (not returned) REQUEST transactions for this user.
-    
-    return (
-        db.query(models.Transaction)
-        .filter(models.Transaction.employee_id == employee_id)
-        .filter(models.Transaction.transaction_type == "request")
-        .order_by(models.Transaction.created_at.desc())
-        .all()
-    )
-"""
+    """
+    Returns all active (not fully returned) REQUEST transactions for this user.
+    Includes remaining_quantity calculation.
+    """
+    return crud.get_transactions_by_employee(db, employee_id)
 
 
 @router.get("/user/{employee_id}", response_model=list[schemas.TransactionOut])

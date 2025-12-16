@@ -28,12 +28,14 @@ export default function RestockEditItemPage() {
     item_type: "",
     item_life_cycle: "",
     item_current_quantity: "",
+    item_unit_price: "",
     quantity_to_add: "", // New field for quantity being added
     remarks: "",
   });
   const [employeeId, setEmployeeId] = useState(null);
   const [accessLevel, setAccessLevel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Load employee_id and access level
@@ -73,6 +75,7 @@ export default function RestockEditItemPage() {
           item_type: itemData.item_type || "",
           item_life_cycle: itemData.item_life_cycle || "",
           item_current_quantity: itemData.item_current_quantity || "",
+          item_unit_price: itemData.item_unit_price || "",
           quantity_to_add: "", // Initialize empty
           remarks: "",
         });
@@ -83,8 +86,8 @@ export default function RestockEditItemPage() {
   // NOW WE CAN DO CONDITIONAL RETURNS AFTER ALL HOOKS
   // Check if user is admin
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+      <p className="text-gray-500 dark:text-gray-400">Loading...</p>
     </div>;
   }
 
@@ -109,6 +112,27 @@ export default function RestockEditItemPage() {
     try {
       const quantityToAdd = parseFloat(formData.quantity_to_add);
 
+      // If in edit mode, update item details first
+      if (isEditMode) {
+        const updateData = {
+          item_name: formData.item_name,
+          item_part_number: formData.item_part_number || null,
+          item_description: formData.item_description || null,
+          test_area: formData.test_area || null,
+          project_name: formData.project_name || null,
+          item_unit: formData.item_unit || null,
+          item_min_count: parseInt(formData.item_min_count) || 0,
+          item_manufacturer: formData.item_manufacturer || null,
+          item_type: formData.item_type || null,
+          item_life_cycle: parseInt(formData.item_life_cycle) || 0,
+          item_unit_price: formData.item_unit_price || null,
+          item_current_quantity: parseInt(formData.item_current_quantity) || 0, // This will be ignored by backend
+        };
+
+        await API.put(`/inventory/${item_id}`, updateData);
+      }
+
+      // Then restock the item
       await API.post("/inventory/restock", {
         item_id: parseInt(item_id),
         quantity: quantityToAdd,
@@ -116,7 +140,7 @@ export default function RestockEditItemPage() {
         employee_id: employeeId,
       });
 
-      alert("Item restocked successfully!");
+      alert(isEditMode ? "Item updated and restocked successfully!" : "Item restocked successfully!");
       navigate(`/dashboard/restock/items?project=${project}&test_area=${test_area}`);
     } catch (err) {
       console.error(err);
@@ -124,157 +148,238 @@ export default function RestockEditItemPage() {
     }
   };
 
-  if (!item) return <h2 className="text-center mt-10">Loading...</h2>;
+  if (!item) return <h2 className="text-center mt-10 text-gray-500 dark:text-gray-400">Loading...</h2>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Restock</h1>
       </div>
 
       <div className="max-w-5xl mx-auto px-8">
+        {/* EDIT MODE TOGGLE */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`px-6 py-2 rounded shadow transition ${
+              isEditMode
+                ? "bg-red-600 dark:bg-red-700 text-white hover:bg-red-700 dark:hover:bg-red-600"
+                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+            }`}
+          >
+            {isEditMode ? "Cancel Edit" : "Edit Details"}
+          </button>
+        </div>
+
         {/* FORM */}
-        <div className="bg-white border rounded-xl shadow p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-6 mb-8 transition-colors">
           <div className="grid grid-cols-2 gap-6 mb-6">
             {/* LEFT COLUMN */}
             <div className="space-y-4">
               <div>
-                <label className="block mb-2 font-semibold">Item ID</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Item ID</label>
                 <input
                   type="text"
                   name="item_id"
                   value={formData.item_id}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
+                  className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
                   readOnly
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Name</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Name</label>
                 <input
                   type="text"
                   name="item_name"
                   value={formData.item_name}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                  readOnly={!isEditMode}
+                  required={isEditMode}
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Part Number</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Part Number</label>
                 <input
                   type="text"
                   name="item_part_number"
                   value={formData.item_part_number}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                  readOnly={!isEditMode}
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Description</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Description</label>
                 <input
                   type="text"
                   name="item_description"
                   value={formData.item_description}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                  readOnly={!isEditMode}
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Test Area</label>
-                <input
-                  type="text"
-                  name="test_area"
-                  value={formData.test_area}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
-                />
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Test Area</label>
+                {isEditMode ? (
+                  <select
+                    name="test_area"
+                    value={formData.test_area}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                  >
+                    <option value="">Select Test Area</option>
+                    <option value="ICT_Mobo">ICT_Mobo</option>
+                    <option value="BSI_Mobo">BSI_Mobo</option>
+                    <option value="FBT_Mobo">FBT_Mobo</option>
+                    <option value="ICT_Agora">ICT_Agora</option>
+                    <option value="FBT_Agora">FBT_Agora</option>
+                    <option value="TOOLS">TOOLS</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    name="test_area"
+                    value={formData.test_area}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                    readOnly
+                  />
+                )}
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Project Name</label>
-                <input
-                  type="text"
-                  name="project_name"
-                  value={formData.project_name}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
-                />
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Project Name</label>
+                {isEditMode ? (
+                  <select
+                    name="project_name"
+                    value={formData.project_name}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                  >
+                    <option value="">Select Project</option>
+                    <option value="Common">Common</option>
+                    <option value="Astoria">Astoria</option>
+                    <option value="Athena">Athena</option>
+                    <option value="Turin">Turin</option>
+                    <option value="Bondi Beach">Bondi Beach</option>
+                    <option value="Zebra Beach">Zebra Beach</option>
+                    <option value="Mandolin Beach">Mandolin Beach</option>
+                    <option value="Gulp">Gulp</option>
+                    <option value="Xena">Xena</option>
+                    <option value="Agora">Agora</option>
+                    <option value="Humu Beach">Humu Beach</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    name="project_name"
+                    value={formData.project_name}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                    readOnly
+                  />
+                )}
               </div>
             </div>
 
             {/* RIGHT COLUMN */}
             <div className="space-y-4">
               <div>
-                <label className="block mb-2 font-semibold">Unit</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Unit</label>
                 <input
                   type="text"
                   name="item_unit"
                   value={formData.item_unit}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
                   placeholder="liters, lbs"
-                  readOnly
+                  readOnly={!isEditMode}
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Minimum Count</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Minimum Count</label>
                 <input
                   type="number"
                   name="item_min_count"
                   value={formData.item_min_count}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                  readOnly={!isEditMode}
+                  min="0"
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Manufacturer</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Manufacturer</label>
                 <input
                   type="text"
                   name="item_manufacturer"
                   value={formData.item_manufacturer}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                  readOnly={!isEditMode}
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Type</label>
-                <input
-                  type="text"
-                  name="item_type"
-                  value={formData.item_type}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
-                />
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Type</label>
+                {isEditMode ? (
+                  <select
+                    name="item_type"
+                    value={formData.item_type}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                  >
+                    <option value="">Select Type</option>
+                    <option value="part">Part</option>
+                    <option value="tool">Tool</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    name="item_type"
+                    value={formData.item_type}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                    readOnly
+                  />
+                )}
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Life Cycle</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Life Cycle</label>
                 <input
                   type="number"
                   name="item_life_cycle"
                   value={formData.item_life_cycle}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded bg-gray-100"
-                  readOnly
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                  readOnly={!isEditMode}
+                  min="0"
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold">Current Quantity</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Current Quantity</label>
                 <input
                   type="number"
                   name="item_current_quantity"
                   value={formData.item_current_quantity}
                   readOnly
-                  className="w-full p-2 border rounded bg-gray-100"
+                  className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Unit Price</label>
+                <input
+                  type="text"
+                  name="item_unit_price"
+                  value={formData.item_unit_price}
+                  onChange={handleChange}
+                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                  placeholder="e.g., 12.50"
+                  readOnly={!isEditMode}
                 />
               </div>
             </div>
@@ -283,13 +388,13 @@ export default function RestockEditItemPage() {
           {/* BOTTOM FIELDS */}
           <div className="space-y-4">
             <div>
-              <label className="block mb-2 font-semibold">Adding Quantity</label>
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Adding Quantity</label>
               <input
                 type="number"
                 name="quantity_to_add"
                 value={formData.quantity_to_add}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
                 placeholder="Enter quantity to add"
                 min="0"
                 step="0.01"
@@ -297,13 +402,13 @@ export default function RestockEditItemPage() {
               />
             </div>
             <div>
-              <label className="block mb-2 font-semibold">Remarks (Optional)</label>
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
               <input
                 type="text"
                 name="remarks"
                 value={formData.remarks}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
                 placeholder="Any notes..."
               />
             </div>
@@ -313,17 +418,17 @@ export default function RestockEditItemPage() {
         {/* ACTION BUTTONS */}
         <div className="flex justify-center gap-6 mb-8">
           <button
-            className="px-8 py-2 bg-blue-200 rounded hover:bg-blue-300 shadow"
+            className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
             onClick={() => navigate(`/dashboard/restock/items?project=${project}&test_area=${test_area}`)}
           >
             Back
           </button>
 
           <button
-            className="px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow"
+            className="px-8 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 shadow transition-colors"
             onClick={handleRestock}
           >
-            Restock
+            Submit Restock
           </button>
         </div>
       </div>

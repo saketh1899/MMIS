@@ -41,17 +41,17 @@ export default function RequestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Search Inventory</h1>
       </div>
 
-      <p className="text-center mt-4 text-gray-700 font-semibold text-lg">
-        Project: <span className="text-blue-600">{project}</span> — Test Area:{" "}
-        <span className="text-blue-600">{test_area}</span>
+      <p className="text-center mt-4 text-gray-700 dark:text-gray-300 font-semibold text-lg">
+        Project: <span className="text-blue-600 dark:text-blue-400">{project}</span> — Test Area:{" "}
+        <span className="text-blue-600 dark:text-blue-400">{test_area}</span>
       </p>
 
       <div className="p-6 rounded-lg w-full max-w-4xl mx-auto mt-6">
@@ -61,7 +61,7 @@ export default function RequestPage() {
           <input
             ref={searchRef}
             type="text"
-            className="w-full p-3 pl-3 pr-10 border rounded shadow-sm"
+            className="w-full p-3 pl-3 pr-10 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm transition-colors"
             placeholder="Search or select by item name..."
             value={searchInput}
             onChange={handleSearch}
@@ -73,7 +73,7 @@ export default function RequestPage() {
               e.stopPropagation();
               setShowDropdown(prev => !prev);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black transition"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition"
           >
             <svg
               className={`w-5 h-5 transform transition-transform duration-200 ${
@@ -94,7 +94,7 @@ export default function RequestPage() {
           {/* DROPDOWN RESULTS (Works with search + arrow click) */}
           {showDropdown && (
             <div
-              className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-[500px] overflow-y-auto z-50"
+              className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-[500px] overflow-y-auto z-50 transition-colors"
               onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
             >
             {(searchInput ? filteredItems : items).map((item) => (
@@ -104,13 +104,13 @@ export default function RequestPage() {
                 handleSelect(item);
                 setShowDropdown(false);
               }}
-              className="p-3 border-b hover:bg-blue-50 cursor-pointer"
+              className="p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer transition-colors"
             >
-              <div className="font-semibold">{item.item_name}</div>
-              <div className="text-sm text-gray-700">
+              <div className="font-semibold text-gray-800 dark:text-gray-200">{item.item_name}</div>
+              <div className="text-sm text-gray-700 dark:text-gray-300">
                 {item.item_description}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 Qty: {item.item_current_quantity} | Part #: {item.item_part_number}
               </div>
             </div>
@@ -122,7 +122,7 @@ export default function RequestPage() {
     {/* Back Button */}
     <div className="flex justify-center mt-10">
       <button
-        className="px-8 py-2 bg-gray-300 rounded hover:bg-gray-400 shadow"
+        className="px-8 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 shadow transition-colors"
         onClick={() =>
             navigate(`/dashboard/request/test-area?project=${project}`)
           }

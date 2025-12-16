@@ -35,6 +35,7 @@ export default function CustomizedReportPage() {
   ];
 
   const projects = [
+    "Common",
     "Astoria",
     "Athena",
     "Turin",
@@ -167,21 +168,21 @@ export default function CustomizedReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
-        <h1 className="text-3xl font-bold">Reports</h1>
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
+        <h1 className="text-3xl font-bold">Customized Report</h1>
       </div>
 
 
       {/* FILTER FORM */}
       <div className="max-w-4xl mx-auto px-8 mb-8">
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6 transition-colors">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Test Area:</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Test Area:</label>
               <div className="relative" ref={testAreaRef}>
                 <input
                   type="text"
@@ -192,7 +193,7 @@ export default function CustomizedReportPage() {
                   }}
                   onFocus={() => setShowTestAreaDropdown(true)}
                   placeholder="Search with Dropdown"
-                  className="w-full p-2 border rounded shadow-sm pr-20"
+                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm pr-20 transition-colors"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   {testArea && (
@@ -204,7 +205,7 @@ export default function CustomizedReportPage() {
                         setTestAreaSearch("");
                         setShowTestAreaDropdown(false);
                       }}
-                      className="text-gray-400 hover:text-red-600"
+                      className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
                       title="Clear selection"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +216,7 @@ export default function CustomizedReportPage() {
                   <button
                     type="button"
                     onClick={() => setShowTestAreaDropdown(!showTestAreaDropdown)}
-                    className="text-gray-600 hover:text-black"
+                    className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                   >
                     <svg
                       className={`w-5 h-5 transform transition-transform duration-200 ${
@@ -231,9 +232,9 @@ export default function CustomizedReportPage() {
                   </button>
                 </div>
                 {showTestAreaDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                  <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
                     {filteredTestAreas.length === 0 ? (
-                      <div className="p-3 text-gray-500">No matches found</div>
+                      <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
                     ) : (
                       filteredTestAreas.map((area) => (
                         <div
@@ -243,8 +244,8 @@ export default function CustomizedReportPage() {
                             setTestAreaSearch(area);
                             setShowTestAreaDropdown(false);
                           }}
-                          className={`p-3 border-b hover:bg-blue-50 cursor-pointer ${
-                            testArea === area ? "bg-blue-100" : ""
+                          className={`p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-gray-200 ${
+                            testArea === area ? "bg-blue-100 dark:bg-gray-600" : ""
                           }`}
                         >
                           {area}
@@ -256,7 +257,7 @@ export default function CustomizedReportPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">project_name:</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Project Name:</label>
               <div className="relative" ref={projectRef}>
                 <input
                   type="text"
@@ -267,7 +268,7 @@ export default function CustomizedReportPage() {
                   }}
                   onFocus={() => setShowProjectDropdown(true)}
                   placeholder="Search with Dropdown"
-                  className="w-full p-2 border rounded shadow-sm pr-20"
+                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm pr-20 transition-colors"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   {projectName && (
@@ -279,7 +280,7 @@ export default function CustomizedReportPage() {
                         setProjectSearch("");
                         setShowProjectDropdown(false);
                       }}
-                      className="text-gray-400 hover:text-red-600"
+                      className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
                       title="Clear selection"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,7 +291,7 @@ export default function CustomizedReportPage() {
                   <button
                     type="button"
                     onClick={() => setShowProjectDropdown(!showProjectDropdown)}
-                    className="text-gray-600 hover:text-black"
+                    className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                   >
                     <svg
                       className={`w-5 h-5 transform transition-transform duration-200 ${
@@ -306,9 +307,9 @@ export default function CustomizedReportPage() {
                   </button>
                 </div>
                 {showProjectDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                  <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
                     {filteredProjects.length === 0 ? (
-                      <div className="p-3 text-gray-500">No matches found</div>
+                      <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
                     ) : (
                       filteredProjects.map((project) => (
                         <div
@@ -318,8 +319,8 @@ export default function CustomizedReportPage() {
                             setProjectSearch(project);
                             setShowProjectDropdown(false);
                           }}
-                          className={`p-3 border-b hover:bg-blue-50 cursor-pointer ${
-                            projectName === project ? "bg-blue-100" : ""
+                          className={`p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-gray-200 ${
+                            projectName === project ? "bg-blue-100 dark:bg-gray-600" : ""
                           }`}
                         >
                           {project}
@@ -331,11 +332,11 @@ export default function CustomizedReportPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Transaction Type:</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Transaction Type:</label>
               <select
                 value={transactionType}
                 onChange={(e) => setTransactionType(e.target.value)}
-                className="w-full p-2 border rounded shadow-sm"
+                className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm transition-colors"
               >
                 <option value="">All Types</option>
                 <option value="request">Request</option>
@@ -345,21 +346,21 @@ export default function CustomizedReportPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date:</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Start Date:</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-2 border rounded shadow-sm"
+                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">End Date:</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">End Date:</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-2 border rounded shadow-sm"
+                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm transition-colors"
                 />
               </div>
             </div>
@@ -369,14 +370,14 @@ export default function CustomizedReportPage() {
           <div className="flex justify-center gap-4 mt-6">
             <button
               onClick={() => navigate("/dashboard/reports")}
-              className="px-8 py-2 bg-blue-200 rounded hover:bg-blue-300 shadow"
+              className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
             >
               Back
             </button>
             <button
               onClick={generateReport}
               disabled={loading}
-              className="px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow disabled:bg-gray-400"
+              className="px-8 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 shadow disabled:bg-gray-400 dark:disabled:bg-gray-600 transition-colors"
             >
               {loading ? "Generating..." : "Generate"}
             </button>
@@ -387,12 +388,12 @@ export default function CustomizedReportPage() {
       {/* RESULTS TABLE */}
       {transactions.length > 0 && (
         <div className="max-w-6xl mx-auto px-8 mb-8">
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6 transition-colors">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Report Results ({transactions.length} transactions)</h2>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Report Results ({transactions.length} transactions)</h2>
               <button
                 onClick={downloadCSV}
-                className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow"
+                className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 shadow transition-colors"
               >
                 Download CSV
               </button>
@@ -400,16 +401,16 @@ export default function CustomizedReportPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-100 border-b">
-                    <th className="p-3 text-left">Date</th>
-                    <th className="p-3 text-left">Type</th>
-                    <th className="p-3 text-left">Employee</th>
-                    <th className="p-3 text-left">Item</th>
-                    <th className="p-3 text-left">Part Number</th>
-                    <th className="p-3 text-left">Quantity</th>
-                    <th className="p-3 text-left">Fixture</th>
-                    <th className="p-3 text-left">Test Area</th>
-                    <th className="p-3 text-left">Project</th>
+                  <tr className="bg-gray-100 dark:bg-gray-700 border-b dark:border-gray-600">
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Date</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Type</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Employee</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Item</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Part Number</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Quantity</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Fixture</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Test Area</th>
+                    <th className="p-3 text-left text-gray-700 dark:text-gray-300">Project</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -417,21 +418,21 @@ export default function CustomizedReportPage() {
                     <tr 
                       key={tx.transaction_id} 
                       onClick={() => setSelectedTransactionId(tx.transaction_id)}
-                      className={`border-b cursor-pointer transition-colors ${
+                      className={`border-b dark:border-gray-700 cursor-pointer transition-colors ${
                         selectedTransactionId === tx.transaction_id 
-                          ? "bg-blue-100 hover:bg-blue-200" 
-                          : "hover:bg-gray-50"
+                          ? "bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/40" 
+                          : "hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <td className="p-3">{new Date(tx.created_at).toLocaleString()}</td>
-                      <td className="p-3">{tx.transaction_type}</td>
-                      <td className="p-3">{tx.employee_name}</td>
-                      <td className={`p-3 ${selectedTransactionId === tx.transaction_id ? "text-blue-700 font-bold" : ""}`}>{tx.item_name}</td>
-                      <td className="p-3">{tx.item_part_number || "N/A"}</td>
-                      <td className="p-3">{tx.quantity_used}</td>
-                      <td className="p-3">{tx.fixture_name}</td>
-                      <td className="p-3">{tx.test_area || "N/A"}</td>
-                      <td className="p-3">{tx.project_name || "N/A"}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{new Date(tx.created_at).toLocaleString()}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{tx.transaction_type}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{tx.employee_name}</td>
+                      <td className={`p-3 text-gray-800 dark:text-gray-200 ${selectedTransactionId === tx.transaction_id ? "text-blue-700 dark:text-blue-400 font-bold" : ""}`}>{tx.item_name || "N/A"}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{tx.item_part_number || "N/A"}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{tx.quantity_used}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{tx.fixture_name || "N/A"}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{tx.test_area || "N/A"}</td>
+                      <td className="p-3 text-gray-800 dark:text-gray-200">{tx.project_name || "N/A"}</td>
                     </tr>
                   ))}
                 </tbody>
