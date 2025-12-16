@@ -132,7 +132,7 @@ export default function CurrentInventoryReportPage() {
     } else {
       headers = [
         "Fixture ID",
-        "Fixture Name",
+        "Fixture Number",
         "Test Area",
         "Project Name",
         "Asset Tag",
@@ -425,7 +425,7 @@ export default function CurrentInventoryReportPage() {
                   <thead>
                     <tr className="bg-gray-100 dark:bg-gray-700 border-b dark:border-gray-600">
                       <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Fixture ID</th>
-                      <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Fixture Name</th>
+                      <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Fixture Number</th>
                       <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Test Area</th>
                       <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Project Name</th>
                       <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Asset Tag</th>

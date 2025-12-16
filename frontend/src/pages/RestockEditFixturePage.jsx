@@ -14,6 +14,7 @@ export default function RestockEditFixturePage() {
     fixture_name: "",
     test_area: "",
     project_name: "",
+    fixture_number: "", // Extracted number from fixture_name
     asset_tag: "",
     fixture_serial_number: "",
   });
@@ -75,6 +76,18 @@ export default function RestockEditFixturePage() {
     setLoading(false);
   }, []);
 
+  // Extract fixture number from fixture_name (format: project_testarea_number)
+  const extractFixtureNumber = (fixtureName, projectName, testArea) => {
+    if (!fixtureName || !projectName || !testArea) return "";
+    const prefix = `${projectName}_${testArea}_`;
+    if (fixtureName.startsWith(prefix)) {
+      return fixtureName.replace(prefix, "");
+    }
+    // Fallback: try to extract number from end
+    const parts = fixtureName.split("_");
+    return parts[parts.length - 1] || "";
+  };
+
   // Load fixture details
   useEffect(() => {
     if (!fixture_id) return;
@@ -83,19 +96,38 @@ export default function RestockEditFixturePage() {
       .then((res) => {
         const fixtureData = res.data;
         setFixture(fixtureData);
+        const projectName = fixtureData.project_name || "";
+        const testArea = fixtureData.test_area || "";
+        const fixtureNumber = extractFixtureNumber(
+          fixtureData.fixture_name || "",
+          projectName,
+          testArea
+        );
         setFormData({
           fixture_id: fixtureData.fixture_id || "",
           fixture_name: fixtureData.fixture_name || "",
-          test_area: fixtureData.test_area || "",
-          project_name: fixtureData.project_name || "",
+          test_area: testArea,
+          project_name: projectName,
+          fixture_number: fixtureNumber,
           asset_tag: fixtureData.asset_tag || "",
           fixture_serial_number: fixtureData.fixture_serial_number || "",
         });
-        setProjectSearch(fixtureData.project_name || "");
-        setTestAreaSearch(fixtureData.test_area || "");
+        setProjectSearch(projectName);
+        setTestAreaSearch(testArea);
       })
       .catch((err) => console.error("Error loading fixture:", err));
   }, [fixture_id]);
+
+  // Auto-generate fixture_name from project_name, test_area, and fixture_number
+  useEffect(() => {
+    if (formData.project_name && formData.test_area && formData.fixture_number) {
+      const generatedName = `${formData.project_name}_${formData.test_area}_${formData.fixture_number}`;
+      setFormData((prev) => ({
+        ...prev,
+        fixture_name: generatedName,
+      }));
+    }
+  }, [formData.project_name, formData.test_area, formData.fixture_number]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -116,8 +148,8 @@ export default function RestockEditFixturePage() {
 
   // Check if user is admin
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Loading...</p>
+    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+      <p className="text-gray-500 dark:text-gray-400">Loading...</p>
     </div>;
   }
 
@@ -127,15 +159,26 @@ export default function RestockEditFixturePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // For fixture_number, only allow numeric input
+    if (name === "fixture_number") {
+      // Remove any non-numeric characters
+      const numericValue = value.replace(/[^0-9]/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleUpdate = async () => {
-    if (!formData.fixture_name) {
-      alert("Please fill in Fixture Name");
+    if (!formData.fixture_number) {
+      alert("Please fill in Fixture Number");
       return;
     }
     if (!formData.project_name) {
@@ -155,9 +198,12 @@ export default function RestockEditFixturePage() {
       return;
     }
 
+    // Generate final fixture_name
+    const finalFixtureName = `${formData.project_name}_${formData.test_area}_${formData.fixture_number}`;
+
     try {
       await API.put(`/fixtures/${fixture_id}`, {
-        fixture_name: formData.fixture_name,
+        fixture_name: finalFixtureName,
         project_name: formData.project_name,
         test_area: formData.test_area,
         asset_tag: formData.asset_tag,
@@ -172,35 +218,35 @@ export default function RestockEditFixturePage() {
     }
   };
 
-  if (!fixture) return <h2 className="text-center mt-10">Loading...</h2>;
+  if (!fixture) return <h2 className="text-center mt-10 text-gray-500 dark:text-gray-400">Loading...</h2>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Edit Fixture</h1>
       </div>
 
       <div className="max-w-2xl mx-auto px-8">
         {/* FORM */}
-        <div className="bg-white border rounded-xl shadow-lg p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-lg p-8 mb-8 transition-colors">
           <div className="space-y-6">
             {/* Fixture ID - Read Only */}
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">Fixture ID</label>
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Fixture ID</label>
               <input
                 type="text"
                 value={formData.fixture_id}
                 readOnly
-                className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
+                className="w-full p-3 border dark:border-gray-600 border-gray-300 rounded-md bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
               />
             </div>
 
             {/* Project Name - Searchable Dropdown */}
             <div className="relative" ref={projectRef}>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
                 Project Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -212,10 +258,10 @@ export default function RestockEditFixturePage() {
                 }}
                 onFocus={() => setShowProjectDropdown(true)}
                 placeholder="Select Project Name"
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               />
               {showProjectDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border dark:border-gray-600 border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto transition-colors">
                   {filteredProjects.length > 0 ? (
                     filteredProjects.map((proj) => (
                       <div
@@ -225,13 +271,13 @@ export default function RestockEditFixturePage() {
                           setProjectSearch(proj);
                           setShowProjectDropdown(false);
                         }}
-                        className="p-2 hover:bg-blue-50 cursor-pointer text-gray-700"
+                        className="p-2 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-700 dark:text-gray-300 transition-colors"
                       >
                         {proj}
                       </div>
                     ))
                   ) : (
-                    <div className="p-2 text-gray-500">No project found</div>
+                    <div className="p-2 text-gray-500 dark:text-gray-400">No project found</div>
                   )}
                 </div>
               )}
@@ -239,7 +285,7 @@ export default function RestockEditFixturePage() {
 
             {/* Test Area - Searchable Dropdown */}
             <div className="relative" ref={testAreaRef}>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
                 Test Area <span className="text-red-500">*</span>
               </label>
               <input
@@ -251,10 +297,10 @@ export default function RestockEditFixturePage() {
                 }}
                 onFocus={() => setShowTestAreaDropdown(true)}
                 placeholder="Select Test Area"
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               />
               {showTestAreaDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border dark:border-gray-600 border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto transition-colors">
                   {filteredTestAreas.length > 0 ? (
                     filteredTestAreas.map((area) => (
                       <div
@@ -264,37 +310,46 @@ export default function RestockEditFixturePage() {
                           setTestAreaSearch(area);
                           setShowTestAreaDropdown(false);
                         }}
-                        className="p-2 hover:bg-blue-50 cursor-pointer text-gray-700"
+                        className="p-2 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-700 dark:text-gray-300 transition-colors"
                       >
                         {area}
                       </div>
                     ))
                   ) : (
-                    <div className="p-2 text-gray-500">No test area found</div>
+                    <div className="p-2 text-gray-500 dark:text-gray-400">No test area found</div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Fixture Name */}
+            {/* Fixture Number */}
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
-                Fixture Name <span className="text-red-500">*</span>
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                Fixture Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                name="fixture_name"
-                value={formData.fixture_name}
+                name="fixture_number"
+                value={formData.fixture_number}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
-                placeholder="e.g., Bondi_ICT_01"
+                placeholder="e.g., 01"
+                pattern="[0-9]+"
+                title="Please enter only numbers"
               />
+              {formData.project_name && formData.test_area && formData.fixture_number && (
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  Full Fixture Name: <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    {formData.project_name}_{formData.test_area}_{formData.fixture_number}
+                  </span>
+                </p>
+              )}
             </div>
 
             {/* Asset Tag */}
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
                 Asset Tag <span className="text-red-500">*</span>
               </label>
               <input
@@ -302,7 +357,7 @@ export default function RestockEditFixturePage() {
                 name="asset_tag"
                 value={formData.asset_tag}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
                 placeholder="Enter asset tag"
               />
@@ -310,7 +365,7 @@ export default function RestockEditFixturePage() {
 
             {/* Fixture Serial Number */}
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
                 Fixture Serial Number <span className="text-red-500">*</span>
               </label>
               <input
@@ -318,7 +373,7 @@ export default function RestockEditFixturePage() {
                 name="fixture_serial_number"
                 value={formData.fixture_serial_number}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
                 placeholder="Enter fixture serial number"
               />
@@ -329,14 +384,14 @@ export default function RestockEditFixturePage() {
         {/* ACTION BUTTONS */}
         <div className="flex justify-center gap-6 mb-8">
           <button
-            className="px-8 py-3 bg-blue-200 text-blue-800 rounded-md hover:bg-blue-300 shadow-md font-medium transition-colors"
+            className="px-8 py-3 bg-blue-200 dark:bg-blue-700 dark:text-white text-blue-800 rounded-md hover:bg-blue-300 dark:hover:bg-blue-600 shadow-md font-medium transition-colors"
             onClick={() => navigate("/dashboard/reports/current-inventory")}
           >
             Back
           </button>
 
           <button
-            className="px-8 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-md font-medium transition-colors"
+            className="px-8 py-3 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 shadow-md font-medium transition-colors"
             onClick={handleUpdate}
           >
             Update Fixture

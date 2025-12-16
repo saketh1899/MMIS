@@ -46,6 +46,7 @@ export default function RestockNewFixturePage() {
     fixture_name: "",
     project_name: "",
     test_area: "",
+    fixture_number: "", // User enters only the number part
     asset_tag: "",
     fixture_serial_number: "",
   });
@@ -105,6 +106,17 @@ export default function RestockNewFixturePage() {
     }
   }, [formData.test_area]);
 
+  // Auto-generate fixture_name from project_name, test_area, and fixture_number
+  useEffect(() => {
+    if (formData.project_name && formData.test_area && formData.fixture_number) {
+      const generatedName = `${formData.project_name}_${formData.test_area}_${formData.fixture_number}`;
+      setFormData((prev) => ({
+        ...prev,
+        fixture_name: generatedName,
+      }));
+    }
+  }, [formData.project_name, formData.test_area, formData.fixture_number]);
+
   // Check if user is admin
   if (loading) {
     return (
@@ -120,15 +132,26 @@ export default function RestockNewFixturePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // For fixture_number, only allow numeric input
+    if (name === "fixture_number") {
+      // Remove any non-numeric characters
+      const numericValue = value.replace(/[^0-9]/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async () => {
-    if (!formData.fixture_name) {
-      alert("Please fill in all required fields. Fixture Name is required.");
+    if (!formData.fixture_number) {
+      alert("Please fill in all required fields. Fixture Number is required.");
       return;
     }
     if (!formData.project_name) {
@@ -148,9 +171,12 @@ export default function RestockNewFixturePage() {
       return;
     }
 
+    // Generate final fixture_name
+    const finalFixtureName = `${formData.project_name}_${formData.test_area}_${formData.fixture_number}`;
+
     try {
       await API.post("/fixtures/", {
-        fixture_name: formData.fixture_name,
+        fixture_name: finalFixtureName,
         project_name: formData.project_name,
         test_area: formData.test_area,
         asset_tag: formData.asset_tag,
@@ -257,20 +283,29 @@ export default function RestockNewFixturePage() {
               )}
             </div>
 
-            {/* Fixture Name */}
+            {/* Fixture Number */}
             <div>
               <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
-                Fixture Name <span className="text-red-500">*</span>
+                Fixture Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                name="fixture_name"
-                value={formData.fixture_name}
+                name="fixture_number"
+                value={formData.fixture_number}
                 onChange={handleChange}
                 className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
-                placeholder="e.g., Bondi_ICT_01"
+                placeholder="e.g., 01"
+                pattern="[0-9]+"
+                title="Please enter only numbers"
               />
+              {formData.project_name && formData.test_area && formData.fixture_number && (
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  Full Fixture Name: <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    {formData.project_name}_{formData.test_area}_{formData.fixture_number}
+                  </span>
+                </p>
+              )}
             </div>
 
             {/* Asset Tag */}
