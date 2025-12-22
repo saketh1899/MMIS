@@ -127,6 +127,15 @@ export default function ReturnItemPage() {
     }
   };
 
+  // Helper function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Otherwise, prepend the API base URL
+    return `http://127.0.0.1:8000${imageUrl}`;
+  };
+
   if (!tx) return <h2 className="text-center mt-10">Loading...</h2>;
 
   return (
@@ -142,18 +151,44 @@ export default function ReturnItemPage() {
 
         {/* TRANSACTION BOX */}
         <div className="border p-4 rounded-xl bg-gray-50 mb-8">
-            <h2 className="text-2xl text-center font-bold mb-2">{tx.item_name}</h2>
-
-            <p><strong>Description:</strong> {tx.item_description || "N/A"}</p>
-            <p><strong>Part Number:</strong> {tx.item_part_number || "N/A"}</p>
-            <p><strong>Manufacturer:</strong> {tx.item_manufacturer || "N/A"}</p>
-
-            <p><strong>Fixture:</strong> {tx.fixture_name || "N/A"}</p>
-            <p><strong>Quantity Taken:</strong> {tx.quantity_used}</p>
-            {tx.remaining_quantity !== undefined && tx.remaining_quantity !== tx.quantity_used && (
-              <p><strong>Remaining to Return:</strong> {tx.remaining_quantity}</p>
-            )}
-            <p><strong>Date Requested:</strong> {tx.created_at.substring(0, 10)}</p>
+          <div className="flex gap-6">
+            {/* Item Image */}
+            <div className="flex-shrink-0">
+              {getImageUrl(tx.item_image_url) ? (
+                <img 
+                  src={getImageUrl(tx.item_image_url)} 
+                  alt={tx.item_name || `Item #${tx.item_id}`}
+                  className="w-48 h-48 object-cover rounded-lg border shadow-md"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div 
+                className="w-48 h-48 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-sm shadow-md"
+                style={{ display: getImageUrl(tx.item_image_url) ? 'none' : 'flex' }}
+              >
+                No Image
+              </div>
+            </div>
+            
+            {/* Item Details */}
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-3">{tx.item_name || `Item #${tx.item_id}`}</h2>
+              <div className="space-y-2">
+                <p><strong>Description:</strong> {tx.item_description || "N/A"}</p>
+                <p><strong>Part Number:</strong> {tx.item_part_number || "N/A"}</p>
+                <p><strong>Manufacturer:</strong> {tx.item_manufacturer || "N/A"}</p>
+                <p><strong>Fixture:</strong> {tx.fixture_name || "N/A"}</p>
+                <p><strong>Quantity Taken:</strong> {tx.quantity_used}</p>
+                {tx.remaining_quantity !== undefined && tx.remaining_quantity !== tx.quantity_used && (
+                  <p><strong>Remaining to Return:</strong> {tx.remaining_quantity}</p>
+                )}
+                <p><strong>Date Requested:</strong> {tx.created_at.substring(0, 10)}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* RETURN QUANTITY */}

@@ -189,6 +189,7 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
         "item_part_number": tx.item.item_part_number,
         "item_description": tx.item.item_description,
         "item_manufacturer": tx.item.item_manufacturer,
+        "item_image_url": tx.item.item_image_url,
 
         # Fixture info
         "fixture_name": tx.fixture.fixture_name,

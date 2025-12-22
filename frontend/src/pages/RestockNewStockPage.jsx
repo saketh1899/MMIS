@@ -51,11 +51,15 @@ export default function RestockNewStockPage() {
     item_manufacturer: "",
     item_type: "",
     item_life_cycle: "",
+    item_image_url: "",
     remarks: "",
   });
   const [employeeId, setEmployeeId] = useState(null);
   const [accessLevel, setAccessLevel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   // Load employee_id and access level
   useEffect(() => {
@@ -92,6 +96,53 @@ export default function RestockNewStockPage() {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedFile) {
+      return null;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await fetch("http://127.0.0.1:8000/inventory/upload-image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      setUploading(false);
+      return data.image_url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setUploading(false);
+      alert("Failed to upload image. Please try again.");
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.item_name || !formData.item_current_quantity) {
       alert("Please fill in required fields (Item Name and Current Quantity)");
@@ -99,6 +150,16 @@ export default function RestockNewStockPage() {
     }
 
     try {
+      // Upload image first if file is selected
+      let imageUrl = formData.item_image_url;
+      if (selectedFile) {
+        imageUrl = await handleImageUpload();
+        if (!imageUrl && !formData.item_image_url) {
+          // User selected file but upload failed, and no manual URL provided
+          return; // Don't proceed if upload failed
+        }
+      }
+
       await API.post("/inventory/", {
         item_name: formData.item_name,
         project_name: formData.project_name,
@@ -112,6 +173,7 @@ export default function RestockNewStockPage() {
         item_manufacturer: formData.item_manufacturer || null,
         item_type: formData.item_type || null,
         item_life_cycle: parseInt(formData.item_life_cycle) || null,
+        item_image_url: imageUrl || null,
         employee_id: employeeId,  // Include employee_id for activity history
       });
 
@@ -283,6 +345,51 @@ export default function RestockNewStockPage() {
                   onChange={handleChange}
                   className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
                 />
+              </div>
+              <div>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                  Item Image
+                </label>
+                
+                {/* File Upload */}
+                <div className="mb-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Upload an image file (JPG, PNG, GIF, WebP)
+                  </p>
+                </div>
+
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mb-3">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded border dark:border-gray-600"
+                    />
+                  </div>
+                )}
+
+                {/* Manual URL Input (Alternative) */}
+                <div>
+                  <label className="block mb-2 text-sm text-gray-600 dark:text-gray-400">
+                    Or enter image URL manually:
+                  </label>
+                  <input
+                    type="text"
+                    name="item_image_url"
+                    value={formData.item_image_url}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
+                    placeholder="/uploads/item_images/filename.jpg or https://..."
+                    disabled={!!selectedFile}
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -170,6 +170,7 @@ def get_transactions_by_employee(db: Session, emp_id: int):
             models.Inventory.item_part_number.label("item_part_number"),
             models.Inventory.item_description.label("item_description"),
             models.Inventory.item_manufacturer.label("item_manufacturer"),
+            models.Inventory.item_image_url.label("item_image_url"),
             models.Inventory.test_area.label("test_area"),
             models.Inventory.project_name.label("project_name"),
 
@@ -242,6 +243,7 @@ def get_transactions_by_employee(db: Session, emp_id: int):
                 "item_part_number": row.item_part_number,
                 "item_description": row.item_description,
                 "item_manufacturer": row.item_manufacturer,
+                "item_image_url": row.item_image_url,
                 "test_area": row.test_area,
                 "project_name": row.project_name,
                 "fixture_name": row.fixture_name,

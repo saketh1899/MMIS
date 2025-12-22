@@ -41,6 +41,7 @@ class InventoryBase(BaseModel):
     test_area: Optional[str]
     project_name: Optional[str]
     item_life_cycle: Optional[int]
+    item_image_url: Optional[str] = None
 
     @validator('item_unit_price', pre=True)
     def convert_decimal_to_string(cls, v):
@@ -94,6 +95,7 @@ class TransactionOut(BaseModel):
     item_description: Optional[str] = None
     item_manufacturer: Optional[str] = None
     item_unit_price: Optional[str] = None
+    item_image_url: Optional[str] = None
     test_area: Optional[str] = None
     project_name: Optional[str] = None
 

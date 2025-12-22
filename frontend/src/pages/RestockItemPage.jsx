@@ -146,6 +146,15 @@ export default function RestockItemPage() {
     navigate(`/dashboard/restock/item/${item.item_id}/edit?project=${project}&test_area=${test_area}`);
   };
 
+  // Helper function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Otherwise, prepend the API base URL
+    return `http://127.0.0.1:8000${imageUrl}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors" style={{ minHeight: '100vh' }}>
       <Header />
@@ -218,16 +227,37 @@ export default function RestockItemPage() {
                       setShowDropdown(false);
                       setSearchInput("");
                     }}
-                    className="p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                    className="p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer transition-colors flex items-center gap-4"
                   >
-                    <div className="font-semibold text-gray-900 dark:text-gray-200">{item.item_name}</div>
-                    <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                      {item.item_description || "No description"}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex gap-4">
-                      <span>ID: {item.item_id}</span>
-                      <span>Part #: {item.item_part_number || "N/A"}</span>
-                      <span>Qty: {item.item_current_quantity}</span>
+                    {/* Item Image */}
+                    {getImageUrl(item.item_image_url) ? (
+                      <div className="flex-shrink-0">
+                        <img 
+                          src={getImageUrl(item.item_image_url)} 
+                          alt={item.item_name}
+                          className="w-16 h-16 object-cover rounded border dark:border-gray-600"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs">
+                        No Image
+                      </div>
+                    )}
+                    
+                    {/* Item Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-gray-200">{item.item_name}</div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                        {item.item_description || "No description"}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex gap-4">
+                        <span>ID: {item.item_id}</span>
+                        <span>Part #: {item.item_part_number || "N/A"}</span>
+                        <span>Qty: {item.item_current_quantity}</span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -269,19 +299,40 @@ export default function RestockItemPage() {
               <div
                 key={item.item_id}
                 onClick={() => handleSelect(item)}
-                className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4 shadow-md cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors mb-3"
+                className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4 shadow-md cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors mb-3 flex gap-4"
               >
-                <h3 className="text-lg font-bold mb-2 text-gray-800 dark:text-gray-200">{item.item_name}</h3>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div><strong className="text-gray-700 dark:text-gray-300">Description:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_description || "N/A"}</span></div>
-                  <div><strong className="text-gray-700 dark:text-gray-300">ID:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_id}</span></div>
-                  <div><strong className="text-gray-700 dark:text-gray-300">Part Number:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_part_number || "N/A"}</span></div>
-                  <div><strong className="text-gray-700 dark:text-gray-300">Current Quantity:</strong> <span className="text-gray-700 dark:text-gray-300 font-semibold">{item.item_current_quantity}</span></div>
-                  <div><strong className="text-gray-700 dark:text-gray-300">Test Area:</strong> <span className="text-gray-700 dark:text-gray-300">{item.test_area || "N/A"}</span></div>
-                  <div><strong className="text-gray-700 dark:text-gray-300">Unit:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_unit || "N/A"}</span></div>
-                  <div><strong className="text-gray-700 dark:text-gray-300">Minimum Count:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_min_count}</span></div>
-                  <div><strong className="text-gray-700 dark:text-gray-300">Manufacturer:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_manufacturer || "N/A"}</span></div>
-                  <div className="col-span-2"><strong className="text-gray-700 dark:text-gray-300">Project Name:</strong> <span className="text-gray-700 dark:text-gray-300">{item.project_name || "N/A"}</span></div>
+                {/* Item Image */}
+                {getImageUrl(item.item_image_url) ? (
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={getImageUrl(item.item_image_url)} 
+                      alt={item.item_name}
+                      className="w-24 h-24 object-cover rounded border dark:border-gray-600"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-shrink-0 w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs">
+                    No Image
+                  </div>
+                )}
+                
+                {/* Item Details */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold mb-2 text-gray-800 dark:text-gray-200">{item.item_name}</h3>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><strong className="text-gray-700 dark:text-gray-300">Description:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_description || "N/A"}</span></div>
+                    <div><strong className="text-gray-700 dark:text-gray-300">ID:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_id}</span></div>
+                    <div><strong className="text-gray-700 dark:text-gray-300">Part Number:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_part_number || "N/A"}</span></div>
+                    <div><strong className="text-gray-700 dark:text-gray-300">Current Quantity:</strong> <span className="text-gray-700 dark:text-gray-300 font-semibold">{item.item_current_quantity}</span></div>
+                    <div><strong className="text-gray-700 dark:text-gray-300">Test Area:</strong> <span className="text-gray-700 dark:text-gray-300">{item.test_area || "N/A"}</span></div>
+                    <div><strong className="text-gray-700 dark:text-gray-300">Unit:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_unit || "N/A"}</span></div>
+                    <div><strong className="text-gray-700 dark:text-gray-300">Minimum Count:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_min_count}</span></div>
+                    <div><strong className="text-gray-700 dark:text-gray-300">Manufacturer:</strong> <span className="text-gray-700 dark:text-gray-300">{item.item_manufacturer || "N/A"}</span></div>
+                    <div className="col-span-2"><strong className="text-gray-700 dark:text-gray-300">Project Name:</strong> <span className="text-gray-700 dark:text-gray-300">{item.project_name || "N/A"}</span></div>
+                  </div>
                 </div>
               </div>
             ))}

@@ -29,6 +29,7 @@ export default function RestockEditItemPage() {
     item_life_cycle: "",
     item_current_quantity: "",
     item_unit_price: "",
+    item_image_url: "",
     quantity_to_add: "", // New field for quantity being added
     remarks: "",
   });
@@ -36,6 +37,9 @@ export default function RestockEditItemPage() {
   const [accessLevel, setAccessLevel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Load employee_id and access level
@@ -76,6 +80,7 @@ export default function RestockEditItemPage() {
           item_life_cycle: itemData.item_life_cycle || "",
           item_current_quantity: itemData.item_current_quantity || "",
           item_unit_price: itemData.item_unit_price || "",
+          item_image_url: itemData.item_image_url || "",
           quantity_to_add: "", // Initialize empty
           remarks: "",
         });
@@ -103,6 +108,56 @@ export default function RestockEditItemPage() {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedFile) {
+      return null;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await fetch(`http://127.0.0.1:8000/inventory/upload-image/${item_id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      setUploading(false);
+      setFormData(prev => ({ ...prev, item_image_url: data.image_url }));
+      setSelectedFile(null);
+      setImagePreview(null);
+      return data.image_url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setUploading(false);
+      alert("Failed to upload image. Please try again.");
+      return null;
+    }
+  };
+
   const handleRestock = async () => {
     if (!formData.quantity_to_add || parseFloat(formData.quantity_to_add) <= 0) {
       alert("Please enter a valid quantity to add (must be greater than 0)");
@@ -126,6 +181,7 @@ export default function RestockEditItemPage() {
           item_type: formData.item_type || null,
           item_life_cycle: parseInt(formData.item_life_cycle) || 0,
           item_unit_price: formData.item_unit_price || null,
+          item_image_url: formData.item_image_url || null,
           item_current_quantity: parseInt(formData.item_current_quantity) || 0, // This will be ignored by backend
         };
 
@@ -381,6 +437,90 @@ export default function RestockEditItemPage() {
                   placeholder="e.g., 12.50"
                   readOnly={!isEditMode}
                 />
+              </div>
+              <div>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                  Item Image
+                </label>
+                
+                {/* Current Image Display */}
+                {formData.item_image_url && !imagePreview && (
+                  <div className="mb-3">
+                    <img
+                      src={`http://127.0.0.1:8000${formData.item_image_url}`}
+                      alt="Current item"
+                      className="w-32 h-32 object-cover rounded border dark:border-gray-600"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* File Upload (only in edit mode) */}
+                {isEditMode && (
+                  <>
+                    <div className="mb-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Upload a new image file (JPG, PNG, GIF, WebP)
+                      </p>
+                    </div>
+
+                    {/* Image Preview */}
+                    {imagePreview && (
+                      <div className="mb-3">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-32 h-32 object-cover rounded border dark:border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleImageUpload}
+                          disabled={uploading}
+                          className="mt-2 px-4 py-1 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                        >
+                          {uploading ? "Uploading..." : "Upload Image"}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Manual URL Input (Alternative, only in edit mode) */}
+                {isEditMode && (
+                  <div>
+                    <label className="block mb-2 text-sm text-gray-600 dark:text-gray-400">
+                      Or enter image URL manually:
+                    </label>
+                    <input
+                      type="text"
+                      name="item_image_url"
+                      value={formData.item_image_url}
+                      onChange={handleChange}
+                      className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
+                      placeholder="/uploads/item_images/filename.jpg or https://..."
+                      disabled={!!selectedFile}
+                    />
+                  </div>
+                )}
+
+                {/* Read-only display when not in edit mode */}
+                {!isEditMode && (
+                  <input
+                    type="text"
+                    name="item_image_url"
+                    value={formData.item_image_url || "No image"}
+                    readOnly
+                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                  />
+                )}
               </div>
             </div>
           </div>

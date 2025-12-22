@@ -40,6 +40,15 @@ export default function RequestPage() {
     navigate(`/dashboard/request/item/${item.item_id}?project=${project}&test_area=${test_area}`);
   };
 
+  // Helper function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Otherwise, prepend the API base URL
+    return `http://127.0.0.1:8000${imageUrl}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
@@ -104,14 +113,35 @@ export default function RequestPage() {
                 handleSelect(item);
                 setShowDropdown(false);
               }}
-              className="p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+              className="p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer transition-colors flex items-center gap-4"
             >
-              <div className="font-semibold text-gray-800 dark:text-gray-200">{item.item_name}</div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                {item.item_description}
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Qty: {item.item_current_quantity} | Part #: {item.item_part_number}
+              {/* Item Image */}
+              {getImageUrl(item.item_image_url) ? (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={getImageUrl(item.item_image_url)} 
+                    alt={item.item_name}
+                    className="w-16 h-16 object-cover rounded border dark:border-gray-600"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs">
+                  No Image
+                </div>
+              )}
+              
+              {/* Item Details */}
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-gray-800 dark:text-gray-200">{item.item_name}</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  {item.item_description}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Qty: {item.item_current_quantity} | Part #: {item.item_part_number}
+                </div>
               </div>
             </div>
           ))}

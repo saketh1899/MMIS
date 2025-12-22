@@ -61,6 +61,15 @@ export default function ItemRequestPage() {
     }
   };
 
+  // Helper function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Otherwise, prepend the API base URL
+    return `http://127.0.0.1:8000${imageUrl}`;
+  };
+
   // MUST COME AFTER HOOKS
   if (!item) return <h2 className="text-center mt-10 text-gray-500 dark:text-gray-400">Loading...</h2>;
 
@@ -77,14 +86,47 @@ export default function ItemRequestPage() {
 
         {/* ITEM CARD */}
         <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-6 mb-8 transition-colors">
-          <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-gray-200">{item.item_name}</h2>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Part Number:</strong> {item.item_part_number}</p>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Description:</strong> {item.item_description}</p>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Manufacturer:</strong> {item.item_manufacturer}</p>
-
-          <p className="mt-3 font-bold text-green-600 dark:text-green-400 text-lg">
-            Current Quantity: {item.item_current_quantity}
-          </p>
+          <div className="flex gap-6">
+            {/* Item Image */}
+            <div className="flex-shrink-0">
+              {getImageUrl(item.item_image_url) ? (
+                <img 
+                  src={getImageUrl(item.item_image_url)} 
+                  alt={item.item_name}
+                  className="w-48 h-48 object-cover rounded-lg border dark:border-gray-600 shadow-md"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div 
+                className="w-48 h-48 bg-gray-200 dark:bg-gray-600 rounded-lg border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm shadow-md"
+                style={{ display: getImageUrl(item.item_image_url) ? 'none' : 'flex' }}
+              >
+                No Image
+              </div>
+            </div>
+            
+            {/* Item Details */}
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-3 text-gray-800 dark:text-gray-200">{item.item_name}</h2>
+              <div className="space-y-2">
+                <p className="text-gray-700 dark:text-gray-300">
+                  <strong className="text-gray-900 dark:text-gray-100">Part Number:</strong> {item.item_part_number || "N/A"}
+                </p>
+                <p className="text-gray-700 dark:text-gray-300">
+                  <strong className="text-gray-900 dark:text-gray-100">Description:</strong> {item.item_description || "N/A"}
+                </p>
+                <p className="text-gray-700 dark:text-gray-300">
+                  <strong className="text-gray-900 dark:text-gray-100">Manufacturer:</strong> {item.item_manufacturer || "N/A"}
+                </p>
+                <p className="mt-4 font-bold text-green-600 dark:text-green-400 text-lg">
+                  Current Quantity: {item.item_current_quantity}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* FORM */}

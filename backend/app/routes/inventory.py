@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from .. import crud, schemas, models
 from ..database import get_db
+import os
+import shutil
+from pathlib import Path
+from typing import Optional
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
@@ -186,4 +190,98 @@ def restock_item(data: dict, db: Session = Depends(get_db)):
     db.refresh(item)
 
     return {"message": "Restock successful", "new_quantity": item.item_current_quantity}
+
+
+@router.post("/upload-image")
+async def upload_item_image(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Upload an image file and return the URL path."""
+    # Get the backend directory
+    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    upload_dir = Path(backend_dir) / "uploads" / "item_images"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Validate file type
+    allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+    file_extension = Path(file.filename).suffix.lower()
+    
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"
+        )
+    
+    # Generate unique filename (using timestamp + original filename)
+    import time
+    timestamp = int(time.time() * 1000)  # milliseconds
+    safe_filename = f"{timestamp}_{file.filename}"
+    file_path = upload_dir / safe_filename
+    
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+    
+    # Return the URL path
+    image_url = f"/uploads/item_images/{safe_filename}"
+    return {"image_url": image_url, "filename": safe_filename}
+
+
+@router.post("/upload-image/{item_id}")
+async def upload_and_update_item_image(
+    item_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Upload an image for a specific inventory item and update the database."""
+    # Verify item exists
+    item = db.query(models.Inventory).filter(models.Inventory.item_id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Get the backend directory
+    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    upload_dir = Path(backend_dir) / "uploads" / "item_images"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Validate file type
+    allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+    file_extension = Path(file.filename).suffix.lower()
+    
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"
+        )
+    
+    # Generate filename using item_id to ensure uniqueness
+    safe_filename = f"item_{item_id}{file_extension}"
+    file_path = upload_dir / safe_filename
+    
+    # Delete old image if it exists
+    if item.item_image_url:
+        old_image_path = Path(backend_dir) / item.item_image_url.lstrip("/")
+        if old_image_path.exists() and old_image_path.is_file():
+            try:
+                old_image_path.unlink()
+            except Exception:
+                pass  # Ignore errors when deleting old file
+    
+    # Save new file
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+    
+    # Update item with image URL
+    item.item_image_url = f"/uploads/item_images/{safe_filename}"
+    db.commit()
+    db.refresh(item)
+    
+    return {"message": "Image uploaded successfully", "image_url": item.item_image_url}
     

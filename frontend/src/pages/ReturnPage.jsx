@@ -38,6 +38,15 @@ export default function ReturnPage() {
     fetchTransactions();
   }, [employeeId, location.pathname]); // Refetch when location changes (e.g., navigating back)
 
+  // Helper function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Otherwise, prepend the API base URL
+    return `http://127.0.0.1:8000${imageUrl}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
@@ -66,23 +75,44 @@ export default function ReturnPage() {
             <div
               key={tx.transaction_id}
               onClick={() => navigate(`/dashboard/return/item/${tx.transaction_id}`)}
-              className="p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-4"
             >
-              <div className="font-semibold text-lg text-gray-800 dark:text-gray-200">{tx.item_name || `Item #${tx.item_id}`}</div>
+              {/* Item Image */}
+              {getImageUrl(tx.item_image_url) ? (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={getImageUrl(tx.item_image_url)} 
+                    alt={tx.item_name || `Item #${tx.item_id}`}
+                    className="w-20 h-20 object-cover rounded border dark:border-gray-600"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="flex-shrink-0 w-20 h-20 bg-gray-200 dark:bg-gray-600 rounded border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs">
+                  No Image
+                </div>
+              )}
+              
+              {/* Item Details */}
+              <div className="flex-1">
+                <div className="font-semibold text-lg text-gray-800 dark:text-gray-200">{tx.item_name || `Item #${tx.item_id}`}</div>
 
-              <div className="text-gray-600 dark:text-gray-400 text-sm">
-                {tx.remaining_quantity !== undefined && tx.remaining_quantity !== tx.quantity_used ? (
-                  <>
-                    <span className="font-semibold">Remaining to Return: {tx.remaining_quantity}</span>
-                    <span className="text-gray-500 dark:text-gray-500 ml-2">(of {tx.quantity_used} requested)</span>
-                  </>
-                ) : (
-                  <span>Quantity: {tx.quantity_used}</span>
-                )}
-              </div>
+                <div className="text-gray-600 dark:text-gray-400 text-sm">
+                  {tx.remaining_quantity !== undefined && tx.remaining_quantity !== tx.quantity_used ? (
+                    <>
+                      <span className="font-semibold">Remaining to Return: {tx.remaining_quantity}</span>
+                      <span className="text-gray-500 dark:text-gray-500 ml-2">(of {tx.quantity_used} requested)</span>
+                    </>
+                  ) : (
+                    <span>Quantity: {tx.quantity_used}</span>
+                  )}
+                </div>
 
-              <div className="text-gray-500 dark:text-gray-400 text-sm">
-                Requested on: {tx.created_at.substring(0, 10)}
+                <div className="text-gray-500 dark:text-gray-400 text-sm">
+                  Requested on: {tx.created_at.substring(0, 10)}
+                </div>
               </div>
             </div>
           ))}

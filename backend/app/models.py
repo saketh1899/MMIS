@@ -50,6 +50,7 @@ class Inventory(Base):
     test_area = Column(String(20))
     project_name = Column(String(100))
     item_life_cycle = Column(Integer, default=0)
+    item_image_url = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationship: one inventory item → many transactions
