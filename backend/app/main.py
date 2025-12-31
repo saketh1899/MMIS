@@ -26,10 +26,18 @@ os.makedirs(uploads_dir, exist_ok=True)
 uploads_base_dir = os.path.join(backend_dir, "uploads")
 app.mount("/uploads", StaticFiles(directory=uploads_base_dir), name="uploads")
 
-# CORS so React frontend (localhost:5173) can access
+# CORS configuration - production ready with environment variable support
+# Default allows all origins for development, use CORS_ORIGINS env var for production
+cors_origins_env = os.getenv("CORS_ORIGINS", "*")
+if cors_origins_env == "*":
+    cors_origins = ["*"]
+else:
+    # Split comma-separated origins and strip whitespace
+    cors_origins = [origin.strip() for origin in cors_origins_env.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten later for production
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
