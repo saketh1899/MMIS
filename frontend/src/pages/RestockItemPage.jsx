@@ -49,7 +49,7 @@ export default function RestockItemPage() {
     const encodedProject = encodeURIComponent(project);
     const encodedTestArea = encodeURIComponent(test_area);
     
-    API.get(`/inventory?project=${encodedProject}&test_area=${encodedTestArea}`)
+    API.get(`/inventory/?project=${encodedProject}&test_area=${encodedTestArea}`)
       .then((res) => {
         const loadedItems = res.data || [];
         setItems(loadedItems);
@@ -151,8 +151,11 @@ export default function RestockItemPage() {
     if (!imageUrl) return null;
     // If it's already a full URL, return as is
     if (imageUrl.startsWith('http')) return imageUrl;
-    // Otherwise, prepend the API base URL
-    return `http://127.0.0.1:8000${imageUrl}`;
+    // Get API base URL (same logic as api.js)
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 
+      (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:8000');
+    // Prepend the API base URL
+    return `${apiBaseUrl}${imageUrl}`;
   };
 
   return (

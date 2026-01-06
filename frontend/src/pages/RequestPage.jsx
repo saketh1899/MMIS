@@ -18,22 +18,43 @@ export default function RequestPage() {
 
   // Load items from backend with filtering
   useEffect(() => {
-    API.get(`/inventory?project=${project}&test_area=${test_area}`)
+    if (!project || !test_area) {
+      setItems([]);
+      setFilteredItems([]);
+      return;
+    }
+    
+    // Properly encode URL parameters
+    const encodedProject = encodeURIComponent(project);
+    const encodedTestArea = encodeURIComponent(test_area);
+    
+    API.get(`/inventory/?project=${encodedProject}&test_area=${encodedTestArea}`)
       .then((res) => {
-        setItems(res.data);
-        setFilteredItems(res.data);
+        // Ensure res.data is always an array
+        const data = Array.isArray(res.data) ? res.data : [];
+        setItems(data);
+        setFilteredItems(data);
       })
-      .catch((err) => console.error("Failed to load items", err));
+      .catch((err) => {
+        console.error("Failed to load items", err);
+        // Always set to empty array on error to prevent .map() errors
+        setItems([]);
+        setFilteredItems([]);
+      });
   }, [project, test_area]);
 
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchInput(query);
-    setFilteredItems(
-      items.filter((item) =>
-        item.item_name.toLowerCase().includes(query)
-      )
-    );
+    if (Array.isArray(items)) {
+      setFilteredItems(
+        items.filter((item) =>
+          item?.item_name?.toLowerCase().includes(query)
+        )
+      );
+    } else {
+      setFilteredItems([]);
+    }
   };
 
   const handleSelect = (item) => {
@@ -45,8 +66,11 @@ export default function RequestPage() {
     if (!imageUrl) return null;
     // If it's already a full URL, return as is
     if (imageUrl.startsWith('http')) return imageUrl;
-    // Otherwise, prepend the API base URL
-    return `http://127.0.0.1:8000${imageUrl}`;
+    // Get API base URL (same logic as api.js)
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 
+      (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:8000');
+    // Prepend the API base URL
+    return `${apiBaseUrl}${imageUrl}`;
   };
 
   return (
@@ -106,7 +130,7 @@ export default function RequestPage() {
               className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-[500px] overflow-y-auto z-50 transition-colors"
               onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
             >
-            {(searchInput ? filteredItems : items).map((item) => (
+            {(Array.isArray(searchInput ? filteredItems : items) ? (searchInput ? filteredItems : items) : []).map((item) => (
             <div
               key={item.item_id}
               onClick={() => {
@@ -145,6 +169,11 @@ export default function RequestPage() {
               </div>
             </div>
           ))}
+          {Array.isArray(items) && items.length === 0 && (
+            <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+              No items found
+            </div>
+          )}
         </div>
       )}  
     </div>  

@@ -66,8 +66,11 @@ export default function ItemRequestPage() {
     if (!imageUrl) return null;
     // If it's already a full URL, return as is
     if (imageUrl.startsWith('http')) return imageUrl;
-    // Otherwise, prepend the API base URL
-    return `http://127.0.0.1:8000${imageUrl}`;
+    // Get API base URL (same logic as api.js)
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 
+      (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:8000');
+    // Prepend the API base URL
+    return `${apiBaseUrl}${imageUrl}`;
   };
 
   // MUST COME AFTER HOOKS

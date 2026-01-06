@@ -100,6 +100,18 @@ export default function RestockEditItemPage() {
     return <AccessDenied feature="the Restock feature" />;
   }
 
+  // Helper function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Get API base URL (same logic as api.js)
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 
+      (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:8000');
+    // Prepend the API base URL
+    return `${apiBaseUrl}${imageUrl}`;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -132,7 +144,11 @@ export default function RestockEditItemPage() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch(`http://127.0.0.1:8000/inventory/upload-image/${item_id}`, {
+      // Get API base URL (same logic as api.js)
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 
+        (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:8000');
+
+      const response = await fetch(`${apiBaseUrl}/inventory/upload-image/${item_id}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -447,7 +463,7 @@ export default function RestockEditItemPage() {
                 {formData.item_image_url && !imagePreview && (
                   <div className="mb-3">
                     <img
-                      src={`http://127.0.0.1:8000${formData.item_image_url}`}
+                      src={getImageUrl(formData.item_image_url)}
                       alt="Current item"
                       className="w-32 h-32 object-cover rounded border dark:border-gray-600"
                       onError={(e) => {

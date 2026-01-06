@@ -120,7 +120,11 @@ export default function RestockNewStockPage() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch("http://127.0.0.1:8000/inventory/upload-image", {
+      // Get API base URL (same logic as api.js)
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 
+        (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:8000');
+
+      const response = await fetch(`${apiBaseUrl}/inventory/upload-image`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
