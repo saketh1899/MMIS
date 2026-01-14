@@ -1,8 +1,9 @@
 # backend/app/routes/alerts.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import crud, schemas, models
+from ..utils.scheduler import send_daily_low_stock_notifications
 
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
 
@@ -20,3 +21,15 @@ def low_stock_alerts(test_area: str | None = None, project: str | None = None, d
         query = query.filter(models.Inventory.project_name == project)
     
     return query.order_by(models.Inventory.item_name).all()
+
+@router.post("/send-notifications")
+def send_low_stock_notifications_manual(db: Session = Depends(get_db)):
+    """
+    Manually trigger low stock email notifications to admin users.
+    This endpoint can be used for testing or to send immediate notifications.
+    """
+    try:
+        send_daily_low_stock_notifications()
+        return {"message": "Low stock notifications sent successfully to all admin users"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending notifications: {str(e)}")

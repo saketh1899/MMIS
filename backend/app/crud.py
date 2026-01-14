@@ -21,7 +21,8 @@ def create_employee(db: Session, emp: schemas.EmployeeCreate, hashed_pw: str):
         employee_shift=emp.employee_shift,
         employee_access_level=emp.employee_access_level,
         employee_username=emp.employee_username,
-        employee_password=hashed_pw
+        employee_password=hashed_pw,
+        employee_email=emp.employee_email
     )
     db.add(new_emp)
     db.commit()
@@ -31,6 +32,13 @@ def create_employee(db: Session, emp: schemas.EmployeeCreate, hashed_pw: str):
 def get_employee_by_username(db: Session, username: str):
     """Find employee by username for login."""
     return db.query(models.Employee).filter(models.Employee.employee_username == username).first()
+
+def get_admin_users(db: Session):
+    """Get all admin users with email addresses."""
+    return db.query(models.Employee).filter(
+        models.Employee.employee_access_level == "admin",
+        models.Employee.employee_email.isnot(None)
+    ).all()
 
 # ---------------- Inventory ----------------
 def get_all_inventory(db: Session):

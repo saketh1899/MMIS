@@ -14,6 +14,7 @@ class EmployeeCreate(BaseModel):
     employee_access_level: str
     employee_username: str
     employee_password: str
+    employee_email: Optional[str] = None
 
 # Schema for returning employee data to the client (response model)
 class EmployeeOut(BaseModel):
@@ -24,6 +25,7 @@ class EmployeeOut(BaseModel):
     employee_designation: Optional[str] = None
     employee_shift: Optional[str] = None
     employee_username: Optional[str] = None
+    employee_email: Optional[str] = None
     class Config:
         from_attributes = True
 #-----------------------------------------------------------------------------------------------------------------------------------------

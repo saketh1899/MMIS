@@ -9,7 +9,9 @@ from fastapi.staticfiles import StaticFiles
 from .database import Base, engine
 from .routes import employees, inventory, transactions, reports, alerts, activity, fixtures
 from . import auth
+from .utils.scheduler import start_scheduler, stop_scheduler
 import os
+import atexit
 
 app = FastAPI(title="Machine Maintenance Inventory System (MMIS)")
 
@@ -55,4 +57,17 @@ app.include_router(fixtures.router)
 
 @app.get("/")
 def root():
-    return {"message": "Inventory Management System API running!"} 
+    return {"message": "Inventory Management System API running!"}
+
+@app.on_event("startup")
+def startup_event():
+    """Start the scheduler when the application starts."""
+    start_scheduler()
+
+@app.on_event("shutdown")
+def shutdown_event():
+    """Stop the scheduler when the application shuts down."""
+    stop_scheduler()
+
+# Register shutdown handler
+atexit.register(stop_scheduler) 

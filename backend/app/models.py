@@ -17,6 +17,7 @@ class Employee(Base):
     employee_access_level = Column(String(20))
     employee_username = Column(String(50), unique=True, nullable=False)
     employee_password = Column(String(255), nullable=False)
+    employee_email = Column(String(255), nullable=True)
 
      # Relationship: one employee → many transactions
     transactions = relationship("Transaction", back_populates="employee")
