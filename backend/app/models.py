@@ -29,8 +29,8 @@ class Fixture(Base):
     fixture_name = Column(String(100), nullable=False)
     test_area = Column(String(20), nullable=False)
     project_name = Column(String(100), nullable=False)
-    asset_tag = Column(String(50), nullable=False)
-    fixture_serial_number = Column(String(50), nullable=False)
+    asset_tag = Column(String(50), nullable=True)
+    fixture_serial_number = Column(String(50), nullable=True)
 
     # Relationship: one fixture → many transactions
     transactions = relationship("Transaction", back_populates="fixture")

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../api";
 import AccessDenied from "../components/AccessDenied";
 import Header from "../components/Header";
+import ProjectSelector from "../components/ProjectSelector";
 
 export default function RestockNewFixturePage() {
   const navigate = useNavigate();
@@ -132,21 +133,10 @@ export default function RestockNewFixturePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // For fixture_number, only allow numeric input
-    if (name === "fixture_number") {
-      // Remove any non-numeric characters
-      const numericValue = value.replace(/[^0-9]/g, "");
-      setFormData((prev) => ({
-        ...prev,
-        [name]: numericValue,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async () => {
@@ -162,14 +152,6 @@ export default function RestockNewFixturePage() {
       alert("Please fill in all required fields. Test Area is required.");
       return;
     }
-    if (!formData.asset_tag) {
-      alert("Please fill in all required fields. Asset Tag is required.");
-      return;
-    }
-    if (!formData.fixture_serial_number) {
-      alert("Please fill in all required fields. Fixture Serial Number is required.");
-      return;
-    }
 
     // Generate final fixture_name
     const finalFixtureName = `${formData.project_name}_${formData.test_area}_${formData.fixture_number}`;
@@ -179,8 +161,8 @@ export default function RestockNewFixturePage() {
         fixture_name: finalFixtureName,
         project_name: formData.project_name,
         test_area: formData.test_area,
-        asset_tag: formData.asset_tag,
-        fixture_serial_number: formData.fixture_serial_number,
+        asset_tag: formData.asset_tag || "",
+        fixture_serial_number: formData.fixture_serial_number || "",
         employee_id: employeeId,  // Include employee_id for activity history
       });
 
@@ -206,42 +188,20 @@ export default function RestockNewFixturePage() {
         <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-lg p-8 mb-8 transition-colors">
           <div className="space-y-6">
             {/* Project Name - Searchable Dropdown */}
-            <div className="relative" ref={projectRef}>
+            <div>
               <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
                 Project Name <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                value={projectSearch}
+              <ProjectSelector
+                value={formData.project_name}
                 onChange={(e) => {
+                  setFormData((prev) => ({ ...prev, project_name: e.target.value }));
                   setProjectSearch(e.target.value);
-                  setShowProjectDropdown(true);
                 }}
-                onFocus={() => setShowProjectDropdown(true)}
                 placeholder="Select Project Name"
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                required
+                className="w-full p-3"
               />
-              {showProjectDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border dark:border-gray-600 border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto transition-colors">
-                  {filteredProjects.length > 0 ? (
-                    filteredProjects.map((proj) => (
-                      <div
-                        key={proj}
-                        onClick={() => {
-                          setFormData((prev) => ({ ...prev, project_name: proj }));
-                          setProjectSearch(proj);
-                          setShowProjectDropdown(false);
-                        }}
-                        className="p-2 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-700 dark:text-gray-300 transition-colors"
-                      >
-                        {proj}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-2 text-gray-500 dark:text-gray-400">No project found</div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Test Area - Searchable Dropdown */}
@@ -295,9 +255,7 @@ export default function RestockNewFixturePage() {
                 onChange={handleChange}
                 className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
-                placeholder="e.g., 01"
-                pattern="[0-9]+"
-                title="Please enter only numbers"
+                placeholder="e.g., 01 or A01"
               />
               {formData.project_name && formData.test_area && formData.fixture_number && (
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -311,7 +269,7 @@ export default function RestockNewFixturePage() {
             {/* Asset Tag */}
             <div>
               <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
-                Asset Tag <span className="text-red-500">*</span>
+                Asset Tag
               </label>
               <input
                 type="text"
@@ -319,15 +277,14 @@ export default function RestockNewFixturePage() {
                 value={formData.asset_tag}
                 onChange={handleChange}
                 className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                required
-                placeholder="Enter asset tag"
+                placeholder="Enter asset tag (optional)"
               />
             </div>
 
             {/* Fixture Serial Number */}
             <div>
               <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
-                Fixture Serial Number <span className="text-red-500">*</span>
+                Fixture Serial Number
               </label>
               <input
                 type="text"
@@ -335,8 +292,7 @@ export default function RestockNewFixturePage() {
                 value={formData.fixture_serial_number}
                 onChange={handleChange}
                 className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                required
-                placeholder="Enter fixture serial number"
+                placeholder="Enter fixture serial number (optional)"
               />
             </div>
           </div>

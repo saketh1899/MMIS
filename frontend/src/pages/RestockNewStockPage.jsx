@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import API from "../api";
 import AccessDenied from "../components/AccessDenied";
 import Header from "../components/Header";
+import ProjectSelector from "../components/ProjectSelector";
 
 export default function RestockNewStockPage() {
   const navigate = useNavigate();
@@ -217,19 +218,12 @@ export default function RestockNewStockPage() {
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Project Name</label>
-                <select
-                  name="project_name"
+                <ProjectSelector
                   value={formData.project_name}
                   onChange={handleChange}
-                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                >
-                  <option value="">Select Project Name</option>
-                  {projects.map((proj) => (
-                    <option key={proj} value={proj}>
-                      {proj}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Select Project Name"
+                  className="w-full p-2"
+                />
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Part Number</label>

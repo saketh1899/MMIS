@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AccessDenied from "../components/AccessDenied";
 import Header from "../components/Header";
+import { getProjects } from "../utils/projects";
 
 export default function RestockProjectPage() {
   const navigate = useNavigate();
   const [accessLevel, setAccessLevel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
+  const [projects, setProjects] = useState(getProjects());
 
   //Load access level from token
   useEffect(() => {
@@ -25,6 +27,22 @@ export default function RestockProjectPage() {
     setLoading(false);
   }, []);
 
+  // Reload projects when component mounts or when projects are updated
+  useEffect(() => {
+    const handleProjectsUpdate = () => {
+      setProjects(getProjects());
+    };
+
+    // Listen for custom event and storage changes
+    window.addEventListener('projectsUpdated', handleProjectsUpdate);
+    window.addEventListener('storage', handleProjectsUpdate);
+
+    return () => {
+      window.removeEventListener('projectsUpdated', handleProjectsUpdate);
+      window.removeEventListener('storage', handleProjectsUpdate);
+    };
+  }, []);
+
   // Check if user is admin
   if (loading) {
     return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
@@ -36,24 +54,24 @@ export default function RestockProjectPage() {
     return <AccessDenied feature="the Restock feature" />;
   }
 
-  const projects = [
-    "Common",
-    "Astoria",
-    "Athena",
-    "Turin",
-    "Bondi Beach",
-    "Zebra Beach",
-    "Mandolin Beach",
-    "Gulp",
-    "Xena",
-    "Agora",
-    "Humu Beach",
-  ];
-
   // Filter projects based on search input
   const filteredProjects = projects.filter((project) =>
     project.toLowerCase().includes(searchInput.toLowerCase().trim())
   );
+
+  // Projects that skip test area selection
+  const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+
+  // Handle project selection - skip test area for specific projects
+  const handleProjectClick = (project) => {
+    if (skipTestAreaProjects.includes(project)) {
+      // Navigate directly to items page without test_area
+      navigate(`/dashboard/restock/items?project=${encodeURIComponent(project)}`);
+    } else {
+      // Navigate to test area selection page
+      navigate(`/dashboard/restock/test-area?project=${encodeURIComponent(project)}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -97,7 +115,7 @@ export default function RestockProjectPage() {
           filteredProjects.map((p) => (
             <div
               key={p}
-              onClick={() => navigate(`/dashboard/restock/test-area?project=${p}`)}
+              onClick={() => handleProjectClick(p)}
               className="border dark:border-gray-700 p-8 text-center rounded-xl bg-white dark:bg-gray-800 cursor-pointer 
                          hover:bg-blue-100 dark:hover:bg-gray-700 hover:shadow-lg transition-all shadow-md"
             >

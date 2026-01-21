@@ -2,23 +2,43 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import ProjectSelector from "../components/ProjectSelector";
+import { getProjects } from "../utils/projects";
 
 export default function LowStockReportPage() {
   const [lowStockItems, setLowStockItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [alternativeItems, setAlternativeItems] = useState([]);
+  const [showAlternatives, setShowAlternatives] = useState(false);
+  const [loadingAlternatives, setLoadingAlternatives] = useState(false);
+  const [itemsWithAlternatives, setItemsWithAlternatives] = useState({}); // item_id -> alternatives count
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTestArea, setSelectedTestArea] = useState("");
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const [showTestAreaDropdown, setShowTestAreaDropdown] = useState(false);
   const navigate = useNavigate();
 
-  // Predefined lists for dropdowns
-  const projects = [
-    "Common", "Astoria", "Athena", "Turin", "Bondi Beach", "Zebra Beach",
-    "Mandolin Beach", "Gulp", "Xena", "Agora", "Humu Beach"
-  ];
+  // Get projects from shared utility
+  const [projects, setProjects] = useState(getProjects());
+
+  // Reload projects when component mounts or when projects are updated
+  useEffect(() => {
+    const handleProjectsUpdate = () => {
+      setProjects(getProjects());
+    };
+
+    // Listen for custom event and storage changes
+    window.addEventListener('projectsUpdated', handleProjectsUpdate);
+    window.addEventListener('storage', handleProjectsUpdate);
+
+    return () => {
+      window.removeEventListener('projectsUpdated', handleProjectsUpdate);
+      window.removeEventListener('storage', handleProjectsUpdate);
+    };
+  }, []);
 
   const testAreas = [
     "ICT_Mobo", "BSI_Mobo", "FBT_Mobo", "ICT_Agora", "FBT_Agora", "TOOLS"
@@ -37,6 +57,8 @@ export default function LowStockReportPage() {
       .then((res) => {
         setLowStockItems(res.data);
         setFilteredItems(res.data);
+        // Automatically check for alternatives for items with quantity = 0
+        checkAlternativesForOutOfStockItems(res.data);
       })
       .catch((err) => {
         console.error("Error loading low stock items:", err);
@@ -45,6 +67,27 @@ export default function LowStockReportPage() {
       })
       .finally(() => setLoading(false));
   }, [selectedProject, selectedTestArea]);
+
+  // Check for alternatives for items that are out of stock (quantity = 0)
+  const checkAlternativesForOutOfStockItems = async (items) => {
+    const outOfStockItems = items.filter(item => item.item_current_quantity === 0);
+    const alternativesMap = {};
+    
+    // Check alternatives for each out-of-stock item
+    const promises = outOfStockItems.map(async (item) => {
+      try {
+        const res = await API.get(`/inventory/${item.item_id}/alternatives`);
+        if (res.data && res.data.length > 0) {
+          alternativesMap[item.item_id] = res.data.length;
+        }
+      } catch (err) {
+        console.error(`Error checking alternatives for item ${item.item_id}:`, err);
+      }
+    });
+    
+    await Promise.all(promises);
+    setItemsWithAlternatives(alternativesMap);
+  };
 
   // Filter items client-side as well (for additional filtering)
   useEffect(() => {
@@ -60,6 +103,41 @@ export default function LowStockReportPage() {
 
     setFilteredItems(filtered);
   }, [lowStockItems, selectedProject, selectedTestArea]);
+
+  // Load alternative items when an item is selected
+  useEffect(() => {
+    if (selectedItemId) {
+      const item = filteredItems.find(i => i.item_id === selectedItemId);
+      setSelectedItem(item);
+      loadAlternativeItems(selectedItemId);
+    } else {
+      setSelectedItem(null);
+      setAlternativeItems([]);
+      setShowAlternatives(false);
+    }
+  }, [selectedItemId, filteredItems]);
+
+  // Auto-show alternatives for out-of-stock items when they're selected
+  useEffect(() => {
+    if (selectedItem && selectedItem.item_current_quantity === 0 && alternativeItems.length > 0) {
+      setShowAlternatives(true);
+    }
+  }, [selectedItem, alternativeItems]);
+
+  const loadAlternativeItems = async (itemId) => {
+    setLoadingAlternatives(true);
+    try {
+      const res = await API.get(`/inventory/${itemId}/alternatives`);
+      setAlternativeItems(res.data || []);
+      setShowAlternatives(res.data && res.data.length > 0);
+    } catch (err) {
+      console.error("Error loading alternative items:", err);
+      setAlternativeItems([]);
+      setShowAlternatives(false);
+    } finally {
+      setLoadingAlternatives(false);
+    }
+  };
 
   const downloadCSV = () => {
     if (filteredItems.length === 0) {
@@ -135,54 +213,22 @@ export default function LowStockReportPage() {
           <div className="flex-1 relative">
             <label className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">Project Name</label>
             <div className="relative">
-              <input
-                type="text"
+              <ProjectSelector
                 value={selectedProject}
-                onChange={(e) => {
-                  setSelectedProject(e.target.value);
-                  setShowProjectDropdown(true);
-                }}
-                onFocus={() => setShowProjectDropdown(true)}
-                onBlur={() => setTimeout(() => setShowProjectDropdown(false), 200)}
+                onChange={(e) => setSelectedProject(e.target.value)}
                 placeholder="Search with Dropdown"
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded pr-8 text-base transition-colors"
+                className="w-full p-3 pr-8 text-base"
               />
-              <svg
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {showProjectDropdown && (
-                <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
-                  <div
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                    onClick={() => {
-                      setSelectedProject("");
-                      setShowProjectDropdown(false);
-                    }}
-                  >
-                    Clear Filter
-                  </div>
-                  {projects
-                    .filter((proj) =>
-                      proj.toLowerCase().includes(selectedProject.toLowerCase())
-                    )
-                    .map((proj) => (
-                      <div
-                        key={proj}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                        onClick={() => {
-                          setSelectedProject(proj);
-                          setShowProjectDropdown(false);
-                        }}
-                      >
-                        {proj}
-                      </div>
-                    ))}
-                </div>
+              {selectedProject && (
+                <button
+                  onClick={() => setSelectedProject("")}
+                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
+                  title="Clear filter"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               )}
             </div>
           </div>
@@ -294,6 +340,7 @@ export default function LowStockReportPage() {
                     <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Manufacturer</th>
                     <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Test Area</th>
                     <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Project</th>
+                    <th className="p-4 text-left font-semibold text-gray-700 dark:text-gray-300">Alternatives</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -317,6 +364,19 @@ export default function LowStockReportPage() {
                       <td className="p-4 text-gray-800 dark:text-gray-200">{item.item_manufacturer || "N/A"}</td>
                       <td className="p-4 text-gray-800 dark:text-gray-200">{item.test_area || "N/A"}</td>
                       <td className="p-4 text-gray-800 dark:text-gray-200">{item.project_name || "N/A"}</td>
+                      <td className="p-4 text-gray-800 dark:text-gray-200">
+                        {itemsWithAlternatives[item.item_id] > 0 ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                            ✓ {itemsWithAlternatives[item.item_id]} available
+                          </span>
+                        ) : item.item_current_quantity === 0 ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
+                            Out of stock
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">-</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -325,6 +385,75 @@ export default function LowStockReportPage() {
           )}
         </div>
       </div>
+
+      {/* ALTERNATIVE ITEMS CARD - Show automatically for out of stock items or when clicked */}
+      {(showAlternatives || (selectedItem && selectedItem.item_current_quantity === 0 && itemsWithAlternatives[selectedItem.item_id] > 0)) && selectedItem && (
+        <div className="max-w-7xl mx-auto px-10 mb-8">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 shadow transition-colors">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
+                {selectedItem.item_current_quantity === 0 ? (
+                  <>⚠️ Out of Stock: Same item available in other projects</>
+                ) : (
+                  <>⚠️ Low Stock Alert: Same item available in other projects</>
+                )}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAlternatives(false);
+                  setSelectedItemId(null);
+                }}
+                className="text-yellow-800 dark:text-yellow-200 hover:text-yellow-900 dark:hover:text-yellow-100 text-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
+              <strong>{selectedItem.item_name}</strong> {selectedItem.item_current_quantity === 0 ? 'is out of stock' : 'is running low'} in <strong>{selectedItem.project_name}</strong>. 
+              The same item is available in other projects:
+            </p>
+
+            {loadingAlternatives ? (
+              <p className="text-yellow-700 dark:text-yellow-300">Loading alternatives...</p>
+            ) : alternativeItems.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-yellow-100 dark:bg-yellow-900/40 border-b dark:border-yellow-800">
+                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Project</th>
+                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Test Area</th>
+                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Available Qty</th>
+                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alternativeItems.map((altItem) => (
+                      <tr key={altItem.item_id} className="border-b dark:border-yellow-800">
+                        <td className="p-3 text-yellow-800 dark:text-yellow-200">{altItem.project_name}</td>
+                        <td className="p-3 text-yellow-800 dark:text-yellow-200">{altItem.test_area || "N/A"}</td>
+                        <td className="p-3 font-semibold text-green-600 dark:text-green-400">
+                          {altItem.item_current_quantity} {altItem.item_unit || ""}
+                        </td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => navigate(`/dashboard/transfer?source_item_id=${altItem.item_id}&dest_item_id=${selectedItem.item_id}`)}
+                            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-sm transition-colors"
+                          >
+                            Transfer to {selectedItem.project_name}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-yellow-700 dark:text-yellow-300">No alternatives found.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* BACK BUTTON */}
       <div className="flex justify-center mt-10 mb-8">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import { getProjects } from "../utils/projects";
 
 export default function CurrentInventoryReportPage() {
   const [inventory, setInventory] = useState([]);
@@ -31,10 +32,23 @@ export default function CurrentInventoryReportPage() {
   }, []);
 
   // Predefined lists for dropdowns
-  const projects = [
-    "Common", "Astoria", "Athena", "Turin", "Bondi Beach", "Zebra Beach",
-    "Mandolin Beach", "Gulp", "Xena", "Agora", "Humu Beach"
-  ];
+  const [projects, setProjects] = useState(getProjects());
+
+  // Reload projects when component mounts or when projects are updated
+  useEffect(() => {
+    const handleProjectsUpdate = () => {
+      setProjects(getProjects());
+    };
+
+    // Listen for custom event and storage changes
+    window.addEventListener('projectsUpdated', handleProjectsUpdate);
+    window.addEventListener('storage', handleProjectsUpdate);
+
+    return () => {
+      window.removeEventListener('projectsUpdated', handleProjectsUpdate);
+      window.removeEventListener('storage', handleProjectsUpdate);
+    };
+  }, []);
 
   const testAreas = [
     "ICT_Mobo", "BSI_Mobo", "FBT_Mobo", "ICT_Agora", "FBT_Agora", "TOOLS"

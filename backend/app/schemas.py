@@ -59,7 +59,7 @@ class InventoryBase(BaseModel):
 class RequestCreate(BaseModel):
     item_id: int
     employee_id: int
-    fixture_id: int
+    fixture_id: Optional[int] = None
     quantity: int    
 
 # Schema for returning full inventory details to the client
@@ -125,8 +125,8 @@ class FixtureBase(BaseModel):
     fixture_name: str
     test_area: str
     project_name: str
-    asset_tag: str
-    fixture_serial_number: str
+    asset_tag: Optional[str] = ""
+    fixture_serial_number: Optional[str] = ""
 
 class FixtureOut(FixtureBase):
     fixture_id: int

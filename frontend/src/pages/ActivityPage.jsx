@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import API from "../api";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { getProjects } from "../utils/projects";
 
 export default function ActivityPage() {
   const [history, setHistory] = useState([]);
@@ -41,11 +42,11 @@ export default function ActivityPage() {
     "TOOLS"
   ];
 
-  // Get unique projects from history and add "Common" if not present
-  const uniqueProjectsFromData = [...new Set(history.map(h => h.project_name).filter(Boolean))].sort();
-  const uniqueProjects = uniqueProjectsFromData.includes("Common") 
-    ? ["Common", ...uniqueProjectsFromData.filter(p => p !== "Common")] 
-    : ["Common", ...uniqueProjectsFromData];
+  // Get unique projects from history and merge with custom projects from localStorage
+  const uniqueProjectsFromData = [...new Set(history.map(h => h.project_name).filter(Boolean))];
+  const customProjects = getProjects();
+  const allProjects = [...new Set([...customProjects, ...uniqueProjectsFromData])].sort();
+  const uniqueProjects = allProjects;
 
   // Filtered options for dropdowns
   const filteredProjects = uniqueProjects.filter(project =>

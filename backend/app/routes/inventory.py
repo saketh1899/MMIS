@@ -109,14 +109,122 @@ def request_item(data: schemas.RequestCreate, db: Session = Depends(get_db)):
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    if item.item_current_quantity < qty:
-        raise HTTPException(status_code=400, detail="Not enough stock")
-
-    # Deduct quantity
+    # Check if current project has enough stock
+    if item.item_current_quantity >= qty:
+        # Normal request - enough stock in current project
+        item.item_current_quantity -= qty
+        
+        transaction = models.Transaction(
+            item_id=item_id,
+            employee_id=data.employee_id,
+            fixture_id=data.fixture_id,
+            quantity_used=qty,
+            test_area=item.test_area,
+            project_name=item.project_name,
+            transaction_type="request",
+        )
+        
+        db.add(transaction)
+        db.commit()
+        
+        return {
+            "message": "Request successful", 
+            "new_quantity": item.item_current_quantity,
+            "transfer_used": False
+        }
+    
+    # Not enough stock in current project - check other projects
+    available_in_other_projects = (
+        db.query(models.Inventory)
+        .filter(
+            models.Inventory.item_name == item.item_name,
+            models.Inventory.item_id != item_id,
+            models.Inventory.item_current_quantity > 0
+        )
+        .order_by(models.Inventory.item_current_quantity.desc())
+        .all()
+    )
+    
+    if not available_in_other_projects:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Not enough stock. Available: {item.item_current_quantity}, Requested: {qty}. No stock available in other projects."
+        )
+    
+    # Calculate how much we need from other projects
+    remaining_needed = qty - item.item_current_quantity
+    used_from_current = item.item_current_quantity
+    
+    # Transfer from other projects first
+    transfers_made = []
+    total_transferred = 0
+    
+    for source_item in available_in_other_projects:
+        if total_transferred >= remaining_needed:
+            break
+            
+        # Lock the source item
+        source_item_locked = (
+            db.query(models.Inventory)
+            .filter(models.Inventory.item_id == source_item.item_id)
+            .with_for_update()
+            .first()
+        )
+        
+        if not source_item_locked or source_item_locked.item_current_quantity == 0:
+            continue
+        
+        transfer_qty = min(
+            source_item_locked.item_current_quantity,
+            remaining_needed - total_transferred
+        )
+        
+        # Deduct from source project
+        source_item_locked.item_current_quantity -= transfer_qty
+        
+        # Add to destination project
+        item.item_current_quantity += transfer_qty
+        
+        # Create transfer transaction for source project
+        transfer_tx_source = models.Transaction(
+            item_id=source_item_locked.item_id,
+            employee_id=data.employee_id,
+            fixture_id=data.fixture_id,
+            quantity_used=transfer_qty,
+            test_area=source_item_locked.test_area,
+            project_name=source_item_locked.project_name,
+            transaction_type="transfer_out",
+            remarks=f"Transferred to {item.project_name} project. Request ID: {item_id}"
+        )
+        db.add(transfer_tx_source)
+        
+        # Create transfer transaction for destination project
+        transfer_tx_dest = models.Transaction(
+            item_id=item_id,
+            employee_id=data.employee_id,
+            fixture_id=data.fixture_id,
+            quantity_used=transfer_qty,
+            test_area=item.test_area,
+            project_name=item.project_name,
+            transaction_type="transfer_in",
+            remarks=f"Transferred from {source_item_locked.project_name} project. Source Item ID: {source_item_locked.item_id}"
+        )
+        db.add(transfer_tx_dest)
+        
+        transfers_made.append({
+            "from_project": source_item_locked.project_name,
+            "from_item_id": source_item_locked.item_id,
+            "quantity": transfer_qty
+        })
+        
+        total_transferred += transfer_qty
+    
+    # Now deduct the full requested quantity from destination
+    # (which now has original stock + transferred items)
     item.item_current_quantity -= qty
-
-    # Create transaction record
-    transaction = models.Transaction(
+    
+    # Create final request transaction for the full quantity
+    final_request_tx = models.Transaction(
         item_id=item_id,
         employee_id=data.employee_id,
         fixture_id=data.fixture_id,
@@ -124,12 +232,21 @@ def request_item(data: schemas.RequestCreate, db: Session = Depends(get_db)):
         test_area=item.test_area,
         project_name=item.project_name,
         transaction_type="request",
+        remarks=f"Fulfilled via cross-project transfer. Used {used_from_current} from current project, {total_transferred} transferred from other projects."
     )
-
-    db.add(transaction)
+    db.add(final_request_tx)
+    
     db.commit()
-
-    return {"message": "Request successful", "new_quantity": item.item_current_quantity}
+    db.refresh(item)
+    
+    return {
+        "message": "Request fulfilled with cross-project transfer",
+        "new_quantity": item.item_current_quantity,
+        "transfer_used": True,
+        "used_from_current": used_from_current,
+        "transferred_from_other_projects": total_transferred,
+        "transfers": transfers_made
+    }
 
 
 @router.post("/restock")
@@ -284,4 +401,112 @@ async def upload_and_update_item_image(
     db.refresh(item)
     
     return {"message": "Image uploaded successfully", "image_url": item.item_image_url}
+
+
+# New endpoint to get available items from other projects
+@router.get("/{item_id}/alternatives")
+def get_alternative_items(item_id: int, db: Session = Depends(get_db)):
+    """Get the same item from other projects that have stock available."""
+    item = db.query(models.Inventory).filter(models.Inventory.item_id == item_id).first()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Find same items in other projects
+    alternatives = (
+        db.query(models.Inventory)
+        .filter(
+            models.Inventory.item_name == item.item_name,
+            models.Inventory.item_id != item_id,
+            models.Inventory.item_current_quantity > 0
+        )
+        .order_by(models.Inventory.item_current_quantity.desc())
+        .all()
+    )
+    
+    return alternatives
+
+
+# New endpoint for explicit transfer between projects
+@router.post("/transfer")
+def transfer_item(data: dict, db: Session = Depends(get_db)):
+    """Explicitly transfer items from one project to another."""
+    source_item_id = data.get("source_item_id")
+    dest_item_id = data.get("dest_item_id")
+    quantity = data.get("quantity")
+    employee_id = data.get("employee_id")
+    fixture_id = data.get("fixture_id")
+    remarks = data.get("remarks", "")
+    
+    if not all([source_item_id, dest_item_id, quantity, employee_id, fixture_id]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    if quantity <= 0:
+        raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+    
+    # Lock both items
+    source_item = (
+        db.query(models.Inventory)
+        .filter(models.Inventory.item_id == source_item_id)
+        .with_for_update()
+        .first()
+    )
+    
+    dest_item = (
+        db.query(models.Inventory)
+        .filter(models.Inventory.item_id == dest_item_id)
+        .with_for_update()
+        .first()
+    )
+    
+    if not source_item or not dest_item:
+        raise HTTPException(status_code=404, detail="Source or destination item not found")
+    
+    if source_item.item_name != dest_item.item_name:
+        raise HTTPException(status_code=400, detail="Items must have the same name")
+    
+    if source_item.item_current_quantity < quantity:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Insufficient stock. Available: {source_item.item_current_quantity}, Requested: {quantity}"
+        )
+    
+    # Perform transfer
+    source_item.item_current_quantity -= quantity
+    dest_item.item_current_quantity += quantity
+    
+    # Create transactions
+    transfer_out_tx = models.Transaction(
+        item_id=source_item_id,
+        employee_id=employee_id,
+        fixture_id=fixture_id,
+        quantity_used=quantity,
+        test_area=source_item.test_area,
+        project_name=source_item.project_name,
+        transaction_type="transfer_out",
+        remarks=f"Transferred to {dest_item.project_name}. {remarks}"
+    )
+    
+    transfer_in_tx = models.Transaction(
+        item_id=dest_item_id,
+        employee_id=employee_id,
+        fixture_id=fixture_id,
+        quantity_used=quantity,
+        test_area=dest_item.test_area,
+        project_name=dest_item.project_name,
+        transaction_type="transfer_in",
+        remarks=f"Transferred from {source_item.project_name}. {remarks}"
+    )
+    
+    db.add(transfer_out_tx)
+    db.add(transfer_in_tx)
+    db.commit()
+    db.refresh(source_item)
+    db.refresh(dest_item)
+    
+    return {
+        "message": "Transfer successful",
+        "source_quantity": source_item.item_current_quantity,
+        "dest_quantity": dest_item.item_current_quantity
+    }
     

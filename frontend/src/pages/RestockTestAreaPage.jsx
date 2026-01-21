@@ -36,8 +36,8 @@ export default function RestockTestAreaPage() {
     return <AccessDenied feature="the Restock feature" />;
   }
 
-  // Regular test areas
-  const regularTestAreas = [
+  // Test areas
+  const testAreas = [
     "ICT_Mobo",
     "BSI_Mobo",
     "FBT_Mobo",
@@ -45,16 +45,6 @@ export default function RestockTestAreaPage() {
     "FBT_Agora",
     "TOOLS",
   ];
-
-  // Test areas for Common project
-  const commonTestAreas = [
-    "Hi-Lo",
-    "Flying Probe",
-    "Development",
-  ];
-
-  // Select test areas based on project
-  const testAreas = project === "Common" ? commonTestAreas : regularTestAreas;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">

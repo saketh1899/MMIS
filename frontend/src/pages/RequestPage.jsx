@@ -18,7 +18,17 @@ export default function RequestPage() {
 
   // Load items from backend with filtering
   useEffect(() => {
-    if (!project || !test_area) {
+    if (!project) {
+      setItems([]);
+      setFilteredItems([]);
+      return;
+    }
+    
+    // Projects that don't require test_area
+    const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+    const requiresTestArea = !skipTestAreaProjects.includes(project);
+    
+    if (requiresTestArea && !test_area) {
       setItems([]);
       setFilteredItems([]);
       return;
@@ -26,9 +36,13 @@ export default function RequestPage() {
     
     // Properly encode URL parameters
     const encodedProject = encodeURIComponent(project);
-    const encodedTestArea = encodeURIComponent(test_area);
+    let url = `/inventory/?project=${encodedProject}`;
+    if (test_area) {
+      const encodedTestArea = encodeURIComponent(test_area);
+      url += `&test_area=${encodedTestArea}`;
+    }
     
-    API.get(`/inventory/?project=${encodedProject}&test_area=${encodedTestArea}`)
+    API.get(url)
       .then((res) => {
         // Ensure res.data is always an array
         const data = Array.isArray(res.data) ? res.data : [];
@@ -58,7 +72,11 @@ export default function RequestPage() {
   };
 
   const handleSelect = (item) => {
-    navigate(`/dashboard/request/item/${item.item_id}?project=${project}&test_area=${test_area}`);
+    let url = `/dashboard/request/item/${item.item_id}?project=${encodeURIComponent(project)}`;
+    if (test_area) {
+      url += `&test_area=${encodeURIComponent(test_area)}`;
+    }
+    navigate(url);
   };
 
   // Helper function to get full image URL
@@ -83,8 +101,10 @@ export default function RequestPage() {
       </div>
 
       <p className="text-center mt-4 text-gray-700 dark:text-gray-300 font-semibold text-lg">
-        Project: <span className="text-blue-600 dark:text-blue-400">{project}</span> — Test Area:{" "}
-        <span className="text-blue-600 dark:text-blue-400">{test_area}</span>
+        Project: <span className="text-blue-600 dark:text-blue-400">{project}</span>
+        {test_area && (
+          <> — Test Area: <span className="text-blue-600 dark:text-blue-400">{test_area}</span></>
+        )}
       </p>
 
       <div className="p-6 rounded-lg w-full max-w-4xl mx-auto mt-6">
@@ -182,9 +202,17 @@ export default function RequestPage() {
     <div className="flex justify-center mt-10">
       <button
         className="px-8 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 shadow transition-colors"
-        onClick={() =>
-            navigate(`/dashboard/request/test-area?project=${project}`)
+        onClick={() => {
+          // Projects that skip test area selection
+          const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+          if (skipTestAreaProjects.includes(project)) {
+            // Go back to project selection page
+            navigate("/dashboard/request");
+          } else {
+            // Go back to test area selection page
+            navigate(`/dashboard/request/test-area?project=${encodeURIComponent(project)}`);
           }
+        }}
         >
           Back
         </button>

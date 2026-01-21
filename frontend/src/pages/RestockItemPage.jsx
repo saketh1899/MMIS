@@ -40,16 +40,29 @@ export default function RestockItemPage() {
 
   // Load items from backend with filtering
   useEffect(() => {
-    if (!project || !test_area) {
+    if (!project) {
+      setItemsLoading(false);
+      return;
+    }
+    
+    // Projects that don't require test_area
+    const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+    const requiresTestArea = !skipTestAreaProjects.includes(project);
+    
+    if (requiresTestArea && !test_area) {
       setItemsLoading(false);
       return;
     }
     
     setItemsLoading(true);
     const encodedProject = encodeURIComponent(project);
-    const encodedTestArea = encodeURIComponent(test_area);
+    let url = `/inventory/?project=${encodedProject}`;
+    if (test_area) {
+      const encodedTestArea = encodeURIComponent(test_area);
+      url += `&test_area=${encodedTestArea}`;
+    }
     
-    API.get(`/inventory/?project=${encodedProject}&test_area=${encodedTestArea}`)
+    API.get(url)
       .then((res) => {
         const loadedItems = res.data || [];
         setItems(loadedItems);
@@ -118,14 +131,20 @@ export default function RestockItemPage() {
     return <AccessDenied feature="the Restock feature" />;
   }
 
-  // Show error if missing parameters
-  if (!project || !test_area) {
+  // Projects that don't require test_area
+  const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+  const requiresTestArea = project && !skipTestAreaProjects.includes(project);
+
+  // Show error if missing required parameters
+  if (!project || (requiresTestArea && !test_area)) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="text-center">
-          <p className="text-red-500 dark:text-red-400 mb-4">Missing project or test area parameters</p>
+          <p className="text-red-500 dark:text-red-400 mb-4">
+            {!project ? "Missing project parameter" : "Missing test area parameter"}
+          </p>
           <button
-            onClick={() => navigate("/dashboard/restock/project")}
+            onClick={() => navigate("/dashboard/restock")}
             className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
             Go Back to Projects
@@ -143,7 +162,11 @@ export default function RestockItemPage() {
   };
 
   const handleSelect = (item) => {
-    navigate(`/dashboard/restock/item/${item.item_id}/edit?project=${project}&test_area=${test_area}`);
+    let url = `/dashboard/restock/item/${item.item_id}/edit?project=${encodeURIComponent(project)}`;
+    if (test_area) {
+      url += `&test_area=${encodeURIComponent(test_area)}`;
+    }
+    navigate(url);
   };
 
   // Helper function to get full image URL
@@ -168,8 +191,10 @@ export default function RestockItemPage() {
       </div>
 
       <p className="text-center mt-4 text-gray-700 dark:text-gray-300 font-semibold text-lg">
-        Project: <span className="text-blue-600 dark:text-blue-400">{project}</span> — Test Area:{" "}
-        <span className="text-blue-600 dark:text-blue-400">{test_area}</span>
+        Project: <span className="text-blue-600 dark:text-blue-400">{project}</span>
+        {test_area && (
+          <> — Test Area: <span className="text-blue-600 dark:text-blue-400">{test_area}</span></>
+        )}
       </p>
 
       <div className="p-6 rounded-lg w-full max-w-4xl mx-auto mt-6">
@@ -347,9 +372,17 @@ export default function RestockItemPage() {
       <div className="flex justify-center mt-10 mb-8">
         <button
           className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
-          onClick={() =>
-              navigate(`/dashboard/restock/test-area?project=${project}`)
-          }
+          onClick={() => {
+            // Projects that skip test area selection
+            const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+            if (skipTestAreaProjects.includes(project)) {
+              // Go back to project selection page
+              navigate("/dashboard/restock");
+            } else {
+              // Go back to test area selection page
+              navigate(`/dashboard/restock/test-area?project=${encodeURIComponent(project)}`);
+            }
+          }}
         >
           Back
         </button>

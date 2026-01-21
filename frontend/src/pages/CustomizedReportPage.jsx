@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import { getProjects } from "../utils/projects";
 
 export default function CustomizedReportPage() {
   const [transactions, setTransactions] = useState([]);
@@ -34,19 +35,23 @@ export default function CustomizedReportPage() {
     "TOOLS",
   ];
 
-  const projects = [
-    "Common",
-    "Astoria",
-    "Athena",
-    "Turin",
-    "Bondi Beach",
-    "Zebra Beach",
-    "Mandolin Beach",
-    "Gulp",
-    "Xena",
-    "Agora",
-    "Humu Beach",
-  ];
+  const [projects, setProjects] = useState(getProjects());
+
+  // Reload projects when component mounts or when projects are updated
+  useEffect(() => {
+    const handleProjectsUpdate = () => {
+      setProjects(getProjects());
+    };
+
+    // Listen for custom event and storage changes
+    window.addEventListener('projectsUpdated', handleProjectsUpdate);
+    window.addEventListener('storage', handleProjectsUpdate);
+
+    return () => {
+      window.removeEventListener('projectsUpdated', handleProjectsUpdate);
+      window.removeEventListener('storage', handleProjectsUpdate);
+    };
+  }, []);
 
   // Filtered options
   const filteredTestAreas = testAreas.filter(area =>

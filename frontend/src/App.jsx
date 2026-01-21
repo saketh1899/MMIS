@@ -27,6 +27,7 @@ import CustomizedReportPage from "./pages/CustomizedReportPage";
 import SpendingReportPage from "./pages/SpendingReportPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ProfilePage from "./pages/ProfilePage";
+import TransferItemPage from "./pages/TransferItemPage";
 
 export default function App() {
   return (
@@ -214,6 +215,15 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["admin", "user"]}>
               <LowStockReportPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/transfer"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <TransferItemPage />
             </ProtectedRoute>
           }
         />

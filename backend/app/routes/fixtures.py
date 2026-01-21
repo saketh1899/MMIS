@@ -52,10 +52,12 @@ def update_fixture(fixture_id: int, fixture: schemas.FixtureBase, db: Session = 
     if not db_fixture:
         raise HTTPException(status_code=404, detail="Fixture not found")
     
-    # Update all fields
+    # Update all fields, converting None to empty string for optional fields
     update_data = fixture.dict()
     for key, value in update_data.items():
-        setattr(db_fixture, key, value)
+        # Convert None to empty string for optional fields
+        final_value = value if value is not None else ""
+        setattr(db_fixture, key, final_value)
     
     db.commit()
     db.refresh(db_fixture)
@@ -69,7 +71,8 @@ def add_fixture(data: dict, db: Session = Depends(get_db)):
     employee_id = data.get("employee_id")
     
     # Create FixtureBase from the data (excluding employee_id)
-    fixture_data = {k: v for k, v in data.items() if k != "employee_id"}
+    # Convert None to empty string for optional fields
+    fixture_data = {k: (v if v is not None else "") for k, v in data.items() if k != "employee_id"}
     fx = schemas.FixtureBase(**fixture_data)
     
     # Create the fixture

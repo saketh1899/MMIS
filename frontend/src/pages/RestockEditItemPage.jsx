@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import API from "../api";
 import AccessDenied from "../components/AccessDenied";
 import Header from "../components/Header";
+import { getProjects } from "../utils/projects";
 
 export default function RestockEditItemPage() {
   const { item_id } = useParams();
@@ -40,6 +41,23 @@ export default function RestockEditItemPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [projects, setProjects] = useState(getProjects());
+
+  // Reload projects when component mounts or when projects are updated
+  useEffect(() => {
+    const handleProjectsUpdate = () => {
+      setProjects(getProjects());
+    };
+
+    // Listen for custom event and storage changes
+    window.addEventListener('projectsUpdated', handleProjectsUpdate);
+    window.addEventListener('storage', handleProjectsUpdate);
+
+    return () => {
+      window.removeEventListener('projectsUpdated', handleProjectsUpdate);
+      window.removeEventListener('storage', handleProjectsUpdate);
+    };
+  }, []);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Load employee_id and access level
@@ -334,17 +352,11 @@ export default function RestockEditItemPage() {
                     className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
                   >
                     <option value="">Select Project</option>
-                    <option value="Common">Common</option>
-                    <option value="Astoria">Astoria</option>
-                    <option value="Athena">Athena</option>
-                    <option value="Turin">Turin</option>
-                    <option value="Bondi Beach">Bondi Beach</option>
-                    <option value="Zebra Beach">Zebra Beach</option>
-                    <option value="Mandolin Beach">Mandolin Beach</option>
-                    <option value="Gulp">Gulp</option>
-                    <option value="Xena">Xena</option>
-                    <option value="Agora">Agora</option>
-                    <option value="Humu Beach">Humu Beach</option>
+                    {projects.map((proj) => (
+                      <option key={proj} value={proj}>
+                        {proj}
+                      </option>
+                    ))}
                   </select>
                 ) : (
                   <input

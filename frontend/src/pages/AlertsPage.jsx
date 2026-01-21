@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import { getProjects } from "../utils/projects";
 
 export default function AlertsPage() {
   const [allLowStockItems, setAllLowStockItems] = useState([]);
@@ -33,11 +34,11 @@ export default function AlertsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Get unique projects and test areas from all low stock items and add "Common" if not present
-  const uniqueProjectsFromData = [...new Set(allLowStockItems.map(item => item.project_name).filter(Boolean))].sort();
-  const uniqueProjects = uniqueProjectsFromData.includes("Common") 
-    ? ["Common", ...uniqueProjectsFromData.filter(p => p !== "Common")] 
-    : ["Common", ...uniqueProjectsFromData];
+  // Get unique projects from data and merge with custom projects from localStorage
+  const uniqueProjectsFromData = [...new Set(allLowStockItems.map(item => item.project_name).filter(Boolean))];
+  const customProjects = getProjects();
+  const allProjects = [...new Set([...customProjects, ...uniqueProjectsFromData])].sort();
+  const uniqueProjects = allProjects;
   const uniqueTestAreas = [...new Set(allLowStockItems.map(item => item.test_area).filter(Boolean))].sort();
 
   // Filtered options for dropdowns
