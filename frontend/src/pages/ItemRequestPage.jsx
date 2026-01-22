@@ -21,6 +21,7 @@ export default function ItemRequestPage() {
   const [alternativeItems, setAlternativeItems] = useState([]);
   const [showAlternatives, setShowAlternatives] = useState(false);
   const [loadingAlternatives, setLoadingAlternatives] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Load item details
   useEffect(() => {
@@ -142,20 +143,30 @@ export default function ItemRequestPage() {
         <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-6 mb-8 transition-colors">
           <div className="flex gap-6">
             {/* Item Image */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 relative">
               {getImageUrl(item.item_image_url) ? (
-                <img 
-                  src={getImageUrl(item.item_image_url)} 
-                  alt={item.item_name}
-                  className="w-48 h-48 object-cover rounded-lg border dark:border-gray-600 shadow-md"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
+                <div className="relative group">
+                  <img 
+                    src={getImageUrl(item.item_image_url)} 
+                    alt={item.item_name}
+                    className="w-80 h-80 object-contain rounded-lg border dark:border-gray-600 shadow-md bg-white dark:bg-gray-700 p-2 cursor-pointer hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    onClick={() => setShowImageModal(true)}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = 'flex';
+                    }}
+                  />
+                  {/* Zoom indicator */}
+                  <div className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Click to enlarge</p>
+                </div>
               ) : null}
               <div 
-                className="w-48 h-48 bg-gray-200 dark:bg-gray-600 rounded-lg border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm shadow-md"
+                className="w-80 h-80 bg-gray-200 dark:bg-gray-600 rounded-lg border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm shadow-md"
                 style={{ display: getImageUrl(item.item_image_url) ? 'none' : 'flex' }}
               >
                 No Image
@@ -307,6 +318,33 @@ export default function ItemRequestPage() {
 
         </div>
       </div>
+
+      {/* Image Modal */}
+      {showImageModal && getImageUrl(item.item_image_url) && (
+        <div 
+          className="fixed inset-0 bg-black/80 dark:bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full">
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-full p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors z-10 shadow-lg"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img 
+              src={getImageUrl(item.item_image_url)} 
+              alt={item.item_name}
+              className="w-full h-full object-contain rounded-lg bg-white dark:bg-gray-800 p-4"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <p className="text-white text-center mt-4 text-lg font-semibold">{item.item_name}</p>
+          </div>
+        </div>
+      )}
 
     </div>
   );
