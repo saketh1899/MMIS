@@ -98,7 +98,7 @@ export default function ItemRequestPage() {
       if (response.data && response.data.transfer_used) {
         alert(`Request submitted! ${response.data.transferred_from_other_projects} units were automatically transferred from other projects.`);
       } else {
-        alert("Request submitted!");
+      alert("Request submitted!");
       }
       navigate("/dashboard");
     } catch (err) {
@@ -109,7 +109,7 @@ export default function ItemRequestPage() {
       // If request failed due to insufficient stock, show alternatives if not already shown
       if (err.response?.status === 400 && !showAlternatives) {
         loadAlternativeItems(item_id);
-      }
+    }
     }
   };
 
@@ -149,7 +149,7 @@ export default function ItemRequestPage() {
                   <img 
                     src={getImageUrl(item.item_image_url)} 
                     alt={item.item_name}
-                    className="w-80 h-80 object-contain rounded-lg border dark:border-gray-600 shadow-md bg-white dark:bg-gray-700 p-2 cursor-pointer hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    className="w-[500px] h-[500px] object-contain rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-700 p-4 cursor-pointer hover:shadow-2xl transition-all duration-200 hover:scale-105"
                     onClick={() => setShowImageModal(true)}
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -157,16 +157,16 @@ export default function ItemRequestPage() {
                     }}
                   />
                   {/* Zoom indicator */}
-                  <div className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                     </svg>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Click to enlarge</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 text-center font-medium">Click to enlarge</p>
                 </div>
               ) : null}
               <div 
-                className="w-80 h-80 bg-gray-200 dark:bg-gray-600 rounded-lg border dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm shadow-md"
+                className="w-[500px] h-[500px] bg-gray-200 dark:bg-gray-600 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-base shadow-lg"
                 style={{ display: getImageUrl(item.item_image_url) ? 'none' : 'flex' }}
               >
                 No Image
@@ -191,12 +191,12 @@ export default function ItemRequestPage() {
                     ? "text-red-600 dark:text-red-400" 
                     : "text-green-600 dark:text-green-400"
                 }`}>
-                  Current Quantity: {item.item_current_quantity}
+            Current Quantity: {item.item_current_quantity}
                   {item.item_current_quantity === 0 && (
                     <span className="ml-2 text-sm">(Out of Stock)</span>
                   )}
-                </p>
-              </div>
+          </p>
+        </div>
             </div>
           </div>
         </div>
@@ -267,19 +267,19 @@ export default function ItemRequestPage() {
           {/* Fixture field - only show for projects that require it */}
           {requiresFixture && (
             <>
-              <label className="font-semibold text-gray-700 dark:text-gray-300">Fixture</label>
-              <select
-                className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded transition-colors"
-                value={fixture}
-                onChange={(e) => setFixture(e.target.value)}
-              >
-                <option value="">Select Fixture</option>
-                {fixtures.map((fx) => (
-                  <option key={fx.fixture_id} value={fx.fixture_id}>
-                    {fx.fixture_name}
-                  </option>
-                ))}
-              </select>
+          <label className="font-semibold text-gray-700 dark:text-gray-300">Fixture</label>
+          <select
+            className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded transition-colors"
+            value={fixture}
+            onChange={(e) => setFixture(e.target.value)}
+          >
+            <option value="">Select Fixture</option>
+            {fixtures.map((fx) => (
+              <option key={fx.fixture_id} value={fx.fixture_id}>
+                {fx.fixture_name}
+              </option>
+            ))}
+          </select>
             </>
           )}
 
