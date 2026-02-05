@@ -14,6 +14,8 @@ export default function RestockEditItemPage() {
   const queryParams = new URLSearchParams(location.search);
   const project = queryParams.get("project");
   const test_area = queryParams.get("test_area");
+  const simpleRestockProjects = ["Development", "Hi-Lo", "Flying Probe"];
+  const isSimpleRestockProject = simpleRestockProjects.includes(project || "");
 
   const [item, setItem] = useState(null);
   const [formData, setFormData] = useState({
@@ -231,7 +233,11 @@ export default function RestockEditItemPage() {
       });
 
       alert(isEditMode ? "Item updated and restocked successfully!" : "Item restocked successfully!");
-      navigate(`/dashboard/restock/items?project=${project}&test_area=${test_area}`);
+      let backUrl = `/dashboard/restock/items?project=${encodeURIComponent(project || "")}`;
+      if (test_area) {
+        backUrl += `&test_area=${encodeURIComponent(test_area)}`;
+      }
+      navigate(backUrl);
     } catch (err) {
       console.error(err);
       alert("Failed to restock item: " + (err.response?.data?.detail || err.message));
@@ -250,7 +256,6 @@ export default function RestockEditItemPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8">
-        {/* EDIT MODE TOGGLE */}
         <div className="flex justify-end mb-4">
           <button
             onClick={() => setIsEditMode(!isEditMode)}
@@ -266,328 +271,378 @@ export default function RestockEditItemPage() {
 
         {/* FORM */}
         <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-6 mb-8 transition-colors">
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            {/* LEFT COLUMN */}
+          {isSimpleRestockProject && !isEditMode ? (
             <div className="space-y-4">
               <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Item ID</label>
-                <input
-                  type="text"
-                  name="item_id"
-                  value={formData.item_id}
-                  onChange={handleChange}
-                  className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
-                  readOnly
-                />
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Name</label>
-                <input
-                  type="text"
-                  name="item_name"
-                  value={formData.item_name}
-                  onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  readOnly={!isEditMode}
-                  required={isEditMode}
-                />
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Part Number</label>
-                <input
-                  type="text"
-                  name="item_part_number"
-                  value={formData.item_part_number}
-                  onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  readOnly={!isEditMode}
-                />
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Description</label>
-                <input
-                  type="text"
-                  name="item_description"
-                  value={formData.item_description}
-                  onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  readOnly={!isEditMode}
-                />
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Test Area</label>
-                {isEditMode ? (
-                  <select
-                    name="test_area"
-                    value={formData.test_area}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                  >
-                    <option value="">Select Test Area</option>
-                    <option value="ICT_Mobo">ICT_Mobo</option>
-                    <option value="BSI_Mobo">BSI_Mobo</option>
-                    <option value="FBT_Mobo">FBT_Mobo</option>
-                    <option value="ICT_Agora">ICT_Agora</option>
-                    <option value="FBT_Agora">FBT_Agora</option>
-                    <option value="TOOLS">TOOLS</option>
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name="test_area"
-                    value={formData.test_area}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
-                    readOnly
-                  />
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Project Name</label>
-                {isEditMode ? (
-                  <select
-                    name="project_name"
-                    value={formData.project_name}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                  >
-                    <option value="">Select Project</option>
-                    {projects.map((proj) => (
-                      <option key={proj} value={proj}>
-                        {proj}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name="project_name"
-                    value={formData.project_name}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
-                    readOnly
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN */}
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Unit</label>
-                <input
-                  type="text"
-                  name="item_unit"
-                  value={formData.item_unit}
-                  onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  placeholder="liters, lbs"
-                  readOnly={!isEditMode}
-                />
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Minimum Count</label>
-                <input
-                  type="number"
-                  name="item_min_count"
-                  value={formData.item_min_count}
-                  onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  readOnly={!isEditMode}
-                  min="0"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Manufacturer</label>
-                <input
-                  type="text"
-                  name="item_manufacturer"
-                  value={formData.item_manufacturer}
-                  onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  readOnly={!isEditMode}
-                />
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Type</label>
-                {isEditMode ? (
-                  <select
-                    name="item_type"
-                    value={formData.item_type}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                  >
-                    <option value="">Select Type</option>
-                    <option value="part">Part</option>
-                    <option value="tool">Tool</option>
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name="item_type"
-                    value={formData.item_type}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
-                    readOnly
-                  />
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Life Cycle</label>
-                <input
-                  type="number"
-                  name="item_life_cycle"
-                  value={formData.item_life_cycle}
-                  onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  readOnly={!isEditMode}
-                  min="0"
-                />
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Item</label>
+                <div className="p-3 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
+                  {formData.item_name || "Item"}
+                </div>
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Current Quantity</label>
+                <div className="p-3 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
+                  {formData.item_current_quantity}
+                </div>
+              </div>
+              <div>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Adding Quantity</label>
                 <input
                   type="number"
-                  name="item_current_quantity"
-                  value={formData.item_current_quantity}
-                  readOnly
-                  className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                  name="quantity_to_add"
+                  value={formData.quantity_to_add}
+                  onChange={handleChange}
+                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                  placeholder="Enter quantity to add"
+                  min="0"
+                  step="0.01"
+                  required
                 />
               </div>
               <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Unit Price</label>
+                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
                 <input
                   type="text"
-                  name="item_unit_price"
-                  value={formData.item_unit_price}
+                  name="remarks"
+                  value={formData.remarks}
                   onChange={handleChange}
-                  className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
-                  placeholder="e.g., 12.50"
-                  readOnly={!isEditMode}
+                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                  placeholder="Any notes..."
                 />
               </div>
-              <div>
-                <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
-                  Item Image
-                </label>
-                
-                {/* Current Image Display */}
-                {formData.item_image_url && !imagePreview && (
-                  <div className="mb-3">
-                    <img
-                      src={getImageUrl(formData.item_image_url)}
-                      alt="Current item"
-                      className="w-32 h-32 object-cover rounded border dark:border-gray-600"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* File Upload (only in edit mode) */}
-                {isEditMode && (
-                  <>
-                    <div className="mb-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
-                      />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Upload a new image file (JPG, PNG, GIF, WebP)
-                      </p>
-                    </div>
-
-                    {/* Image Preview */}
-                    {imagePreview && (
-                      <div className="mb-3">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="w-32 h-32 object-cover rounded border dark:border-gray-600"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleImageUpload}
-                          disabled={uploading}
-                          className="mt-2 px-4 py-1 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
-                        >
-                          {uploading ? "Uploading..." : "Upload Image"}
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Manual URL Input (Alternative, only in edit mode) */}
-                {isEditMode && (
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                {/* LEFT COLUMN */}
+                <div className="space-y-4">
                   <div>
-                    <label className="block mb-2 text-sm text-gray-600 dark:text-gray-400">
-                      Or enter image URL manually:
-                    </label>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Item ID</label>
                     <input
                       type="text"
-                      name="item_image_url"
-                      value={formData.item_image_url}
+                      name="item_id"
+                      value={formData.item_id}
                       onChange={handleChange}
-                      className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
-                      placeholder="/uploads/item_images/filename.jpg or https://..."
-                      disabled={!!selectedFile}
+                      className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                      readOnly
                     />
                   </div>
-                )}
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Name</label>
+                    <input
+                      type="text"
+                      name="item_name"
+                      value={formData.item_name}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      readOnly={!isEditMode}
+                      required={isEditMode}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Part Number</label>
+                    <input
+                      type="text"
+                      name="item_part_number"
+                      value={formData.item_part_number}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      readOnly={!isEditMode}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Description</label>
+                    <input
+                      type="text"
+                      name="item_description"
+                      value={formData.item_description}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      readOnly={!isEditMode}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Test Area</label>
+                    {isEditMode ? (
+                      <select
+                        name="test_area"
+                        value={formData.test_area}
+                        onChange={handleChange}
+                        className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                      >
+                        <option value="">Select Test Area</option>
+                        <option value="ICT_Mobo">ICT_Mobo</option>
+                        <option value="BSI_Mobo">BSI_Mobo</option>
+                        <option value="FBT_Mobo">FBT_Mobo</option>
+                        <option value="ICT_Agora">ICT_Agora</option>
+                        <option value="FBT_Agora">FBT_Agora</option>
+                        <option value="TOOLS">TOOLS</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        name="test_area"
+                        value={formData.test_area}
+                        onChange={handleChange}
+                        className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                        readOnly
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Project Name</label>
+                    {isEditMode ? (
+                      <select
+                        name="project_name"
+                        value={formData.project_name}
+                        onChange={handleChange}
+                        className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                      >
+                        <option value="">Select Project</option>
+                        {projects.map((proj) => (
+                          <option key={proj} value={proj}>
+                            {proj}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        name="project_name"
+                        value={formData.project_name}
+                        onChange={handleChange}
+                        className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                        readOnly
+                      />
+                    )}
+                  </div>
+                </div>
 
-                {/* Read-only display when not in edit mode */}
-                {!isEditMode && (
+                {/* RIGHT COLUMN */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Unit</label>
+                    <input
+                      type="text"
+                      name="item_unit"
+                      value={formData.item_unit}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      placeholder="liters, lbs"
+                      readOnly={!isEditMode}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Minimum Count</label>
+                    <input
+                      type="number"
+                      name="item_min_count"
+                      value={formData.item_min_count}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      readOnly={!isEditMode}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Manufacturer</label>
+                    <input
+                      type="text"
+                      name="item_manufacturer"
+                      value={formData.item_manufacturer}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      readOnly={!isEditMode}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Type</label>
+                    {isEditMode ? (
+                      <select
+                        name="item_type"
+                        value={formData.item_type}
+                        onChange={handleChange}
+                        className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                      >
+                        <option value="">Select Type</option>
+                        <option value="part">Part</option>
+                        <option value="tool">Tool</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        name="item_type"
+                        value={formData.item_type}
+                        onChange={handleChange}
+                        className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                        readOnly
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Life Cycle</label>
+                    <input
+                      type="number"
+                      name="item_life_cycle"
+                      value={formData.item_life_cycle}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      readOnly={!isEditMode}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Current Quantity</label>
+                    <input
+                      type="number"
+                      name="item_current_quantity"
+                      value={formData.item_current_quantity}
+                      readOnly
+                      className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Unit Price</label>
+                    <input
+                      type="text"
+                      name="item_unit_price"
+                      value={formData.item_unit_price}
+                      onChange={handleChange}
+                      className={`w-full p-2 border dark:border-gray-600 rounded transition-colors ${isEditMode ? "bg-white dark:bg-gray-700 dark:text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-gray-300"}`}
+                      placeholder="e.g., 12.50"
+                      readOnly={!isEditMode}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                      Item Image
+                    </label>
+                    
+                    {/* Current Image Display */}
+                    {formData.item_image_url && !imagePreview && (
+                      <div className="mb-3">
+                        <img
+                          src={getImageUrl(formData.item_image_url)}
+                          alt="Current item"
+                          className="w-32 h-32 object-cover rounded border dark:border-gray-600"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* File Upload (only in edit mode) */}
+                    {isEditMode && (
+                      <>
+                        <div className="mb-3">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
+                          />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Upload a new image file (JPG, PNG, GIF, WebP)
+                          </p>
+                        </div>
+
+                        {/* Image Preview */}
+                        {imagePreview && (
+                          <div className="mb-3">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-32 h-32 object-cover rounded border dark:border-gray-600"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleImageUpload}
+                              disabled={uploading}
+                              className="mt-2 px-4 py-1 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                            >
+                              {uploading ? "Uploading..." : "Upload Image"}
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Manual URL Input (Alternative, only in edit mode) */}
+                    {isEditMode && (
+                      <div>
+                        <label className="block mb-2 text-sm text-gray-600 dark:text-gray-400">
+                          Or enter image URL manually:
+                        </label>
+                        <input
+                          type="text"
+                          name="item_image_url"
+                          value={formData.item_image_url}
+                          onChange={handleChange}
+                          className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors text-sm"
+                          placeholder="/uploads/item_images/filename.jpg or https://..."
+                          disabled={!!selectedFile}
+                        />
+                      </div>
+                    )}
+
+                    {/* Read-only display when not in edit mode */}
+                    {!isEditMode && (
+                      <input
+                        type="text"
+                        name="item_image_url"
+                        value={formData.item_image_url || "No image"}
+                        readOnly
+                        className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* BOTTOM FIELDS */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Adding Quantity</label>
+                  <input
+                    type="number"
+                    name="quantity_to_add"
+                    value={formData.quantity_to_add}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                    placeholder="Enter quantity to add"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
                   <input
                     type="text"
-                    name="item_image_url"
-                    value={formData.item_image_url || "No image"}
-                    readOnly
-                    className="w-full p-2 border dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                    name="remarks"
+                    value={formData.remarks}
+                    onChange={handleChange}
+                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                    placeholder="Any notes..."
                   />
-                )}
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* BOTTOM FIELDS */}
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Adding Quantity</label>
-              <input
-                type="number"
-                name="quantity_to_add"
-                value={formData.quantity_to_add}
-                onChange={handleChange}
-                className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                placeholder="Enter quantity to add"
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
-              <input
-                type="text"
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleChange}
-                className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                placeholder="Any notes..."
-              />
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
         {/* ACTION BUTTONS */}
         <div className="flex justify-center gap-6 mb-8">
           <button
             className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
-            onClick={() => navigate(`/dashboard/restock/items?project=${project}&test_area=${test_area}`)}
+            onClick={() => {
+              let backUrl = `/dashboard/restock/items?project=${encodeURIComponent(project || "")}`;
+              if (test_area) {
+                backUrl += `&test_area=${encodeURIComponent(test_area)}`;
+              }
+              navigate(backUrl);
+            }}
           >
             Back
           </button>

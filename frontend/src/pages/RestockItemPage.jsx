@@ -46,7 +46,7 @@ export default function RestockItemPage() {
     }
     
     // Projects that don't require test_area
-    const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+    const skipTestAreaProjects = ["Hi-Lo", "Flying Probe", "Development"];
     const requiresTestArea = !skipTestAreaProjects.includes(project);
     
     if (requiresTestArea && !test_area) {
@@ -132,7 +132,7 @@ export default function RestockItemPage() {
   }
 
   // Projects that don't require test_area
-  const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+  const skipTestAreaProjects = ["Hi-Lo", "Flying Probe", "Development"];
   const requiresTestArea = project && !skipTestAreaProjects.includes(project);
 
   // Show error if missing required parameters
@@ -374,7 +374,7 @@ export default function RestockItemPage() {
           className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
           onClick={() => {
             // Projects that skip test area selection
-            const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+            const skipTestAreaProjects = ["Hi-Lo", "Flying Probe", "Development"];
             if (skipTestAreaProjects.includes(project)) {
               // Go back to project selection page
               navigate("/dashboard/restock");

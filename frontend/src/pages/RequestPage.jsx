@@ -25,7 +25,7 @@ export default function RequestPage() {
     }
     
     // Projects that don't require test_area
-    const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+    const skipTestAreaProjects = ["Hi-Lo", "Flying Probe", "Development"];
     const requiresTestArea = !skipTestAreaProjects.includes(project);
     
     if (requiresTestArea && !test_area) {

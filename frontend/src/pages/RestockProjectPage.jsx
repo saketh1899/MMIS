@@ -60,7 +60,7 @@ export default function RestockProjectPage() {
   );
 
   // Projects that skip test area selection
-  const skipTestAreaProjects = ["Hi-Lo", "Flying Probe"];
+  const skipTestAreaProjects = ["Hi-Lo", "Flying Probe", "Development"];
 
   // Handle project selection - skip test area for specific projects
   const handleProjectClick = (project) => {

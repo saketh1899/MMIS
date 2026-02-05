@@ -53,7 +53,7 @@ export default function ItemRequestPage() {
   };
 
   // Projects that don't require fixtures
-  const skipFixtureProjects = ["Hi-Lo", "Flying Probe"];
+  const skipFixtureProjects = ["Hi-Lo", "Flying Probe", "Development"];
   const requiresFixture = project && !skipFixtureProjects.includes(project);
 
   // Load fixtures — Only for projects that require fixtures

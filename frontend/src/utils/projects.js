@@ -7,6 +7,7 @@ export const DEFAULT_PROJECTS = [
   "Athena",
   "Turin",
   "Bondi Beach",
+  "Development",
   "Zebra Beach",
   "Mandolin Beach",
   "Gulp",
