@@ -186,7 +186,7 @@ def get_transactions_by_employee(db: Session, emp_id: int):
             models.Employee.employee_name.label("employee_name"),
         )
         .join(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)
-        .join(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)
+        .outerjoin(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)  # LEFT JOIN for projects without fixtures
         .join(models.Employee, models.Transaction.employee_id == models.Employee.employee_id)
         .filter(models.Transaction.employee_id == emp_id)
         .filter(models.Transaction.transaction_type == "request")

@@ -147,15 +147,15 @@ export default function ReturnItemPage() {
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 mb-8 shadow-md">
-        <h1 className="text-3xl font-bold">Return</h1>
+      <div className="w-full bg-blue-600 text-white text-center py-3 mb-4 shadow-md">
+        <h1 className="text-2xl font-bold">Return</h1>
       </div>
 
-      <div className="max-w-3xl mx-auto bg-white p-8 border rounded-xl shadow">
+      <div className="max-w-4xl mx-auto bg-white p-4 border rounded-xl shadow">
 
         {/* TRANSACTION BOX */}
-        <div className="border p-4 rounded-xl bg-gray-50 mb-8">
-          <div className="flex gap-6">
+        <div className="border p-4 rounded-xl bg-gray-50 mb-4">
+          <div className="flex gap-5">
             {/* Item Image */}
             <div className="flex-shrink-0 relative">
               {getImageUrl(tx.item_image_url) ? (
@@ -163,7 +163,7 @@ export default function ReturnItemPage() {
                   <img 
                     src={getImageUrl(tx.item_image_url)} 
                     alt={tx.item_name || `Item #${tx.item_id}`}
-                    className="w-[500px] h-[500px] object-contain rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-700 p-4 cursor-pointer hover:shadow-2xl transition-all duration-200 hover:scale-105"
+                    className="w-48 h-48 object-contain rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-md bg-white dark:bg-gray-700 p-2 cursor-pointer hover:shadow-xl transition-all duration-200 hover:scale-105"
                     onClick={() => setShowImageModal(true)}
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -171,16 +171,16 @@ export default function ReturnItemPage() {
                     }}
                   />
                   {/* Zoom indicator */}
-                  <div className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                     </svg>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 text-center font-medium">Click to enlarge</p>
+                  <p className="text-xs text-gray-500 mt-1 text-center">Click to enlarge</p>
                 </div>
               ) : null}
               <div 
-                className="w-[500px] h-[500px] bg-gray-200 dark:bg-gray-600 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-base shadow-lg"
+                className="w-48 h-48 bg-gray-200 dark:bg-gray-600 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm shadow-md"
                 style={{ display: getImageUrl(tx.item_image_url) ? 'none' : 'flex' }}
               >
                 No Image
@@ -189,8 +189,8 @@ export default function ReturnItemPage() {
             
             {/* Item Details */}
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-3">{tx.item_name || `Item #${tx.item_id}`}</h2>
-              <div className="space-y-2">
+              <h2 className="text-xl font-bold mb-2">{tx.item_name || `Item #${tx.item_id}`}</h2>
+              <div className="space-y-1 text-sm">
                 <p><strong>Description:</strong> {tx.item_description || "N/A"}</p>
                 <p><strong>Part Number:</strong> {tx.item_part_number || "N/A"}</p>
                 <p><strong>Manufacturer:</strong> {tx.item_manufacturer || "N/A"}</p>
@@ -206,48 +206,48 @@ export default function ReturnItemPage() {
         </div>
 
         {/* RETURN QUANTITY */}
-        <label className="font-semibold text-gray-700">Return Quantity</label>
+        <label className="font-semibold text-sm text-gray-700">Return Quantity</label>
         <input
           type="number"
           min="1"
           max={tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used}
           step="1"
-          className={`border p-2 rounded w-full mb-2 ${quantityError ? "border-red-500" : ""}`}
+          className={`border p-2 rounded w-full mb-1 text-sm ${quantityError ? "border-red-500" : ""}`}
           value={quantity}
           onChange={handleQuantityChange}
           onBlur={handleQuantityBlur}
           placeholder={`Enter quantity (max ${tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used})`}
         />
         {quantityError && (
-          <p className="text-red-500 text-sm mb-4">{quantityError}</p>
+          <p className="text-red-500 text-xs mb-3">{quantityError}</p>
         )}
         {!quantityError && (
-          <p className="text-gray-500 text-sm mb-4">
+          <p className="text-gray-500 text-xs mb-3">
             Maximum returnable: {tx.quantity_used} items
           </p>
         )}
 
         {/* REMARKS */}
-        <label className="font-semibold text-gray-700">Remarks (Optional)</label>
+        <label className="font-semibold text-sm text-gray-700">Remarks (Optional)</label>
         <input
           type="text"
-          className="border p-2 rounded w-full mb-8"
+          className="border p-2 rounded w-full mb-4 text-sm"
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
           placeholder="Any notes..."
         />
 
         {/* BUTTONS */}
-        <div className="flex justify-center gap-6">
+        <div className="flex justify-center gap-4">
           <button
-            className="px-8 py-2 bg-gray-300 rounded hover:bg-gray-400"
+            className="px-5 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm"
             onClick={() => navigate(-1)}
           >
             Back
           </button>
 
           <button
-            className="px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
             onClick={submitReturn}
           >
             Submit Return

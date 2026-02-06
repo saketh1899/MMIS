@@ -75,22 +75,23 @@ class InventoryOut(InventoryBase):
 class TransactionBase(BaseModel):
     item_id: int
     employee_id: int
-    fixture_id: int
+    fixture_id: Optional[int] = None  # Optional for projects that don't require fixtures
     quantity_used: int
     transaction_type: str
-    remarks: Optional[str]
-    test_area: Optional[str]
-    project_name: Optional[str]
+    remarks: Optional[str] = None
+    test_area: Optional[str] = None
+    project_name: Optional[str] = None
 
 # Schema for returning transaction details (includes DB-generated fields)
 class TransactionOut(BaseModel):
     transaction_id: int
     item_id: int
-    fixture_id: int
+    fixture_id: Optional[int] = None  # Optional for projects that don't require fixtures
     employee_id: int
     transaction_type: str
     quantity_used: int
     created_at: datetime
+    remarks: Optional[str] = None
 
     item_name: Optional[str] = None
     item_part_number: Optional[str] = None

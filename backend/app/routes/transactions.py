@@ -128,7 +128,7 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
     tx = (
         db.query(models.Transaction)
         .join(models.Inventory, models.Transaction.item_id == models.Inventory.item_id)
-        .join(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)
+        .outerjoin(models.Fixture, models.Transaction.fixture_id == models.Fixture.fixture_id)  # LEFT JOIN for projects without fixtures
         .join(models.Employee, models.Transaction.employee_id == models.Employee.employee_id)
         .filter(models.Transaction.transaction_id == transaction_id)
         .first()
@@ -191,8 +191,8 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
         "item_manufacturer": tx.item.item_manufacturer,
         "item_image_url": tx.item.item_image_url,
 
-        # Fixture info
-        "fixture_name": tx.fixture.fixture_name,
+        # Fixture info (may be None for projects without fixtures)
+        "fixture_name": tx.fixture.fixture_name if tx.fixture else None,
 
         # Employee info
         "employee_name": tx.employee.employee_name,
