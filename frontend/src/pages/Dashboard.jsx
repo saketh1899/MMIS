@@ -145,8 +145,13 @@ export default function Dashboard() {
           .slice(0, 5); // Top 5 test areas
         setTestAreaStats(testAreaArray);
         
-        // Get recent 5 transactions
-        setRecentActivity(allTransactions.slice(0, 5));
+        // Get recent 5 transactions (newest first)
+        const recentSorted = [...allTransactions].sort((a, b) => {
+          const aTime = new Date(a.created_at || 0).getTime();
+          const bTime = new Date(b.created_at || 0).getTime();
+          return bTime - aTime;
+        });
+        setRecentActivity(recentSorted.slice(0, 5));
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       } finally {
@@ -181,6 +186,14 @@ export default function Dashboard() {
     if (typeLower === "return") return "📥";
     if (typeLower === "restock") return "📦";
     return "📋";
+  };
+
+  const getTransactionTypeBadge = (type) => {
+    const typeLower = type?.toLowerCase() || "";
+    if (typeLower === "request") return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+    if (typeLower === "return") return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+    if (typeLower === "restock") return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
+    return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
   };
 
   // Calculate percentage for low stock
@@ -273,7 +286,10 @@ export default function Dashboard() {
             {/* Recent Activity */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">Recent Activity</h3>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">Recent Activity</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Latest 5 transactions</p>
+                </div>
                 <button
                   onClick={() => navigate("/dashboard/activity")}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
@@ -288,14 +304,23 @@ export default function Dashboard() {
                   {recentActivity.map((activity) => (
                     <div
                       key={activity.transaction_id}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getTransactionTypeIcon(activity.transaction_type)}</span>
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow text-xl">
+                          {getTransactionTypeIcon(activity.transaction_type)}
+                        </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{activity.item_name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              {activity.item_name || "Item"}
+                            </p>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${getTransactionTypeBadge(activity.transaction_type)}`}>
+                              {activity.transaction_type || "N/A"}
+                            </span>
+                          </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {activity.employee_name} • {formatDate(activity.created_at)}
+                            {activity.project_name || "Project"}{activity.test_area ? ` • ${activity.test_area}` : ""} • {formatDate(activity.created_at)}
                           </p>
                         </div>
                       </div>
