@@ -84,7 +84,7 @@ export default function TransferItemPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-transparent">
         <Header />
         <div className="text-center mt-10 text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
@@ -92,7 +92,7 @@ export default function TransferItemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
       <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md">

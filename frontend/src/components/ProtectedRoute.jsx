@@ -19,5 +19,12 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return children;
+  return (
+    <div className="app-bg min-h-screen">
+      <div className="app-bg-grid"></div>
+      <div className="relative z-10">
+        {children}
+      </div>
+    </div>
+  );
 }

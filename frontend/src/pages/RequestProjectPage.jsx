@@ -45,7 +45,7 @@ export default function RequestProjectPage() {
   };
 
     return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
@@ -62,7 +62,7 @@ export default function RequestProjectPage() {
         <input
           type="text"
           placeholder="Project Names"
-          className="w-full p-3 border dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded shadow-sm transition-colors"
+          className="w-full p-3 border-2 border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg shadow-sm transition-all"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />

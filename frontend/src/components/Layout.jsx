@@ -27,7 +27,7 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+    <div className="flex h-screen bg-transparent transition-colors">
       
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 shadow-md p-6 space-y-4 transition-colors">
@@ -60,7 +60,7 @@ export default function Layout({ children }) {
         <Header showMMIS={false} />
 
         {/* Page Body */}
-        <main className="p-6 overflow-auto bg-gray-50 dark:bg-gray-900 transition-colors">
+        <main className="p-6 overflow-auto bg-transparent transition-colors">
           {children}
         </main>
       </div>

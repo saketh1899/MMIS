@@ -121,7 +121,7 @@ export default function RestockItemPage() {
   // Check if user is admin
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+      <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
         <p className="text-gray-500 dark:text-gray-400">Loading...</p>
       </div>
     );
@@ -138,7 +138,7 @@ export default function RestockItemPage() {
   // Show error if missing required parameters
   if (!project || (requiresTestArea && !test_area)) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+      <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
         <div className="text-center">
           <p className="text-red-500 dark:text-red-400 mb-4">
             {!project ? "Missing project parameter" : "Missing test area parameter"}
@@ -182,7 +182,7 @@ export default function RestockItemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors" style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen bg-transparent transition-colors" style={{ minHeight: '100vh' }}>
       <Header />
 
       {/* BLUE HEADER */}

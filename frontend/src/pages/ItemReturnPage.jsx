@@ -143,7 +143,7 @@ export default function ReturnItemPage() {
   if (!tx) return <h2 className="text-center mt-10">Loading...</h2>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       <Header />
 
       {/* BLUE HEADER */}
@@ -215,7 +215,7 @@ export default function ReturnItemPage() {
                 min="1"
                 max={tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used}
                 step="1"
-                className={`w-full border p-2.5 rounded-lg text-sm ${quantityError ? "border-red-500" : ""}`}
+                className={`w-full border-2 p-2.5 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white transition-all hover:border-blue-300 ${quantityError ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
                 value={quantity}
                 onChange={handleQuantityChange}
                 onBlur={handleQuantityBlur}
@@ -232,7 +232,7 @@ export default function ReturnItemPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Remarks (Optional)</label>
               <input
                 type="text"
-                className="w-full border p-2.5 rounded-lg text-sm"
+                className="w-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-2.5 rounded-lg text-sm transition-all hover:border-blue-300"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
                 placeholder="Any notes..."

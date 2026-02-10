@@ -139,7 +139,7 @@ export default function ItemRequestPage() {
   if (!item) return <h2 className="text-center mt-10 text-gray-500 dark:text-gray-400">Loading...</h2>;
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col overflow-hidden">
+    <div className="h-screen bg-transparent transition-colors flex flex-col overflow-hidden">
       <Header />
 
       {/* BLUE HEADER */}
@@ -272,7 +272,7 @@ export default function ItemRequestPage() {
               <div className="relative">
                 <input
                   type="text"
-                  className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-colors pr-10"
+                  className="w-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-all pr-10 hover:border-blue-300"
                   placeholder="Search & select fixture..."
                   value={showFixtureDropdown ? fixtureSearch : selectedFixtureName || fixtureSearch}
                   onChange={(e) => {
@@ -318,7 +318,7 @@ export default function ItemRequestPage() {
           <input
             type="number"
             min="1"
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-colors"
+            className="w-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-all hover:border-blue-300"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             placeholder="Quantity"
@@ -327,7 +327,7 @@ export default function ItemRequestPage() {
           {/* Remarks */}
           <input
             type="text"
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-colors"
+            className="w-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-all hover:border-blue-300"
             placeholder="Remarks (Optional)"
           />
         </div>

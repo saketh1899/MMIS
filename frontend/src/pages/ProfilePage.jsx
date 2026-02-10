@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-transparent">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
@@ -57,7 +57,7 @@ export default function ProfilePage() {
 
   if (!employeeData) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-transparent">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
@@ -75,7 +75,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       <Header />
 
       {/* BLUE HEADER */}

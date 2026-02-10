@@ -45,7 +45,7 @@ export default function RestockProjectPage() {
 
   // Check if user is admin
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+    return <div className="min-h-screen bg-transparent flex items-center justify-center transition-colors">
       <p className="text-gray-500 dark:text-gray-400">Loading...</p>
     </div>;
   }
@@ -74,7 +74,7 @@ export default function RestockProjectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
       {/* BLUE HEADER */}

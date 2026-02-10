@@ -92,7 +92,7 @@ export default function RequestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
       {/* BLUE HEADER */}
@@ -114,7 +114,7 @@ export default function RequestPage() {
           <input
             ref={searchRef}
             type="text"
-            className="w-full p-3 pl-3 pr-10 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm transition-colors"
+            className="w-full p-3 pl-3 pr-10 border-2 border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg shadow-sm transition-all"
             placeholder="Search or select by item name..."
             value={searchInput}
             onChange={handleSearch}

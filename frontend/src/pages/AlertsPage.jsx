@@ -106,7 +106,7 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
       {/* BLUE HEADER */}

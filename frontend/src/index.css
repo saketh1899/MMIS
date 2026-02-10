@@ -1,3 +1,155 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ========== Global App Background ========== */
+.app-bg {
+  background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 30%, #eef1f8 60%, #e8ecf4 100%);
+  position: relative;
+}
+.dark .app-bg {
+  background: linear-gradient(135deg, #111827 0%, #1e293b 50%, #111827 100%);
+}
+
+/* Decorative background circles */
+.app-bg::before,
+.app-bg::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.app-bg::before {
+  top: -10rem;
+  right: -10rem;
+  width: 25rem;
+  height: 25rem;
+  background: rgba(99, 102, 241, 0.06);
+  filter: blur(80px);
+}
+.app-bg::after {
+  bottom: -10rem;
+  left: -10rem;
+  width: 30rem;
+  height: 30rem;
+  background: rgba(59, 130, 246, 0.06);
+  filter: blur(80px);
+}
+
+/* Grid pattern overlay */
+.app-bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(128, 128, 128, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128, 128, 128, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== Global Input Default + Focus Styles ========== */
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="email"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"],
+select,
+textarea {
+  border-width: 2px !important;
+  border-color: #d1d5db !important; /* gray-300 */
+  border-radius: 0.5rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="password"],
+.dark input[type="email"],
+.dark input[type="search"],
+.dark input[type="tel"],
+.dark input[type="url"],
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="month"],
+.dark input[type="week"],
+.dark input[type="time"],
+.dark select,
+.dark textarea {
+  border-color: #4b5563 !important; /* gray-600 */
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+}
+
+input:hover:not(:focus):not(:disabled):not([readonly]),
+select:hover:not(:focus):not(:disabled):not([readonly]),
+textarea:hover:not(:focus):not(:disabled):not([readonly]) {
+  border-color: #93c5fd !important;
+}
+
+/* Dark mode input focus */
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25) !important;
+}
+
+.dark input:hover:not(:focus):not(:disabled):not([readonly]),
+.dark select:hover:not(:focus):not(:disabled):not([readonly]),
+.dark textarea:hover:not(:focus):not(:disabled):not([readonly]) {
+  border-color: #6b7280 !important;
+}
+
+/* ========== Enhanced Card Styling on Gradient ========== */
+/* Subtle glass effect for white cards on gradient background (light mode only) */
+.app-bg .bg-white:not(input):not(select):not(textarea) {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ========== Enhanced Buttons ========== */
+button {
+  transition: all 0.2s ease;
+}
+
+/* ========== Scrollbar Styling ========== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
