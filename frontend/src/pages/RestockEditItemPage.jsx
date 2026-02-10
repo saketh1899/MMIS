@@ -194,6 +194,39 @@ export default function RestockEditItemPage() {
     }
   };
 
+  // Save only attribute changes (no quantity required)
+  const handleSaveChanges = async () => {
+    try {
+      const updateData = {
+        item_name: formData.item_name,
+        item_part_number: formData.item_part_number || null,
+        item_description: formData.item_description || null,
+        test_area: formData.test_area || null,
+        project_name: formData.project_name || null,
+        item_unit: formData.item_unit || null,
+        item_min_count: parseInt(formData.item_min_count) || 0,
+        item_manufacturer: formData.item_manufacturer || null,
+        item_type: formData.item_type || null,
+        item_life_cycle: parseInt(formData.item_life_cycle) || 0,
+        item_unit_price: formData.item_unit_price || null,
+        item_image_url: formData.item_image_url || null,
+        item_current_quantity: parseInt(formData.item_current_quantity) || 0,
+      };
+
+      await API.put(`/inventory/${item_id}`, updateData);
+      alert("Item details updated successfully!");
+      setIsEditMode(false);
+
+      // Refresh item data
+      const res = await API.get(`/inventory/${item_id}`);
+      setItem(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update item: " + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  // Restock (add quantity) - works independently of edit mode
   const handleRestock = async () => {
     if (!formData.quantity_to_add || parseFloat(formData.quantity_to_add) <= 0) {
       alert("Please enter a valid quantity to add (must be greater than 0)");
@@ -203,25 +236,9 @@ export default function RestockEditItemPage() {
     try {
       const quantityToAdd = parseFloat(formData.quantity_to_add);
 
-      // If in edit mode, update item details first
+      // If in edit mode, save attribute changes first
       if (isEditMode) {
-        const updateData = {
-          item_name: formData.item_name,
-          item_part_number: formData.item_part_number || null,
-          item_description: formData.item_description || null,
-          test_area: formData.test_area || null,
-          project_name: formData.project_name || null,
-          item_unit: formData.item_unit || null,
-          item_min_count: parseInt(formData.item_min_count) || 0,
-          item_manufacturer: formData.item_manufacturer || null,
-          item_type: formData.item_type || null,
-          item_life_cycle: parseInt(formData.item_life_cycle) || 0,
-          item_unit_price: formData.item_unit_price || null,
-          item_image_url: formData.item_image_url || null,
-          item_current_quantity: parseInt(formData.item_current_quantity) || 0, // This will be ignored by backend
-        };
-
-        await API.put(`/inventory/${item_id}`, updateData);
+        await handleSaveChanges();
       }
 
       // Then restock the item
@@ -232,7 +249,7 @@ export default function RestockEditItemPage() {
         employee_id: employeeId,
       });
 
-      alert(isEditMode ? "Item updated and restocked successfully!" : "Item restocked successfully!");
+      alert("Item restocked successfully!");
       let backUrl = `/dashboard/restock/items?project=${encodeURIComponent(project || "")}`;
       if (test_area) {
         backUrl += `&test_area=${encodeURIComponent(test_area)}`;
@@ -600,32 +617,37 @@ export default function RestockEditItemPage() {
                 </div>
               </div>
 
-              {/* BOTTOM FIELDS */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Adding Quantity</label>
-                  <input
-                    type="number"
-                    name="quantity_to_add"
-                    value={formData.quantity_to_add}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                    placeholder="Enter quantity to add"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
-                  <input
-                    type="text"
-                    name="remarks"
-                    value={formData.remarks}
-                    onChange={handleChange}
-                    className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                    placeholder="Any notes..."
-                  />
+              {/* RESTOCK SECTION - separated visually */}
+              <div className="border-t dark:border-gray-600 pt-4 mt-2">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Restock Quantity</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                      Adding Quantity
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(required for restock)</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="quantity_to_add"
+                      value={formData.quantity_to_add}
+                      onChange={handleChange}
+                      className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                      placeholder="Enter quantity to add"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
+                    <input
+                      type="text"
+                      name="remarks"
+                      value={formData.remarks}
+                      onChange={handleChange}
+                      className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
+                      placeholder="Any notes..."
+                    />
+                  </div>
                 </div>
               </div>
             </>
@@ -633,9 +655,9 @@ export default function RestockEditItemPage() {
         </div>
 
         {/* ACTION BUTTONS */}
-        <div className="flex justify-center gap-6 mb-8">
+        <div className="flex justify-center gap-4 mb-8">
           <button
-            className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
+            className="px-8 py-2 bg-gray-200 dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 shadow transition-colors font-medium"
             onClick={() => {
               let backUrl = `/dashboard/restock/items?project=${encodeURIComponent(project || "")}`;
               if (test_area) {
@@ -647,8 +669,18 @@ export default function RestockEditItemPage() {
             Back
           </button>
 
+          {/* Save Changes - only visible in edit mode, no quantity required */}
+          {isEditMode && (
+            <button
+              className="px-8 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 shadow transition-colors font-medium"
+              onClick={handleSaveChanges}
+            >
+              Save Changes
+            </button>
+          )}
+
           <button
-            className="px-8 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 shadow transition-colors"
+            className="px-8 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 shadow transition-colors font-medium"
             onClick={handleRestock}
           >
             Submit Restock

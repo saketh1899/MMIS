@@ -143,19 +143,19 @@ export default function ReturnItemPage() {
   if (!tx) return <h2 className="text-center mt-10">Loading...</h2>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 text-white text-center py-3 mb-4 shadow-md">
-        <h1 className="text-2xl font-bold">Return</h1>
+      <div className="w-full bg-blue-600 text-white text-center py-3 shadow-md">
+        <h1 className="text-2xl font-bold">Return Item</h1>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-white p-4 border rounded-xl shadow">
-
-        {/* TRANSACTION BOX */}
-        <div className="border p-4 rounded-xl bg-gray-50 mb-4">
-          <div className="flex gap-5">
+      {/* Main content - fills remaining screen */}
+      <div className="flex-1 flex flex-col justify-center max-w-5xl w-full mx-auto px-6 py-4">
+        {/* ITEM CARD */}
+        <div className="bg-white border rounded-xl shadow-md p-5 mb-4">
+          <div className="flex gap-6 items-center">
             {/* Item Image */}
             <div className="flex-shrink-0 relative">
               {getImageUrl(tx.item_image_url) ? (
@@ -163,7 +163,7 @@ export default function ReturnItemPage() {
                   <img 
                     src={getImageUrl(tx.item_image_url)} 
                     alt={tx.item_name || `Item #${tx.item_id}`}
-                    className="w-48 h-48 object-contain rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-md bg-white dark:bg-gray-700 p-2 cursor-pointer hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    className="w-44 h-44 object-contain rounded-xl border-2 border-gray-200 shadow bg-white p-2 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                     onClick={() => setShowImageModal(true)}
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -171,16 +171,16 @@ export default function ReturnItemPage() {
                     }}
                   />
                   {/* Zoom indicator */}
-                  <div className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                  <div className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                     </svg>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1 text-center">Click to enlarge</p>
+                  <p className="text-xs text-gray-400 text-center mt-1">Click to enlarge</p>
                 </div>
               ) : null}
               <div 
-                className="w-48 h-48 bg-gray-200 dark:bg-gray-600 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm shadow-md"
+                className="w-44 h-44 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm"
                 style={{ display: getImageUrl(tx.item_image_url) ? 'none' : 'flex' }}
               >
                 No Image
@@ -188,72 +188,73 @@ export default function ReturnItemPage() {
             </div>
             
             {/* Item Details */}
-            <div className="flex-1">
-              <h2 className="text-xl font-bold mb-2">{tx.item_name || `Item #${tx.item_id}`}</h2>
-              <div className="space-y-1 text-sm">
-                <p><strong>Description:</strong> {tx.item_description || "N/A"}</p>
-                <p><strong>Part Number:</strong> {tx.item_part_number || "N/A"}</p>
-                <p><strong>Manufacturer:</strong> {tx.item_manufacturer || "N/A"}</p>
-                <p><strong>Fixture:</strong> {tx.fixture_name || "N/A"}</p>
-                <p><strong>Quantity Taken:</strong> {tx.quantity_used}</p>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">{tx.item_name || `Item #${tx.item_id}`}</h2>
+              <div className="space-y-2 text-base">
+                <p className="text-gray-700"><span className="font-semibold text-gray-900">Description:</span> {tx.item_description || "N/A"}</p>
+                <p className="text-gray-700"><span className="font-semibold text-gray-900">Part Number:</span> {tx.item_part_number || "N/A"}</p>
+                <p className="text-gray-700"><span className="font-semibold text-gray-900">Manufacturer:</span> {tx.item_manufacturer || "N/A"}</p>
+                <p className="text-gray-700"><span className="font-semibold text-gray-900">Fixture:</span> {tx.fixture_name || "N/A"}</p>
+                <p className="text-gray-700"><span className="font-semibold text-gray-900">Quantity Taken:</span> {tx.quantity_used}</p>
                 {tx.remaining_quantity !== undefined && tx.remaining_quantity !== tx.quantity_used && (
-                  <p><strong>Remaining to Return:</strong> {tx.remaining_quantity}</p>
+                  <p className="text-orange-600 font-bold">Remaining to Return: {tx.remaining_quantity}</p>
                 )}
-                <p><strong>Date Requested:</strong> {tx.created_at.substring(0, 10)}</p>
+                <p className="text-gray-500"><span className="font-semibold">Date Requested:</span> {tx.created_at.substring(0, 10)}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RETURN QUANTITY */}
-        <label className="font-semibold text-sm text-gray-700">Return Quantity</label>
-        <input
-          type="number"
-          min="1"
-          max={tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used}
-          step="1"
-          className={`border p-2 rounded w-full mb-1 text-sm ${quantityError ? "border-red-500" : ""}`}
-          value={quantity}
-          onChange={handleQuantityChange}
-          onBlur={handleQuantityBlur}
-          placeholder={`Enter quantity (max ${tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used})`}
-        />
-        {quantityError && (
-          <p className="text-red-500 text-xs mb-3">{quantityError}</p>
-        )}
-        {!quantityError && (
-          <p className="text-gray-500 text-xs mb-3">
-            Maximum returnable: {tx.quantity_used} items
-          </p>
-        )}
+        {/* FORM */}
+        <div className="bg-white border rounded-xl shadow-md p-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Return Quantity</label>
+              <input
+                type="number"
+                min="1"
+                max={tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used}
+                step="1"
+                className={`w-full border p-2.5 rounded-lg text-sm ${quantityError ? "border-red-500" : ""}`}
+                value={quantity}
+                onChange={handleQuantityChange}
+                onBlur={handleQuantityBlur}
+                placeholder={`Enter quantity (max ${tx.remaining_quantity !== undefined ? tx.remaining_quantity : tx.quantity_used})`}
+              />
+              {quantityError ? (
+                <p className="text-red-500 text-xs mt-1">{quantityError}</p>
+              ) : (
+                <p className="text-gray-500 text-xs mt-1">Maximum returnable: {tx.quantity_used}</p>
+              )}
+            </div>
 
-        {/* REMARKS */}
-        <label className="font-semibold text-sm text-gray-700">Remarks (Optional)</label>
-        <input
-          type="text"
-          className="border p-2 rounded w-full mb-4 text-sm"
-          value={remarks}
-          onChange={(e) => setRemarks(e.target.value)}
-          placeholder="Any notes..."
-        />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Remarks (Optional)</label>
+              <input
+                type="text"
+                className="w-full border p-2.5 rounded-lg text-sm"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Any notes..."
+              />
+            </div>
+          </div>
 
-        {/* BUTTONS */}
-        <div className="flex justify-center gap-4">
-          <button
-            className="px-5 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm"
-            onClick={() => navigate(-1)}
-          >
-            Back
-          </button>
-
-          <button
-            className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-            onClick={submitReturn}
-          >
-            Submit Return
-          </button>
+          <div className="flex justify-center gap-4 mt-5">
+            <button
+              className="px-8 py-2.5 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm font-medium transition-colors"
+              onClick={() => navigate(-1)}
+            >
+              Back
+            </button>
+            <button
+              className="px-8 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium shadow transition-colors"
+              onClick={submitReturn}
+            >
+              Submit Return
+            </button>
+          </div>
         </div>
-
       </div>
 
       {/* Image Modal */}

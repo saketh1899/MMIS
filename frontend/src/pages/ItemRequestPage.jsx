@@ -22,6 +22,8 @@ export default function ItemRequestPage() {
   const [showAlternatives, setShowAlternatives] = useState(false);
   const [loadingAlternatives, setLoadingAlternatives] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [fixtureSearch, setFixtureSearch] = useState("");
+  const [showFixtureDropdown, setShowFixtureDropdown] = useState(false);
 
   // Load item details
   useEffect(() => {
@@ -125,31 +127,40 @@ export default function ItemRequestPage() {
     return `${apiBaseUrl}${imageUrl}`;
   };
 
+  // Filter fixtures based on search
+  const filteredFixtures = fixtures.filter((fx) =>
+    fx.fixture_name.toLowerCase().includes(fixtureSearch.toLowerCase())
+  );
+
+  // Get selected fixture name
+  const selectedFixtureName = fixtures.find(fx => String(fx.fixture_id) === String(fixture))?.fixture_name || "";
+
   // MUST COME AFTER HOOKS
   if (!item) return <h2 className="text-center mt-10 text-gray-500 dark:text-gray-400">Loading...</h2>;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col overflow-hidden">
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-3 mb-4 shadow-md transition-colors">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-3 shadow-md transition-colors">
         <h1 className="text-2xl font-bold">Request Item</h1>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4">
+      {/* Main content - fills remaining screen */}
+      <div className="flex-1 flex flex-col max-w-6xl w-full mx-auto px-6 py-3 overflow-auto">
 
-        {/* ITEM CARD */}
-        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-4 mb-4 transition-colors">
-          <div className="flex gap-5">
-            {/* Item Image */}
+        {/* TOP SECTION: Image + Details */}
+        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-md p-5 mb-3 transition-colors">
+          <div className="flex gap-8">
+            {/* Item Image - Large */}
             <div className="flex-shrink-0 relative">
               {getImageUrl(item.item_image_url) ? (
                 <div className="relative group">
                   <img 
                     src={getImageUrl(item.item_image_url)} 
                     alt={item.item_name}
-                    className="w-48 h-48 object-contain rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-md bg-white dark:bg-gray-700 p-2 cursor-pointer hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    className="w-64 h-52 object-contain rounded-xl border-2 border-gray-200 dark:border-gray-600 shadow bg-white dark:bg-gray-700 p-3 cursor-pointer hover:shadow-lg transition-all duration-200"
                     onClick={() => setShowImageModal(true)}
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -157,44 +168,41 @@ export default function ItemRequestPage() {
                     }}
                   />
                   {/* Zoom indicator */}
-                  <div className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                  <div className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                     </svg>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Click to enlarge</p>
                 </div>
               ) : null}
               <div 
-                className="w-48 h-48 bg-gray-200 dark:bg-gray-600 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm shadow-md"
+                className="w-64 h-52 bg-gray-100 dark:bg-gray-600 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-base"
                 style={{ display: getImageUrl(item.item_image_url) ? 'none' : 'flex' }}
               >
-                No Image
+                IMAGE
               </div>
             </div>
             
             {/* Item Details */}
-            <div className="flex-1">
-              <h2 className="text-xl font-bold mb-2 text-gray-800 dark:text-gray-200">{item.item_name}</h2>
-              <div className="space-y-1 text-sm">
+            <div className="flex-1 flex flex-col justify-center">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">{item.item_name}</h2>
+              <div className="space-y-2 text-base">
                 <p className="text-gray-700 dark:text-gray-300">
-                  <strong className="text-gray-900 dark:text-gray-100">Part Number:</strong> {item.item_part_number || "N/A"}
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">Part Number:</span> {item.item_part_number || "N/A"}
                 </p>
                 <p className="text-gray-700 dark:text-gray-300">
-                  <strong className="text-gray-900 dark:text-gray-100">Description:</strong> {item.item_description || "N/A"}
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">Description:</span> {item.item_description || "N/A"}
                 </p>
                 <p className="text-gray-700 dark:text-gray-300">
-                  <strong className="text-gray-900 dark:text-gray-100">Manufacturer:</strong> {item.item_manufacturer || "N/A"}
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">Manufacturer:</span> {item.item_manufacturer || "N/A"}
                 </p>
-                <p className={`mt-2 font-bold ${
+                <p className={`font-bold text-lg mt-2 ${
                   item.item_current_quantity === 0 
                     ? "text-red-600 dark:text-red-400" 
                     : "text-green-600 dark:text-green-400"
                 }`}>
                   Current Quantity: {item.item_current_quantity}
-                  {item.item_current_quantity === 0 && (
-                    <span className="ml-2 text-xs">(Out of Stock)</span>
-                  )}
+                  {item.item_current_quantity === 0 && <span className="ml-2 text-sm font-normal">(Out of Stock)</span>}
                 </p>
               </div>
             </div>
@@ -203,51 +211,46 @@ export default function ItemRequestPage() {
 
         {/* ALTERNATIVE ITEMS CARD - Show when item is out of stock */}
         {showAlternatives && item && item.item_current_quantity === 0 && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl shadow p-6 mb-8 transition-colors">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
-                ⚠️ Out of Stock: Same item available in other projects
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl shadow p-4 mb-3 transition-colors">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-base font-bold text-yellow-800 dark:text-yellow-200">
+                Out of Stock: Same item available in other projects
               </h3>
               <button
                 onClick={() => setShowAlternatives(false)}
-                className="text-yellow-800 dark:text-yellow-200 hover:text-yellow-900 dark:hover:text-yellow-100 text-xl font-bold"
+                className="text-yellow-800 dark:text-yellow-200 hover:text-yellow-900 dark:hover:text-yellow-100 text-lg font-bold"
               >
-                ✕
+                x
               </button>
             </div>
             
-            <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
-              <strong>{item.item_name}</strong> is out of stock in <strong>{item.project_name}</strong>. 
-              The same item is available in other projects. You can transfer items or the system will automatically transfer when you make a request:
-            </p>
-
             {loadingAlternatives ? (
-              <p className="text-yellow-700 dark:text-yellow-300">Loading alternatives...</p>
+              <p className="text-yellow-700 dark:text-yellow-300 text-sm">Loading alternatives...</p>
             ) : alternativeItems.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-yellow-100 dark:bg-yellow-900/40 border-b dark:border-yellow-800">
-                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Project</th>
-                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Test Area</th>
-                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Available Qty</th>
-                      <th className="p-3 text-left font-semibold text-yellow-800 dark:text-yellow-200">Action</th>
+                      <th className="p-2 text-left font-semibold text-yellow-800 dark:text-yellow-200">Project</th>
+                      <th className="p-2 text-left font-semibold text-yellow-800 dark:text-yellow-200">Test Area</th>
+                      <th className="p-2 text-left font-semibold text-yellow-800 dark:text-yellow-200">Available Qty</th>
+                      <th className="p-2 text-left font-semibold text-yellow-800 dark:text-yellow-200">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {alternativeItems.map((altItem) => (
                       <tr key={altItem.item_id} className="border-b dark:border-yellow-800">
-                        <td className="p-3 text-yellow-800 dark:text-yellow-200">{altItem.project_name}</td>
-                        <td className="p-3 text-yellow-800 dark:text-yellow-200">{altItem.test_area || "N/A"}</td>
-                        <td className="p-3 font-semibold text-green-600 dark:text-green-400">
+                        <td className="p-2 text-yellow-800 dark:text-yellow-200">{altItem.project_name}</td>
+                        <td className="p-2 text-yellow-800 dark:text-yellow-200">{altItem.test_area || "N/A"}</td>
+                        <td className="p-2 font-semibold text-green-600 dark:text-green-400">
                           {altItem.item_current_quantity} {altItem.item_unit || ""}
                         </td>
-                        <td className="p-3">
+                        <td className="p-2">
                           <button
                             onClick={() => navigate(`/dashboard/transfer?source_item_id=${altItem.item_id}&dest_item_id=${item.item_id}`)}
-                            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-sm transition-colors"
+                            className="px-3 py-1.5 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-xs transition-colors"
                           >
-                            Transfer to {item.project_name}
+                            Transfer
                           </button>
                         </td>
                       </tr>
@@ -256,66 +259,93 @@ export default function ItemRequestPage() {
                 </table>
               </div>
             ) : (
-              <p className="text-yellow-700 dark:text-yellow-300">No alternatives found in other projects.</p>
+              <p className="text-yellow-700 dark:text-yellow-300 text-sm">No alternatives found.</p>
             )}
           </div>
         )}
 
-        {/* FORM */}
-        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow p-4 flex flex-col gap-3 transition-colors">
-
-          {/* Fixture field - only show for projects that require it */}
+        {/* FORM FIELDS - Stacked vertically as per drawing */}
+        <div className="space-y-3">
+          {/* Fixture with search box & dropdown */}
           {requiresFixture && (
-            <>
-              <label className="font-semibold text-sm text-gray-700 dark:text-gray-300">Fixture</label>
-              <select
-                className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded text-sm transition-colors"
-                value={fixture}
-                onChange={(e) => setFixture(e.target.value)}
-              >
-                <option value="">Select Fixture</option>
-                {fixtures.map((fx) => (
-                  <option key={fx.fixture_id} value={fx.fixture_id}>
-                    {fx.fixture_name}
-                  </option>
-                ))}
-              </select>
-            </>
+            <div className="relative">
+              <div className="relative">
+                <input
+                  type="text"
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-colors pr-10"
+                  placeholder="Search & select fixture..."
+                  value={showFixtureDropdown ? fixtureSearch : selectedFixtureName || fixtureSearch}
+                  onChange={(e) => {
+                    setFixtureSearch(e.target.value);
+                    setShowFixtureDropdown(true);
+                    if (!e.target.value) setFixture("");
+                  }}
+                  onFocus={() => setShowFixtureDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowFixtureDropdown(false), 200)}
+                />
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              {showFixtureDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filteredFixtures.length > 0 ? (
+                    filteredFixtures.map((fx) => (
+                      <div
+                        key={fx.fixture_id}
+                        className={`p-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-600 text-sm ${
+                          String(fx.fixture_id) === String(fixture) ? "bg-blue-100 dark:bg-gray-600 font-semibold" : ""
+                        }`}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setFixture(String(fx.fixture_id));
+                          setFixtureSearch(fx.fixture_name);
+                          setShowFixtureDropdown(false);
+                        }}
+                      >
+                        {fx.fixture_name}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-gray-400 text-sm">No fixtures found</div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
-          <label className="font-semibold text-sm text-gray-700 dark:text-gray-300">Quantity</label>
+          {/* Quantity */}
           <input
             type="number"
             min="1"
-            className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded text-sm transition-colors"
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-colors"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            placeholder="Enter quantity"
+            placeholder="Quantity"
           />
 
-          <label className="font-semibold text-sm text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
+          {/* Remarks */}
           <input
             type="text"
-            className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded text-sm transition-colors"
-            placeholder="Any notes..."
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg text-base transition-colors"
+            placeholder="Remarks (Optional)"
           />
+        </div>
 
-          <div className="flex justify-center gap-4 mt-4">
-            <button
-              className="px-5 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm transition-colors"
-              onClick={() => navigate(-1)}
-            >
-              Back
-            </button>
-
-            <button
-              className="px-5 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 text-sm transition-colors"
-              onClick={submitRequest}
-            >
-              Submit Request
-            </button>
-          </div>
-
+        {/* BUTTONS */}
+        <div className="flex justify-center gap-5 mt-4 pb-2">
+          <button
+            className="px-10 py-2.5 bg-blue-100 dark:bg-gray-700 text-blue-800 dark:text-gray-200 rounded-lg hover:bg-blue-200 dark:hover:bg-gray-600 text-base font-medium border border-blue-200 dark:border-gray-600 transition-colors"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </button>
+          <button
+            className="px-10 py-2.5 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 text-base font-medium shadow transition-colors"
+            onClick={submitRequest}
+          >
+            Submit Request
+          </button>
         </div>
       </div>
 
