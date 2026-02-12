@@ -115,11 +115,38 @@ textarea:hover:not(:focus):not(:disabled):not([readonly]) {
   border-color: #6b7280 !important;
 }
 
-/* ========== Enhanced Card Styling on Gradient ========== */
-/* Subtle glass effect for white cards on gradient background (light mode only) */
-.app-bg .bg-white:not(input):not(select):not(textarea) {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+/* ========== Dropdown Styling ========== */
+/* Ensure dropdowns always have solid backgrounds and visible separation */
+.dropdown-menu {
+  background-color: #ffffff !important;
+  border: 2px solid #d1d5db !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  z-index: 50;
+}
+.dark .dropdown-menu {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dropdown menu items */
+.dropdown-menu > div {
+  padding: 0.625rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #f3f4f6;
+}
+.dark .dropdown-menu > div {
+  border-bottom-color: #4b5563;
+}
+.dropdown-menu > div:last-child {
+  border-bottom: none;
+}
+.dropdown-menu > div:hover {
+  background-color: #eff6ff !important; /* blue-50 */
+}
+.dark .dropdown-menu > div:hover {
+  background-color: #374151 !important;
 }
 
 /* ========== Enhanced Buttons ========== */

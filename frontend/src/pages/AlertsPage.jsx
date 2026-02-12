@@ -145,7 +145,7 @@ export default function AlertsPage() {
                 )}
               </div>
               {showProjectDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto transition-colors">
+                <div className="dropdown-menu absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-auto transition-colors">
                   {filteredProjects.length > 0 ? (
                     filteredProjects.map((proj) => (
                       <div
@@ -196,7 +196,7 @@ export default function AlertsPage() {
                 )}
               </div>
               {showTestAreaDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto transition-colors">
+                <div className="dropdown-menu absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-auto transition-colors">
                   {filteredTestAreas.length > 0 ? (
                     filteredTestAreas.map((area) => (
                       <div

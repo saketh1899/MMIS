@@ -147,7 +147,7 @@ export default function RequestPage() {
           {/* DROPDOWN RESULTS (Works with search + arrow click) */}
           {showDropdown && (
             <div
-              className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-[500px] overflow-y-auto z-50 transition-colors"
+              className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-[500px] overflow-y-auto z-50 transition-colors"
               onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
             >
             {(Array.isArray(searchInput ? filteredItems : items) ? (searchInput ? filteredItems : items) : []).map((item) => (

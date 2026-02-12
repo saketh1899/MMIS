@@ -161,7 +161,7 @@ export default function ProjectSelector({
         required={required}
       />
       {showDropdown && (
-        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border dark:border-gray-600 border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
+        <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
           {/* Clear option (for filters) */}
           {value && (
             <div

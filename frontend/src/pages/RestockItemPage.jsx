@@ -239,7 +239,7 @@ export default function RestockItemPage() {
           {showDropdown && items.length > 0 && (
             <div
               ref={dropdownRef}
-              className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-[400px] overflow-y-auto z-50 transition-colors"
+              className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-[400px] overflow-y-auto z-50 transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {filteredItems.length === 0 ? (

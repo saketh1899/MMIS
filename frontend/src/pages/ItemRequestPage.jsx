@@ -288,7 +288,7 @@ export default function ItemRequestPage() {
                 </svg>
               </div>
               {showFixtureDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="dropdown-menu absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-48 overflow-y-auto">
                   {filteredFixtures.length > 0 ? (
                     filteredFixtures.map((fx) => (
                       <div

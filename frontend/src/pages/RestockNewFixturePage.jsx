@@ -221,7 +221,7 @@ export default function RestockNewFixturePage() {
                 className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               />
               {showTestAreaDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border dark:border-gray-600 border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto transition-colors">
+                <div className="dropdown-menu absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-auto transition-colors">
                   {filteredTestAreas.length > 0 ? (
                     filteredTestAreas.map((area) => (
                       <div

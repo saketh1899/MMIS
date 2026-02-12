@@ -237,7 +237,7 @@ export default function CustomizedReportPage() {
                   </button>
                 </div>
                 {showTestAreaDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
+                  <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
                     {filteredTestAreas.length === 0 ? (
                       <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
                     ) : (
@@ -312,7 +312,7 @@ export default function CustomizedReportPage() {
                   </button>
                 </div>
                 {showProjectDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto z-50 transition-colors">
+                  <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
                     {filteredProjects.length === 0 ? (
                       <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
                     ) : (
