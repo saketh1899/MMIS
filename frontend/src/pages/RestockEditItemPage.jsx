@@ -394,6 +394,8 @@ export default function RestockEditItemPage() {
                         <option value="ICT_Agora">ICT_Agora</option>
                         <option value="FBT_Agora">FBT_Agora</option>
                         <option value="TOOLS">TOOLS</option>
+                        <option value="ORT">ORT</option>
+                        <option value="L10_Racks">L10_Racks</option>
                       </select>
                     ) : (
                       <input

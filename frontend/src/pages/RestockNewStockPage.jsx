@@ -32,6 +32,8 @@ export default function RestockNewStockPage() {
     "ICT_Agora",
     "FBT_Agora",
     "TOOLS",
+    "ORT",
+    "L10_Racks",
   ];
 
   const itemTypes = [

@@ -33,6 +33,8 @@ export default function CustomizedReportPage() {
     "ICT_Agora",
     "FBT_Agora",
     "TOOLS",
+    "ORT",
+    "L10_Racks",
   ];
 
   const [projects, setProjects] = useState(getProjects());

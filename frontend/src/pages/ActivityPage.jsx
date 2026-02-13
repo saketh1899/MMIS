@@ -39,7 +39,9 @@ export default function ActivityPage() {
     "FBT_Mobo",
     "ICT_Agora",
     "FBT_Agora",
-    "TOOLS"
+    "TOOLS",
+    "ORT",
+    "L10_Racks"
   ];
 
   // Get unique projects from history and merge with custom projects from localStorage

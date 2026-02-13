@@ -15,6 +15,8 @@ export default function RequestTestAreaPage() {
     "ICT_Agora",
     "FBT_Agora",
     "TOOLS",
+    "ORT",
+    "L10_Racks",
   ];
 
   return (

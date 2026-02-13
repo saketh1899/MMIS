@@ -50,6 +50,8 @@ export default function SpendingReportPage() {
     "ICT_Agora",
     "FBT_Agora",
     "TOOLS",
+    "ORT",
+    "L10_Racks",
   ];
 
   const filteredProjects = projects.filter(project =>

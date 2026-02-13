@@ -113,7 +113,7 @@ export default function Dashboard() {
         // Valid test area names (complete names only)
         const validTestAreas = [
           "ICT_Mobo", "BSI_Mobo", "FBT_Mobo", 
-          "ICT_Agora", "FBT_Agora", "TOOLS"
+          "ICT_Agora", "FBT_Agora", "TOOLS", "ORT", "L10_Racks"
         ];
         
         allTransactions.forEach(t => {

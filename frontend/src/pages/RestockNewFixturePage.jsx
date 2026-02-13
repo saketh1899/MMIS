@@ -41,6 +41,8 @@ export default function RestockNewFixturePage() {
     "ICT_Agora",
     "FBT_Agora",
     "TOOLS",
+    "ORT",
+    "L10_Racks",
   ];
 
   const [formData, setFormData] = useState({

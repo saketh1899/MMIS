@@ -52,6 +52,8 @@ export default function RestockEditFixturePage() {
     "ICT_Agora",
     "FBT_Agora",
     "TOOLS",
+    "ORT",
+    "L10_Racks",
   ];
 
   // Filtered options for dropdowns

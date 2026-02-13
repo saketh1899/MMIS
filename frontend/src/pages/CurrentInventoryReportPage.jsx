@@ -51,7 +51,7 @@ export default function CurrentInventoryReportPage() {
   }, []);
 
   const testAreas = [
-    "ICT_Mobo", "BSI_Mobo", "FBT_Mobo", "ICT_Agora", "FBT_Agora", "TOOLS"
+    "ICT_Mobo", "BSI_Mobo", "FBT_Mobo", "ICT_Agora", "FBT_Agora", "TOOLS", "ORT", "L10_Racks"
   ];
 
   // Load current inventory
