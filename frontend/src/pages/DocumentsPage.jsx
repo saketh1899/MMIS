@@ -122,7 +122,7 @@ export default function DocumentsPage() {
       if (search.trim()) params.search = search.trim();
 
       const res = await API.get("/documents", { params });
-      setDocuments(res.data || []);
+      setDocuments(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to load documents:", err);
       setError(err?.response?.data?.detail || "Failed to load documents.");
