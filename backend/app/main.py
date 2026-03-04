@@ -6,8 +6,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 from .database import Base, engine
-from .routes import employees, inventory, transactions, reports, alerts, activity, fixtures
+from .routes import employees, inventory, transactions, reports, alerts, activity, fixtures, documents
 from . import auth
 from .utils.scheduler import start_scheduler, stop_scheduler
 import os
@@ -18,11 +19,39 @@ app = FastAPI(title="Machine Maintenance Inventory System (MMIS)")
 # Auto-create tables if not exist
 Base.metadata.create_all(bind=engine)
 
+
+def ensure_project_documents_pin_columns():
+    """Backward-compatible migration for document pinning columns."""
+    inspector = inspect(engine)
+    try:
+        columns = {col["name"] for col in inspector.get_columns("project_documents")}
+    except Exception:
+        # Table may not exist yet in first boot; create_all handles that.
+        return
+
+    with engine.begin() as conn:
+        if "is_pinned" not in columns:
+            conn.execute(
+                text(
+                    "ALTER TABLE project_documents "
+                    "ADD COLUMN is_pinned BOOLEAN NOT NULL DEFAULT FALSE"
+                )
+            )
+        if "pinned_at" not in columns:
+            conn.execute(
+                text("ALTER TABLE project_documents ADD COLUMN pinned_at TIMESTAMP WITH TIME ZONE")
+            )
+
+
+ensure_project_documents_pin_columns()
+
 # Create uploads directory if it doesn't exist (relative to backend directory)
 # Get the backend directory (parent of app directory)
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 uploads_dir = os.path.join(backend_dir, "uploads", "item_images")
 os.makedirs(uploads_dir, exist_ok=True)
+documents_upload_dir = os.path.join(backend_dir, "uploads", "project_documents")
+os.makedirs(documents_upload_dir, exist_ok=True)
 
 # Mount static files directory for serving images
 uploads_base_dir = os.path.join(backend_dir, "uploads")
@@ -54,6 +83,7 @@ app.include_router(reports.router)
 app.include_router(alerts.router)
 app.include_router(activity.router)
 app.include_router(fixtures.router)
+app.include_router(documents.router)
 
 @app.get("/")
 def root():

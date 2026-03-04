@@ -134,3 +134,34 @@ class FixtureOut(FixtureBase):
     class Config:
         from_attributes = True
 
+
+# ===== Project Documents =====
+class ProjectDocumentUpdate(BaseModel):
+    project_name: Optional[str] = None
+    test_area: Optional[str] = None
+    remarks: Optional[str] = None
+
+
+class ProjectDocumentOut(BaseModel):
+    document_id: int
+    project_name: str
+    test_area: Optional[str] = None
+    original_filename: str
+    stored_filename: str
+    file_type: str
+    content_type: Optional[str] = None
+    file_size: int
+    file_url: str
+    remarks: Optional[str] = None
+    is_pinned: bool = False
+    pinned_at: Optional[datetime] = None
+    uploaded_by_employee_id: Optional[int] = None
+    uploaded_by_name: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectDocumentPinUpdate(BaseModel):
+    is_pinned: bool

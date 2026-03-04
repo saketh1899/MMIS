@@ -1,6 +1,6 @@
 
 # Import necessary SQLAlchemy components for defining database tables and relationships
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, Date
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, Date, Boolean
 from sqlalchemy.sql import func        # For automatic timestamps (e.g., created_at)
 from sqlalchemy.orm import relationship      # For defining relationships between tables
 from .database import Base   # Import the Base class from database.py
@@ -88,4 +88,23 @@ class Report(Base):
     item_description = Column(Text)
     quantity_used = Column(Integer)
     current_quantity = Column(Integer)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProjectDocument(Base):
+    __tablename__ = "project_documents"
+
+    document_id = Column(Integer, primary_key=True, index=True)
+    project_name = Column(String(100), nullable=False, index=True)
+    test_area = Column(String(50), nullable=True)
+    original_filename = Column(String(255), nullable=False)
+    stored_filename = Column(String(255), nullable=False, unique=True)
+    file_type = Column(String(20), nullable=False)
+    content_type = Column(String(100), nullable=True)
+    file_size = Column(Integer, nullable=False, default=0)
+    file_url = Column(String(500), nullable=False)
+    remarks = Column(Text, nullable=True)
+    is_pinned = Column(Boolean, nullable=False, default=False)
+    pinned_at = Column(DateTime(timezone=True), nullable=True)
+    uploaded_by_employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

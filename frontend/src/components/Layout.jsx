@@ -24,6 +24,7 @@ export default function Layout({ children }) {
     { path: "/dashboard/alerts", label: "Low Stock Alerts" },
     { path: "/dashboard/reports", label: "Reports" },
     { path: "/dashboard/activity", label: "Activity History" },
+    { path: "/dashboard/documents", label: "Documents" },
   ];
 
   return (

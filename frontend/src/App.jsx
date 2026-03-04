@@ -28,6 +28,7 @@ import SpendingReportPage from "./pages/SpendingReportPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 import TransferItemPage from "./pages/TransferItemPage";
+import DocumentsPage from "./pages/DocumentsPage";
 
 export default function App() {
   return (
@@ -251,6 +252,15 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["admin", "user"]}>
               <ActivityPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/documents"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "user"]}>
+              <DocumentsPage />
             </ProtectedRoute>
           }
         />
