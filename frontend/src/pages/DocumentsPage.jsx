@@ -27,14 +27,6 @@ const DOC_TYPES = [
   { value: "txt", label: "Text (.txt)" },
 ];
 
-const bytesToSize = (bytes) => {
-  if (!bytes && bytes !== 0) return "-";
-  if (bytes === 0) return "0 B";
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
-};
-
 const getFileIcon = (type = "") => {
   const lower = type.toLowerCase();
   if (["xls", "xlsx", "csv"].includes(lower)) return "📊";
@@ -42,6 +34,12 @@ const getFileIcon = (type = "") => {
   if (["doc", "docx", "txt"].includes(lower)) return "📝";
   if (["png", "jpg", "jpeg"].includes(lower)) return "🖼️";
   return "📄";
+};
+
+const formatFileSize = (bytes = 0) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 export default function DocumentsPage() {
@@ -63,16 +61,12 @@ export default function DocumentsPage() {
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadScope, setUploadScope] = useState("project");
   const [uploadProject, setUploadProject] = useState("");
   const [uploadTestArea, setUploadTestArea] = useState("");
   const [uploadRemarks, setUploadRemarks] = useState("");
   const fileInputRef = useRef(null);
 
-  const [editingDocumentId, setEditingDocumentId] = useState(null);
-  const [editProject, setEditProject] = useState("");
-  const [editTestArea, setEditTestArea] = useState("");
-  const [editRemarks, setEditRemarks] = useState("");
-  const [savingEdit, setSavingEdit] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -88,6 +82,26 @@ export default function DocumentsPage() {
     if (!showPinnedOnly) return documents;
     return documents.filter((doc) => doc.is_pinned);
   }, [documents, showPinnedOnly]);
+
+  const sectionedDocuments = useMemo(() => {
+    const common = [];
+    const byProject = {};
+    visibleDocuments.forEach((doc) => {
+      if ((doc.document_scope || "project") === "common") {
+        common.push(doc);
+        return;
+      }
+      const key = doc.project_name || "Unassigned";
+      if (!byProject[key]) byProject[key] = [];
+      byProject[key].push(doc);
+    });
+
+    const projectsList = Object.keys(byProject)
+      .sort((a, b) => a.localeCompare(b))
+      .map((projectName) => ({ projectName, documents: byProject[projectName] }));
+
+    return { common, projectsList };
+  }, [visibleDocuments]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -121,7 +135,7 @@ export default function DocumentsPage() {
       if (selectedType && selectedType !== "all") params.doc_type = selectedType;
       if (search.trim()) params.search = search.trim();
 
-      const res = await API.get("/documents", { params });
+      const res = await API.get("/documents/", { params });
       setDocuments(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to load documents:", err);
@@ -142,6 +156,7 @@ export default function DocumentsPage() {
   const resetUploadForm = () => {
     setSelectedFile(null);
     setIsDragOver(false);
+    setUploadScope("project");
     setUploadProject("");
     setUploadTestArea("");
     setUploadRemarks("");
@@ -164,8 +179,8 @@ export default function DocumentsPage() {
       setError("Please choose a file to upload.");
       return;
     }
-    if (!uploadProject.trim()) {
-      setError("Please select a project for this document.");
+    if (uploadScope === "project" && !uploadProject.trim()) {
+      setError("Please select a project for project documents.");
       return;
     }
 
@@ -175,8 +190,11 @@ export default function DocumentsPage() {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
-      formData.append("project_name", uploadProject);
-      if (uploadTestArea) formData.append("test_area", uploadTestArea);
+      formData.append("document_scope", uploadScope);
+      if (uploadScope === "project") {
+        formData.append("project_name", uploadProject);
+      }
+      if (uploadScope === "project" && uploadTestArea) formData.append("test_area", uploadTestArea);
       if (uploadRemarks.trim()) formData.append("remarks", uploadRemarks.trim());
 
       await API.post("/documents/upload", formData, {
@@ -299,47 +317,6 @@ export default function DocumentsPage() {
     }
   };
 
-  const startEdit = (doc) => {
-    setEditingDocumentId(doc.document_id);
-    setEditProject(doc.project_name || "");
-    setEditTestArea(doc.test_area || "");
-    setEditRemarks(doc.remarks || "");
-  };
-
-  const cancelEdit = () => {
-    setEditingDocumentId(null);
-    setEditProject("");
-    setEditTestArea("");
-    setEditRemarks("");
-  };
-
-  const saveEdit = async () => {
-    if (!editingDocumentId) return;
-    if (!editProject.trim()) {
-      setError("Project is required.");
-      return;
-    }
-
-    setSavingEdit(true);
-    setError("");
-    setSuccess("");
-    try {
-      await API.put(`/documents/${editingDocumentId}`, {
-        project_name: editProject.trim(),
-        test_area: editTestArea || null,
-        remarks: editRemarks.trim() || null,
-      });
-      setSuccess("Document details updated.");
-      cancelEdit();
-      loadDocuments();
-    } catch (err) {
-      console.error("Update failed:", err);
-      setError(err?.response?.data?.detail || "Update failed.");
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-transparent transition-colors">
       <Header />
@@ -351,7 +328,7 @@ export default function DocumentsPage() {
         </p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 pb-10">
+      <div className="max-w-[96rem] mx-auto px-6 pb-10">
         {(error || success) && (
           <div
             className={`mb-4 rounded-lg px-4 py-3 border text-sm ${
@@ -365,7 +342,7 @@ export default function DocumentsPage() {
         )}
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 mb-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                 Project
@@ -419,18 +396,11 @@ export default function DocumentsPage() {
               </select>
             </div>
 
-            <div className="lg:col-span-2">
+            <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                Search
+                Quick Actions
               </label>
               <div className="flex gap-2">
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by file name, remarks, uploader..."
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                />
                 <button
                   type="button"
                   onClick={() => setShowPinnedOnly((prev) => !prev)}
@@ -457,6 +427,18 @@ export default function DocumentsPage() {
                 )}
               </div>
             </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              Search Documents
+            </label>
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by file name, project, test area, or uploader..."
+              className="w-full px-4 py-3 text-base bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg"
+            />
           </div>
           {isAdmin && (
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
@@ -514,7 +496,7 @@ export default function DocumentsPage() {
                   </p>
                   {selectedFile && (
                     <div className="mt-3 text-sm text-green-700 dark:text-green-400 font-medium">
-                      Selected: {selectedFile.name} ({bytesToSize(selectedFile.size)})
+                      Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
                     </div>
                   )}
                 </div>
@@ -525,15 +507,32 @@ export default function DocumentsPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Document Scope
+                </label>
+                <select
+                  value={uploadScope}
+                  onChange={(e) => setUploadScope(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  <option value="project">Project Document</option>
+                  <option value="common">Common Department Document</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   Project
                 </label>
                 <select
                   value={uploadProject}
                   onChange={(e) => setUploadProject(e.target.value)}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                  required
+                  required={uploadScope === "project"}
+                  disabled={uploadScope === "common"}
                 >
-                  <option value="">Select Project</option>
+                  <option value="">
+                    {uploadScope === "project" ? "Select Project" : "Not required for common docs"}
+                  </option>
                   {mergedProjects.map((project) => (
                     <option key={project} value={project}>
                       {project}
@@ -550,6 +549,7 @@ export default function DocumentsPage() {
                   value={uploadTestArea}
                   onChange={(e) => setUploadTestArea(e.target.value)}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  disabled={uploadScope === "common"}
                 >
                   <option value="">None</option>
                   {TEST_AREAS.map((area) => (
@@ -595,206 +595,99 @@ export default function DocumentsPage() {
           </form>
         )}
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-              Documents
-            </h2>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {visibleDocuments.length} file{visibleDocuments.length === 1 ? "" : "s"}
-            </span>
+        {loading ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg text-center py-10 text-gray-500 dark:text-gray-400">
+            Loading documents...
           </div>
-
-          {loading ? (
-            <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-              Loading documents...
-            </div>
-          ) : visibleDocuments.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="text-4xl mb-2">📁</div>
-              <p className="text-gray-600 dark:text-gray-300 font-medium">
-                No documents found
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Try changing filters or upload a document for this project.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-auto">
-              <table className="w-full min-w-[980px]">
-                <thead className="bg-gray-50 dark:bg-gray-700/70">
-                  <tr className="text-left text-sm text-gray-600 dark:text-gray-300">
-                    <th className="px-4 py-3 font-semibold">File</th>
-                    <th className="px-4 py-3 font-semibold">Project</th>
-                    <th className="px-4 py-3 font-semibold">Test Area</th>
-                    <th className="px-4 py-3 font-semibold">Type</th>
-                    <th className="px-4 py-3 font-semibold">Size</th>
-                    <th className="px-4 py-3 font-semibold">Uploaded By</th>
-                    <th className="px-4 py-3 font-semibold">Date</th>
-                    <th className="px-4 py-3 font-semibold">Remarks</th>
-                    <th className="px-4 py-3 font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleDocuments.map((doc) => {
-                    const isEditing = editingDocumentId === doc.document_id;
+        ) : visibleDocuments.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg text-center py-10">
+            <div className="text-4xl mb-2">📁</div>
+            <p className="text-gray-600 dark:text-gray-300 font-medium">No documents found</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Try changing filters or upload a document for this project.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+              <div className="bg-blue-100 dark:bg-blue-900/30 px-5 py-3 border-b border-blue-200 dark:border-blue-800 flex justify-between">
+                <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-200">Common Documents</h2>
+                <span className="text-sm text-blue-700 dark:text-blue-300">{sectionedDocuments.common.length} file{sectionedDocuments.common.length === 1 ? "" : "s"}</span>
+              </div>
+              {sectionedDocuments.common.length === 0 ? (
+                <div className="px-5 py-5 text-sm text-gray-500 dark:text-gray-400">No common documents.</div>
+              ) : (
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {sectionedDocuments.common.map((doc) => {
                     return (
-                      <tr
-                        key={doc.document_id}
-                        className="border-t border-gray-100 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200 align-top"
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-start gap-2">
-                            <span className="text-lg">{getFileIcon(doc.file_type)}</span>
-                            <div className="flex flex-col gap-1">
-                              <span className="font-medium break-all">{doc.original_filename}</span>
-                              {doc.is_pinned && (
-                                <span className="inline-flex w-fit px-2 py-0.5 rounded-full text-[11px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                                  ⭐ Pinned
-                                </span>
-                              )}
-                            </div>
+                      <div key={doc.document_id} className="px-5 py-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-lg">{getFileIcon(doc.file_type)}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap overflow-hidden text-ellipsis max-w-[430px]" title={doc.original_filename}>
+                              {doc.original_filename}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {doc.uploaded_by_name || "-"} • {new Date(doc.created_at).toLocaleString()}
+                            </p>
                           </div>
-                        </td>
-
-                        <td className="px-4 py-3">
-                          {isEditing ? (
-                            <select
-                              value={editProject}
-                              onChange={(e) => setEditProject(e.target.value)}
-                              className="w-full px-2 py-1 bg-white dark:bg-gray-700"
-                            >
-                              {mergedProjects.map((project) => (
-                                <option key={project} value={project}>
-                                  {project}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            doc.project_name
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => handleDownload(doc)} className="px-3 py-1 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300">Download</button>
+                          {isPreviewSupported(doc.file_type) && <button type="button" onClick={() => handlePreview(doc)} className="px-3 py-1 rounded-md bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300">Preview</button>}
+                          {isAdmin && (
+                            <>
+                              <button type="button" onClick={() => handleTogglePin(doc)} className="px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200">{doc.is_pinned ? "Unpin" : "Pin"}</button>
+                              <button type="button" onClick={() => handleDelete(doc)} className="px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300">Delete</button>
+                            </>
                           )}
-                        </td>
-
-                        <td className="px-4 py-3">
-                          {isEditing ? (
-                            <select
-                              value={editTestArea}
-                              onChange={(e) => setEditTestArea(e.target.value)}
-                              className="w-full px-2 py-1 bg-white dark:bg-gray-700"
-                            >
-                              <option value="">-</option>
-                              {TEST_AREAS.map((area) => (
-                                <option key={area} value={area}>
-                                  {area}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            doc.test_area || "-"
-                          )}
-                        </td>
-
-                        <td className="px-4 py-3 uppercase">{doc.file_type}</td>
-                        <td className="px-4 py-3">{bytesToSize(doc.file_size)}</td>
-                        <td className="px-4 py-3">{doc.uploaded_by_name || "-"}</td>
-                        <td className="px-4 py-3">
-                          {new Date(doc.created_at).toLocaleString()}
-                        </td>
-
-                        <td className="px-4 py-3 max-w-[260px]">
-                          {isEditing ? (
-                            <textarea
-                              value={editRemarks}
-                              onChange={(e) => setEditRemarks(e.target.value)}
-                              className="w-full px-2 py-1 bg-white dark:bg-gray-700 min-h-[64px]"
-                              placeholder="Add remarks..."
-                            />
-                          ) : (
-                            <span className="text-gray-600 dark:text-gray-300">
-                              {doc.remarks || "-"}
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleDownload(doc)}
-                              className="px-3 py-1 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/40"
-                            >
-                              Download
-                            </button>
-                            {isPreviewSupported(doc.file_type) && (
-                              <button
-                                type="button"
-                                onClick={() => handlePreview(doc)}
-                                className="px-3 py-1 rounded-md bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
-                              >
-                                Preview
-                              </button>
-                            )}
-
-                            {isAdmin && !isEditing && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleTogglePin(doc)}
-                                  className={`px-3 py-1 rounded-md ${
-                                    doc.is_pinned
-                                      ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/40"
-                                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-                                  }`}
-                                  title={doc.is_pinned ? "Unpin document" : "Pin document"}
-                                >
-                                  {doc.is_pinned ? "Unpin" : "Pin"}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => startEdit(doc)}
-                                  className="px-3 py-1 rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/40"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDelete(doc)}
-                                  className="px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/40"
-                                >
-                                  Delete
-                                </button>
-                              </>
-                            )}
-
-                            {isAdmin && isEditing && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={saveEdit}
-                                  disabled={savingEdit}
-                                  className="px-3 py-1 rounded-md bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/40 disabled:opacity-60"
-                                >
-                                  {savingEdit ? "Saving..." : "Save"}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={cancelEdit}
-                                  className="px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {sectionedDocuments.projectsList.map((section) => (
+              <div key={section.projectName} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-gray-100 dark:bg-gray-700 px-5 py-3 border-b border-gray-200 dark:border-gray-600 flex justify-between">
+                  <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{section.projectName}</h2>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{section.documents.length} file{section.documents.length === 1 ? "" : "s"}</span>
+                </div>
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {section.documents.map((doc) => {
+                    return (
+                      <div key={doc.document_id} className="px-5 py-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-lg">{getFileIcon(doc.file_type)}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap overflow-hidden text-ellipsis max-w-[430px]" title={doc.original_filename}>
+                              {doc.original_filename}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {(doc.test_area || "No test area")} • {doc.uploaded_by_name || "-"} • {new Date(doc.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => handleDownload(doc)} className="px-3 py-1 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300">Download</button>
+                          {isPreviewSupported(doc.file_type) && <button type="button" onClick={() => handlePreview(doc)} className="px-3 py-1 rounded-md bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300">Preview</button>}
+                          {isAdmin && (
+                            <>
+                              <button type="button" onClick={() => handleTogglePin(doc)} className="px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200">{doc.is_pinned ? "Unpin" : "Pin"}</button>
+                              <button type="button" onClick={() => handleDelete(doc)} className="px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300">Delete</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {previewOpen && (

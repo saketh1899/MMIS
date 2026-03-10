@@ -137,6 +137,7 @@ class FixtureOut(FixtureBase):
 
 # ===== Project Documents =====
 class ProjectDocumentUpdate(BaseModel):
+    document_scope: Optional[str] = None
     project_name: Optional[str] = None
     test_area: Optional[str] = None
     remarks: Optional[str] = None
@@ -144,7 +145,8 @@ class ProjectDocumentUpdate(BaseModel):
 
 class ProjectDocumentOut(BaseModel):
     document_id: int
-    project_name: str
+    document_scope: str
+    project_name: Optional[str] = None
     test_area: Optional[str] = None
     original_filename: str
     stored_filename: str

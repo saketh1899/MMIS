@@ -95,7 +95,8 @@ class ProjectDocument(Base):
     __tablename__ = "project_documents"
 
     document_id = Column(Integer, primary_key=True, index=True)
-    project_name = Column(String(100), nullable=False, index=True)
+    document_scope = Column(String(20), nullable=False, default="project", index=True)
+    project_name = Column(String(100), nullable=True, index=True)
     test_area = Column(String(50), nullable=True)
     original_filename = Column(String(255), nullable=False)
     stored_filename = Column(String(255), nullable=False, unique=True)

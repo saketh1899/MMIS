@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from .. import models, schemas
 from ..database import get_db
@@ -70,6 +71,7 @@ def _to_document_out(db: Session, document: models.ProjectDocument):
 
     return schemas.ProjectDocumentOut(
         document_id=document.document_id,
+        document_scope=document.document_scope or "project",
         project_name=document.project_name,
         test_area=document.test_area,
         original_filename=document.original_filename,
@@ -89,10 +91,12 @@ def _to_document_out(db: Session, document: models.ProjectDocument):
 
 @router.get("/", response_model=list[schemas.ProjectDocumentOut])
 def list_documents(
+    scope: str | None = Query(default=None),
     project: str | None = Query(default=None),
     test_area: str | None = Query(default=None),
     search: str | None = Query(default=None),
     doc_type: str | None = Query(default=None),
+    include_common: bool = Query(default=True),
     db: Session = Depends(get_db),
 ):
     query = db.query(models.ProjectDocument, models.Employee.employee_name).outerjoin(
@@ -100,8 +104,18 @@ def list_documents(
         models.Employee.employee_id == models.ProjectDocument.uploaded_by_employee_id,
     )
 
+    if scope and scope.lower() in {"project", "common"}:
+        query = query.filter(models.ProjectDocument.document_scope == scope.lower())
     if project:
-        query = query.filter(models.ProjectDocument.project_name == project)
+        if include_common:
+            query = query.filter(
+                or_(
+                    models.ProjectDocument.project_name == project,
+                    models.ProjectDocument.document_scope == "common",
+                )
+            )
+        else:
+            query = query.filter(models.ProjectDocument.project_name == project)
     if test_area:
         query = query.filter(models.ProjectDocument.test_area == test_area)
     if doc_type and doc_type.lower() != "all":
@@ -126,6 +140,7 @@ def list_documents(
     return [
         schemas.ProjectDocumentOut(
             document_id=doc.document_id,
+            document_scope=doc.document_scope or "project",
             project_name=doc.project_name,
             test_area=doc.test_area,
             original_filename=doc.original_filename,
@@ -149,12 +164,18 @@ def list_documents(
 async def upload_document(
     request: Request,
     file: UploadFile = File(...),
-    project_name: str = Form(...),
+    document_scope: str = Form(default="project"),
+    project_name: str | None = Form(default=None),
     test_area: str | None = Form(default=None),
     remarks: str | None = Form(default=None),
     db: Session = Depends(get_db),
 ):
     payload = _require_admin(request)
+    scope_value = (document_scope or "project").strip().lower()
+    if scope_value not in {"project", "common"}:
+        raise HTTPException(status_code=400, detail="document_scope must be 'project' or 'common'")
+    if scope_value == "project" and not (project_name or "").strip():
+        raise HTTPException(status_code=400, detail="project_name is required for project documents")
 
     file_extension = Path(file.filename or "").suffix.lower()
     if file_extension not in ALLOWED_EXTENSIONS:
@@ -179,7 +200,8 @@ async def upload_document(
 
     file_type = file_extension.replace(".", "").lower()
     document = models.ProjectDocument(
-        project_name=project_name.strip(),
+        document_scope=scope_value,
+        project_name=project_name.strip() if scope_value == "project" and project_name else None,
         test_area=test_area.strip() if test_area else None,
         original_filename=file.filename or safe_name,
         stored_filename=safe_name,
@@ -236,8 +258,18 @@ def update_document(
         raise HTTPException(status_code=404, detail="Document not found")
 
     update_data = payload.dict(exclude_unset=True)
+    if "document_scope" in update_data and update_data["document_scope"] is not None:
+        update_data["document_scope"] = str(update_data["document_scope"]).strip().lower()
+        if update_data["document_scope"] not in {"project", "common"}:
+            raise HTTPException(status_code=400, detail="document_scope must be 'project' or 'common'")
+
     for key, value in update_data.items():
         setattr(document, key, value)
+
+    if document.document_scope == "common":
+        document.project_name = None
+    elif document.document_scope == "project" and not (document.project_name or "").strip():
+        raise HTTPException(status_code=400, detail="project_name is required for project documents")
 
     db.commit()
     db.refresh(document)

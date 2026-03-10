@@ -20,8 +20,8 @@ app = FastAPI(title="Machine Maintenance Inventory System (MMIS)")
 Base.metadata.create_all(bind=engine)
 
 
-def ensure_project_documents_pin_columns():
-    """Backward-compatible migration for document pinning columns."""
+def ensure_project_documents_columns():
+    """Backward-compatible migration for project_documents table columns."""
     inspector = inspect(engine)
     try:
         columns = {col["name"] for col in inspector.get_columns("project_documents")}
@@ -41,9 +41,22 @@ def ensure_project_documents_pin_columns():
             conn.execute(
                 text("ALTER TABLE project_documents ADD COLUMN pinned_at TIMESTAMP WITH TIME ZONE")
             )
+        if "document_scope" not in columns:
+            conn.execute(
+                text(
+                    "ALTER TABLE project_documents "
+                    "ADD COLUMN document_scope VARCHAR(20) NOT NULL DEFAULT 'project'"
+                )
+            )
+        # Allow null project_name for common documents.
+        try:
+            conn.execute(text("ALTER TABLE project_documents ALTER COLUMN project_name DROP NOT NULL"))
+        except Exception:
+            # Ignore when database/user doesn't allow alter or column already nullable.
+            pass
 
 
-ensure_project_documents_pin_columns()
+ensure_project_documents_columns()
 
 # Create uploads directory if it doesn't exist (relative to backend directory)
 # Get the backend directory (parent of app directory)
