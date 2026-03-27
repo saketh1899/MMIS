@@ -5,8 +5,10 @@ import Header from "../components/Header";
 import { getProjects } from "../utils/projects";
 
 export default function CurrentInventoryReportPage() {
+  const ROWS_PER_PAGE = 20;
   const [inventory, setInventory] = useState([]);
   const [fixtures, setFixtures] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [selectedFixtureId, setSelectedFixtureId] = useState(null);
@@ -97,6 +99,10 @@ export default function CurrentInventoryReportPage() {
     }
   }, [viewMode, selectedProject, selectedTestArea]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [viewMode, selectedProject, selectedTestArea, inventory.length, fixtures.length]);
+
   const downloadCSV = () => {
     if (viewMode === "items" && inventory.length === 0) {
       alert("No data to download");
@@ -181,6 +187,21 @@ export default function CurrentInventoryReportPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const activeData = viewMode === "items" ? inventory : fixtures;
+  const totalPages = Math.max(1, Math.ceil(activeData.length / ROWS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
+  const paginatedData = activeData.slice(startIndex, startIndex + ROWS_PER_PAGE);
+
+  const getVisiblePages = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+    if (currentPage === 1 || currentPage === totalPages) {
+      return [1, "...", totalPages];
+    }
+    return [1, "...", currentPage, "...", totalPages];
   };
 
   return (
@@ -401,7 +422,7 @@ export default function CurrentInventoryReportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {inventory.map((item) => (
+                    {paginatedData.map((item) => (
                       <tr 
                         key={item.item_id} 
                         onClick={() => setSelectedItemId(item.item_id)}
@@ -450,7 +471,7 @@ export default function CurrentInventoryReportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {fixtures.map((fixture) => (
+                    {paginatedData.map((fixture) => (
                       <tr 
                         key={fixture.fixture_id} 
                         className={`border-b dark:border-gray-700 transition-colors ${
@@ -484,6 +505,56 @@ export default function CurrentInventoryReportPage() {
                 </table>
               </div>
             )
+          )}
+
+          {!loading && activeData.length > ROWS_PER_PAGE && (
+            <div className="sticky bottom-0 z-10 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 mt-4">
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === 1
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Previous
+                </button>
+
+                {getVisiblePages().map((item, index) =>
+                  item === "..." ? (
+                    <span key={`ellipsis-${index}`} className="min-w-9 px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400 text-center">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setCurrentPage(item)}
+                      className={`min-w-9 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === item
+                          ? "bg-blue-600 dark:bg-blue-700 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === totalPages
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>

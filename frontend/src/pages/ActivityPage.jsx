@@ -6,8 +6,10 @@ import Header from "../components/Header";
 import { getProjects } from "../utils/projects";
 
 export default function ActivityPage() {
+  const TRANSACTIONS_PER_PAGE = 20;
   const [history, setHistory] = useState([]);
   const [filteredHistory, setFilteredHistory] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState("all");
   const [selectedProject, setSelectedProject] = useState("");
@@ -110,6 +112,31 @@ export default function ActivityPage() {
 
     setFilteredHistory(filtered);
   }, [selectedType, selectedProject, selectedTestArea, history]);
+
+  // Reset to page 1 whenever the filter result set changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedType, selectedProject, selectedTestArea, history]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredHistory.length / TRANSACTIONS_PER_PAGE));
+  const startIndex = (currentPage - 1) * TRANSACTIONS_PER_PAGE;
+  const paginatedHistory = filteredHistory.slice(startIndex, startIndex + TRANSACTIONS_PER_PAGE);
+
+  const getVisiblePages = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    if (currentPage === 1) {
+      return [1, "...", totalPages];
+    }
+
+    if (currentPage === totalPages) {
+      return [1, "...", totalPages];
+    }
+
+    return [1, "...", currentPage, "...", totalPages];
+  };
 
   const formatQuantity = (type, qty) => {
     if (type?.toLowerCase() === "request") {
@@ -449,7 +476,7 @@ export default function ActivityPage() {
                 </thead>
 
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredHistory.map((row, index) => (
+                  {paginatedHistory.map((row, index) => (
                     <tr
                       key={row.transaction_id}
                       className={`hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors ${
@@ -498,10 +525,64 @@ export default function ActivityPage() {
           )}
         </div>
 
+        {/* PAGINATION (bottom of table card) */}
+        {!loading && filteredHistory.length > TRANSACTIONS_PER_PAGE && (
+          <div className="sticky bottom-0 z-10 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === 1
+                    ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                Previous
+              </button>
+
+              {getVisiblePages().map((item, index) =>
+                item === "..." ? (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="min-w-9 px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400 text-center"
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => setCurrentPage(item)}
+                    className={`min-w-9 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === item
+                        ? "bg-blue-600 dark:bg-blue-700 text-white"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                )
+              )}
+
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === totalPages
+                    ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* RESULTS COUNT */}
         {!loading && filteredHistory.length > 0 && (
           <div className="mt-4 text-sm text-gray-600 text-center">
-            Showing {filteredHistory.length} of {history.length} transaction{history.length !== 1 ? "s" : ""}
+            Showing {startIndex + 1}-{Math.min(startIndex + TRANSACTIONS_PER_PAGE, filteredHistory.length)} of {filteredHistory.length} filtered transaction{filteredHistory.length !== 1 ? "s" : ""}
           </div>
         )}
 

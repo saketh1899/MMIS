@@ -29,259 +29,49 @@ import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 import TransferItemPage from "./pages/TransferItemPage";
 import DocumentsPage from "./pages/DocumentsPage";
+import Layout from "./components/Layout";
 
 export default function App() {
+  const withLayout = (allowedRoles, page) => (
+    <ProtectedRoute allowedRoles={allowedRoles}>
+      <Layout>{page}</Layout>
+    </ProtectedRoute>
+  );
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-
-        
-
         {/* ADMIN + USER */}
-        <Route
-          path="/dashboard/"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/request"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <RequestProjectPage/>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/request/test-area"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <RequestTestAreaPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/request/search"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <RequestPage/>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route 
-          path="/dashboard/request/item/:item_id" 
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]} >
-              <ItemRequestPage /> 
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/return/"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <ReturnPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/return/item/:transaction_id"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <ItemReturnPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/alerts"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <AlertsPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/dashboard/" element={withLayout(["admin", "user"], <Dashboard />)} />
+        <Route path="/dashboard/request" element={withLayout(["admin", "user"], <RequestProjectPage />)} />
+        <Route path="/dashboard/request/test-area" element={withLayout(["admin", "user"], <RequestTestAreaPage />)} />
+        <Route path="/dashboard/request/search" element={withLayout(["admin", "user"], <RequestPage />)} />
+        <Route path="/dashboard/request/item/:item_id" element={withLayout(["admin", "user"], <ItemRequestPage />)} />
+        <Route path="/dashboard/return/" element={withLayout(["admin", "user"], <ReturnPage />)} />
+        <Route path="/dashboard/return/item/:transaction_id" element={withLayout(["admin", "user"], <ItemReturnPage />)} />
+        <Route path="/dashboard/alerts" element={withLayout(["admin", "user"], <AlertsPage />)} />
+        <Route path="/dashboard/reports" element={withLayout(["admin", "user"], <ReportsPage />)} />
+        <Route path="/dashboard/reports/current-inventory" element={withLayout(["admin", "user"], <CurrentInventoryReportPage />)} />
+        <Route path="/dashboard/reports/low-stock" element={withLayout(["admin", "user"], <LowStockReportPage />)} />
+        <Route path="/dashboard/transfer" element={withLayout(["admin"], <TransferItemPage />)} />
+        <Route path="/dashboard/reports/customized" element={withLayout(["admin", "user"], <CustomizedReportPage />)} />
+        <Route path="/dashboard/reports/spending" element={withLayout(["admin", "user"], <SpendingReportPage />)} />
+        <Route path="/dashboard/activity" element={withLayout(["admin", "user"], <ActivityPage />)} />
+        <Route path="/dashboard/documents" element={withLayout(["admin", "user"], <DocumentsPage />)} />
+        <Route path="/dashboard/change-password" element={withLayout(["admin", "user"], <ChangePasswordPage />)} />
+        <Route path="/dashboard/profile" element={withLayout(["admin", "user"], <ProfilePage />)} />
 
         {/* ADMIN ONLY */}
-        <Route
-          path="/dashboard/restock"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/project"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockProjectPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/test-area"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockTestAreaPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/items"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockItemPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/item/:item_id/edit"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockEditItemPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/project/add-new"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockAddNewPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/project/add-new-stock"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockNewStockPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/project/add-new-fixture"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockNewFixturePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/restock/fixture/:fixture_id/edit"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RestockEditFixturePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/reports"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <ReportsPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/reports/current-inventory"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <CurrentInventoryReportPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/reports/low-stock"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <LowStockReportPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/transfer"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <TransferItemPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/reports/customized"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <CustomizedReportPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/reports/spending"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <SpendingReportPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/activity"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <ActivityPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/documents"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <DocumentsPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/change-password"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <ChangePasswordPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard/profile"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "user"]}>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/dashboard/restock" element={withLayout(["admin"], <RestockPage />)} />
+        <Route path="/dashboard/restock/project" element={withLayout(["admin"], <RestockProjectPage />)} />
+        <Route path="/dashboard/restock/test-area" element={withLayout(["admin"], <RestockTestAreaPage />)} />
+        <Route path="/dashboard/restock/items" element={withLayout(["admin"], <RestockItemPage />)} />
+        <Route path="/dashboard/restock/item/:item_id/edit" element={withLayout(["admin"], <RestockEditItemPage />)} />
+        <Route path="/dashboard/restock/project/add-new" element={withLayout(["admin"], <RestockAddNewPage />)} />
+        <Route path="/dashboard/restock/project/add-new-stock" element={withLayout(["admin"], <RestockNewStockPage />)} />
+        <Route path="/dashboard/restock/project/add-new-fixture" element={withLayout(["admin"], <RestockNewFixturePage />)} />
+        <Route path="/dashboard/restock/fixture/:fixture_id/edit" element={withLayout(["admin"], <RestockEditFixturePage />)} />
       </Routes>
     </BrowserRouter>
   );

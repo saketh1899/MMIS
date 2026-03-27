@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import { useTheme } from "../contexts/ThemeContext";
+import { useIsInsideLayout } from "../contexts/LayoutContext";
 
 export default function Header({ showMMIS = true }) {
   const [userName, setUserName] = useState("");
@@ -12,6 +13,12 @@ export default function Header({ showMMIS = true }) {
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const isInsideLayout = useIsInsideLayout();
+
+  // Pages inside the shared dashboard layout should not render a second page-level header.
+  if (isInsideLayout && showMMIS) {
+    return null;
+  }
 
   // Load employee info from token
   useEffect(() => {

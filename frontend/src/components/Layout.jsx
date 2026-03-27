@@ -1,6 +1,7 @@
 // src/components/Layout.jsx
 import { Link, useLocation } from "react-router-dom";
 import Header from "./Header";
+import { LayoutProvider } from "../contexts/LayoutContext";
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -28,7 +29,8 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen bg-transparent transition-colors">
+    <LayoutProvider value={true}>
+      <div className="flex h-screen bg-transparent transition-colors">
       
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 shadow-md p-6 space-y-4 transition-colors">
@@ -55,16 +57,17 @@ export default function Layout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col">
         
         {/* Top Bar */}
         <Header showMMIS={false} />
 
         {/* Page Body */}
-        <main className="p-6 overflow-auto bg-transparent transition-colors">
-          {children}
-        </main>
+          <main className="p-6 overflow-auto bg-transparent transition-colors">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </LayoutProvider>
   );
 }

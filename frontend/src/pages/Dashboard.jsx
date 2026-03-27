@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
-import Layout from "../components/Layout";
 
 export default function Dashboard() {
   const [userName, setUserName] = useState("");
@@ -202,7 +201,7 @@ export default function Dashboard() {
     : 0;
 
   return (
-    <Layout>
+    <>
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white rounded-xl p-8 shadow-lg mb-8 transition-colors">
         <div>
@@ -371,6 +370,6 @@ export default function Dashboard() {
           </div>
         </>
       )}
-    </Layout>
+    </>
   );
 }

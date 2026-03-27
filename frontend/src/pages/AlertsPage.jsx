@@ -5,8 +5,10 @@ import Header from "../components/Header";
 import { getProjects } from "../utils/projects";
 
 export default function AlertsPage() {
+  const ROWS_PER_PAGE = 20;
   const [allLowStockItems, setAllLowStockItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTestArea, setSelectedTestArea] = useState("");
   const [loading, setLoading] = useState(true);
@@ -65,6 +67,10 @@ export default function AlertsPage() {
     setFilteredItems(filtered);
   }, [allLowStockItems, selectedProject, selectedTestArea]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProject, selectedTestArea, allLowStockItems]);
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -103,6 +109,20 @@ export default function AlertsPage() {
   const handleClearTestArea = () => {
     setSelectedTestArea("");
     setTestAreaSearch("");
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / ROWS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + ROWS_PER_PAGE);
+
+  const getVisiblePages = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+    if (currentPage === 1 || currentPage === totalPages) {
+      return [1, "...", totalPages];
+    }
+    return [1, "...", currentPage, "...", totalPages];
   };
 
   return (
@@ -255,7 +275,7 @@ export default function AlertsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredItems.map((item) => {
+                  {paginatedItems.map((item) => {
                     // Calculate how critical the alert is (percentage of minimum)
                     const percentage = (item.item_current_quantity / item.item_min_count) * 100;
                     const isCritical = percentage < 50; // Less than 50% of minimum
@@ -288,6 +308,56 @@ export default function AlertsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {!loading && filteredItems.length > ROWS_PER_PAGE && (
+            <div className="sticky bottom-0 z-10 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === 1
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Previous
+                </button>
+
+                {getVisiblePages().map((item, index) =>
+                  item === "..." ? (
+                    <span key={`ellipsis-${index}`} className="min-w-9 px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400 text-center">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setCurrentPage(item)}
+                      className={`min-w-9 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === item
+                          ? "bg-blue-600 dark:bg-blue-700 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === totalPages
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>

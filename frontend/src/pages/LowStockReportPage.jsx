@@ -6,8 +6,10 @@ import ProjectSelector from "../components/ProjectSelector";
 import { getProjects } from "../utils/projects";
 
 export default function LowStockReportPage() {
+  const ROWS_PER_PAGE = 20;
   const [lowStockItems, setLowStockItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -104,6 +106,10 @@ export default function LowStockReportPage() {
     setFilteredItems(filtered);
   }, [lowStockItems, selectedProject, selectedTestArea]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProject, selectedTestArea, lowStockItems]);
+
   // Load alternative items when an item is selected
   useEffect(() => {
     if (selectedItemId) {
@@ -137,6 +143,20 @@ export default function LowStockReportPage() {
     } finally {
       setLoadingAlternatives(false);
     }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / ROWS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ROWS_PER_PAGE;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + ROWS_PER_PAGE);
+
+  const getVisiblePages = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+    if (currentPage === 1 || currentPage === totalPages) {
+      return [1, "...", totalPages];
+    }
+    return [1, "...", currentPage, "...", totalPages];
   };
 
   const downloadCSV = () => {
@@ -344,7 +364,7 @@ export default function LowStockReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredItems.map((item) => (
+                  {paginatedItems.map((item) => (
                     <tr 
                       key={item.item_id} 
                       onClick={() => setSelectedItemId(item.item_id)}
@@ -381,6 +401,56 @@ export default function LowStockReportPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {!loading && filteredItems.length > ROWS_PER_PAGE && (
+            <div className="sticky bottom-0 z-10 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 mt-4">
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === 1
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Previous
+                </button>
+
+                {getVisiblePages().map((item, index) =>
+                  item === "..." ? (
+                    <span key={`ellipsis-${index}`} className="min-w-9 px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400 text-center">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setCurrentPage(item)}
+                      className={`min-w-9 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === item
+                          ? "bg-blue-600 dark:bg-blue-700 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === totalPages
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
