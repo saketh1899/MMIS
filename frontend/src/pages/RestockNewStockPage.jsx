@@ -21,7 +21,7 @@ export default function RestockNewStockPage() {
     "Mandolin Beach",
     "Gulp",
     "Xena",
-    "Agora",
+    "Asahi",
     "Humu Beach",
   ];
 

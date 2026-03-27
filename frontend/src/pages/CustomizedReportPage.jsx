@@ -1,7 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import SearchableSelect from "../components/SearchableSelect";
+import StickyBackBar from "../components/StickyBackBar";
 import { getProjects } from "../utils/projects";
 
 export default function CustomizedReportPage() {
@@ -18,14 +20,6 @@ export default function CustomizedReportPage() {
   const [transactionType, setTransactionType] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
-  // Dropdown states
-  const [showTestAreaDropdown, setShowTestAreaDropdown] = useState(false);
-  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
-  const [testAreaSearch, setTestAreaSearch] = useState("");
-  const [projectSearch, setProjectSearch] = useState("");
-  const testAreaRef = useRef(null);
-  const projectRef = useRef(null);
 
   // Options
   const testAreas = [
@@ -56,46 +50,6 @@ export default function CustomizedReportPage() {
       window.removeEventListener('storage', handleProjectsUpdate);
     };
   }, []);
-
-  // Filtered options
-  const filteredTestAreas = testAreas.filter(area =>
-    area.toLowerCase().includes(testAreaSearch.toLowerCase())
-  );
-
-  const filteredProjects = projects.filter(project =>
-    project.toLowerCase().includes(projectSearch.toLowerCase())
-  );
-
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (testAreaRef.current && !testAreaRef.current.contains(event.target)) {
-        setShowTestAreaDropdown(false);
-      }
-      if (projectRef.current && !projectRef.current.contains(event.target)) {
-        setShowProjectDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // Sync search with selected values
-  useEffect(() => {
-    if (testArea) {
-      setTestAreaSearch(testArea);
-    }
-  }, [testArea]);
-
-  useEffect(() => {
-    if (projectName) {
-      setProjectSearch(projectName);
-    }
-  }, [projectName]);
 
   const generateReport = () => {
     setLoading(true);
@@ -196,164 +150,43 @@ export default function CustomizedReportPage() {
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Customized Report</h1>
       </div>
 
+      <StickyBackBar to="/dashboard/reports" label="Back to reports" maxWidthClass="max-w-4xl" />
 
       {/* FILTER FORM */}
       <div className="max-w-4xl mx-auto px-8 mb-8">
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6 transition-colors">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Test Area:</label>
-              <div className="relative" ref={testAreaRef}>
-                <input
-                  type="text"
-                  value={testAreaSearch}
-                  onChange={(e) => {
-                    setTestAreaSearch(e.target.value);
-                    setShowTestAreaDropdown(true);
-                  }}
-                  onFocus={() => setShowTestAreaDropdown(true)}
-                  placeholder="Search with Dropdown"
-                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm pr-20 transition-colors"
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  {testArea && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTestArea("");
-                        setTestAreaSearch("");
-                        setShowTestAreaDropdown(false);
-                      }}
-                      className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
-                      title="Clear selection"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowTestAreaDropdown(!showTestAreaDropdown)}
-                    className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
-                  >
-                    <svg
-                      className={`w-5 h-5 transform transition-transform duration-200 ${
-                        showTestAreaDropdown ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
-                {showTestAreaDropdown && (
-                  <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
-                    {filteredTestAreas.length === 0 ? (
-                      <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
-                    ) : (
-                      filteredTestAreas.map((area) => (
-                        <div
-                          key={area}
-                          onClick={() => {
-                            setTestArea(area);
-                            setTestAreaSearch(area);
-                            setShowTestAreaDropdown(false);
-                          }}
-                          className={`p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-gray-200 ${
-                            testArea === area ? "bg-blue-100 dark:bg-gray-600" : ""
-                          }`}
-                        >
-                          {area}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
+              <label htmlFor="custom-report-test-area" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Test Area:
+              </label>
+              <SearchableSelect
+                id="custom-report-test-area"
+                options={testAreas}
+                value={testArea}
+                onChange={setTestArea}
+                placeholder="Search or select test area…"
+                inputMode="commit"
+                size="sm"
+              />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Project Name:</label>
-              <div className="relative" ref={projectRef}>
-                <input
-                  type="text"
-                  value={projectSearch}
-                  onChange={(e) => {
-                    setProjectSearch(e.target.value);
-                    setShowProjectDropdown(true);
-                  }}
-                  onFocus={() => setShowProjectDropdown(true)}
-                  placeholder="Search with Dropdown"
-                  className="w-full p-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded shadow-sm pr-20 transition-colors"
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  {projectName && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setProjectName("");
-                        setProjectSearch("");
-                        setShowProjectDropdown(false);
-                      }}
-                      className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
-                      title="Clear selection"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowProjectDropdown(!showProjectDropdown)}
-                    className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
-                  >
-                    <svg
-                      className={`w-5 h-5 transform transition-transform duration-200 ${
-                        showProjectDropdown ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
-                {showProjectDropdown && (
-                  <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
-                    {filteredProjects.length === 0 ? (
-                      <div className="p-3 text-gray-500 dark:text-gray-400">No matches found</div>
-                    ) : (
-                      filteredProjects.map((project) => (
-                        <div
-                          key={project}
-                          onClick={() => {
-                            setProjectName(project);
-                            setProjectSearch(project);
-                            setShowProjectDropdown(false);
-                          }}
-                          className={`p-3 border-b dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-gray-200 ${
-                            projectName === project ? "bg-blue-100 dark:bg-gray-600" : ""
-                          }`}
-                        >
-                          {project}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
+              <label htmlFor="custom-report-project" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Project Name:
+              </label>
+              <SearchableSelect
+                id="custom-report-project"
+                options={projects}
+                value={projectName}
+                onChange={setProjectName}
+                placeholder="Search or select project…"
+                inputMode="commit"
+                size="sm"
+              />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Transaction Type:</label>
@@ -390,15 +223,9 @@ export default function CustomizedReportPage() {
             </div>
           </div>
 
-          {/* ACTION BUTTONS */}
-          <div className="flex justify-center gap-4 mt-6">
+          <div className="flex justify-center mt-6">
             <button
-              onClick={() => navigate("/dashboard/reports")}
-              className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
-            >
-              Back
-            </button>
-            <button
+              type="button"
               onClick={generateReport}
               disabled={loading}
               className="px-8 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 shadow disabled:bg-gray-400 dark:disabled:bg-gray-600 transition-colors"
@@ -512,6 +339,15 @@ export default function CustomizedReportPage() {
                 </div>
               </div>
             )}
+            <div className="flex justify-center pt-4 pb-2">
+              <button
+                type="button"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
+                onClick={() => navigate("/dashboard/reports")}
+              >
+                ← Back to reports
+              </button>
+            </div>
           </div>
         </div>
       )}

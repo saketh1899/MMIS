@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import API from "../api";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import StickyBackBar from "../components/StickyBackBar";
 import { getProjects } from "../utils/projects";
 
 export default function ActivityPage() {
@@ -190,9 +191,11 @@ export default function ActivityPage() {
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Recent Activity History</h1>
       </div>
+
+      <StickyBackBar to="/dashboard" label="Back to dashboard" maxWidthClass="max-w-[95%]" />
 
       <div className="max-w-[95%] mx-auto px-10">
         {/* STATISTICS CARDS */}
@@ -586,13 +589,13 @@ export default function ActivityPage() {
           </div>
         )}
 
-        {/* BACK BUTTON */}
-        <div className="flex justify-center mt-8 mb-6">
+        <div className="flex justify-center py-6 pb-6">
           <button
-            className="px-8 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 shadow transition-colors font-medium"
+            type="button"
+            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
             onClick={() => navigate("/dashboard")}
           >
-            Back
+            ← Back to dashboard
           </button>
         </div>
       </div>

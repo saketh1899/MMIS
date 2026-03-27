@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import StickyBackBar from "../components/StickyBackBar";
 import { getProjects } from "../utils/projects";
 
 export default function AlertsPage() {
@@ -130,9 +131,11 @@ export default function AlertsPage() {
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Low Stock Alert</h1>
       </div>
+
+      <StickyBackBar to="/dashboard" label="Back to dashboard" maxWidthClass="max-w-6xl" />
 
       {/* FILTERS */}
       <div className="max-w-6xl mx-auto px-8 mb-8">
@@ -363,13 +366,13 @@ export default function AlertsPage() {
         </div>
       </div>
 
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-10 mb-8">
+      <div className="flex justify-center py-6 pb-8">
         <button
-          className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
+          type="button"
+          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
           onClick={() => navigate("/dashboard")}
         >
-          Back
+          ← Back to dashboard
         </button>
       </div>
     </div>

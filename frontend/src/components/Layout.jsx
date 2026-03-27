@@ -1,7 +1,18 @@
 // src/components/Layout.jsx
+import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Header from "./Header";
 import { LayoutProvider } from "../contexts/LayoutContext";
+
+function getRoleFromToken() {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    return JSON.parse(atob(token.split(".")[1])).role;
+  } catch {
+    return null;
+  }
+}
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -16,17 +27,22 @@ export default function Layout({ children }) {
     return location.pathname.startsWith(path);
   };
 
-  // Navigation items
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard" },
-    { path: "/dashboard/request", label: "Request" },
-    { path: "/dashboard/return", label: "Return" },
-    { path: "/dashboard/restock", label: "Restock" },
-    { path: "/dashboard/alerts", label: "Low Stock Alerts" },
-    { path: "/dashboard/reports", label: "Reports" },
-    { path: "/dashboard/activity", label: "Activity History" },
-    { path: "/dashboard/documents", label: "Documents" },
-  ];
+  const navItems = useMemo(() => {
+    const base = [
+      { path: "/dashboard", label: "Dashboard" },
+      { path: "/dashboard/request", label: "Request" },
+      { path: "/dashboard/return", label: "Return" },
+      { path: "/dashboard/restock", label: "Restock" },
+      { path: "/dashboard/alerts", label: "Low Stock Alerts" },
+      { path: "/dashboard/reports", label: "Reports" },
+      { path: "/dashboard/activity", label: "Activity History" },
+      { path: "/dashboard/documents", label: "Documents" },
+    ];
+    if (getRoleFromToken() === "admin") {
+      base.push({ path: "/dashboard/transfer", label: "Transfer" });
+    }
+    return base;
+  }, [location.pathname]);
 
   return (
     <LayoutProvider value={true}>

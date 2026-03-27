@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import StickyBackBar from "../components/StickyBackBar";
+import { useNotifications } from "../contexts/NotificationContext";
 
 export default function TransferItemPage() {
   const MIN_SEARCH_LENGTH = 2;
@@ -24,6 +26,7 @@ export default function TransferItemPage() {
   const [quantity, setQuantity] = useState("");
   const [remarks, setRemarks] = useState("");
   const [selectedFixture, setSelectedFixture] = useState("");
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     loadData();
@@ -141,6 +144,10 @@ export default function TransferItemPage() {
         remarks: remarks || "",
       });
 
+      const itemLabel = sourceItem.item_name || "Item";
+      addNotification(
+        `Transferred ${quantity} × ${itemLabel} from ${sourceItem.project_name || "—"} to ${destItem.project_name || "—"}`
+      );
       alert("Transfer successful!");
       await loadData();
       setQuantity("");
@@ -166,9 +173,11 @@ export default function TransferItemPage() {
     <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md">
         <h1 className="text-3xl font-bold">Transfer</h1>
       </div>
+
+      <StickyBackBar onBack={() => navigate(-1)} label="Back" maxWidthClass="max-w-6xl" />
 
       <div className="max-w-6xl mx-auto px-6 lg:px-10 pb-8">
         {/* Search */}
@@ -367,12 +376,7 @@ export default function TransferItemPage() {
 
           <div className="flex justify-center gap-4 mt-6">
             <button
-              className="px-6 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
-              onClick={() => navigate(-1)}
-            >
-              Back
-            </button>
-            <button
+              type="button"
               className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               onClick={handleTransfer}
               disabled={transferring || !sourceItem || !destItem || !selectedFixture || !quantity}
@@ -380,6 +384,15 @@ export default function TransferItemPage() {
               {transferring ? "Transferring..." : "Transfer"}
             </button>
           </div>
+          <p className="text-center mt-4">
+            <button
+              type="button"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
+              onClick={() => navigate(-1)}
+            >
+              ← Back
+            </button>
+          </p>
 
           {!fixtures.length && (
             <p className="text-sm text-red-600 dark:text-red-400 text-center mt-4">
@@ -391,78 +404,4 @@ export default function TransferItemPage() {
     </div>
   );
 }
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Transfer Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-          <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Transfer Details</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Fixture</label>
-              <select
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                value={selectedFixture}
-                onChange={(e) => setSelectedFixture(e.target.value)}
-              >
-                <option value="">Select Fixture</option>
-                {fixtures.map((fx) => (
-                  <option key={fx.fixture_id} value={fx.fixture_id}>
-                    {fx.fixture_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
-                Quantity (Max: {sourceItem?.item_current_quantity || 0})
-              </label>
-              <input
-                type="number"
-                min="1"
-                max={sourceItem?.item_current_quantity || 0}
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="Enter quantity"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Remarks (Optional)</label>
-              <textarea
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded transition-colors"
-                rows="3"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Add any notes about this transfer..."
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-center gap-4 mt-6">
-            <button
-              className="px-6 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
-              onClick={() => navigate(-1)}
-            >
-              Cancel
-            </button>
-            <button
-              className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              onClick={handleTransfer}
-              disabled={transferring || !selectedFixture || !quantity}
-            >
-              {transferring ? "Transferring..." : "Confirm Transfer"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 

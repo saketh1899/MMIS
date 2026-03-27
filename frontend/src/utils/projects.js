@@ -12,7 +12,7 @@ export const DEFAULT_PROJECTS = [
   "Mandolin Beach",
   "Gulp",
   "Xena",
-  "Agora",
+  "Asahi",
   "Humu Beach",
   "Hi-Lo",
   "Flying Probe",
@@ -24,8 +24,9 @@ export const getProjects = () => {
     const stored = localStorage.getItem("mmis_projects");
     if (stored) {
       const parsed = JSON.parse(stored);
+      const migrated = parsed.map((p) => (p === "Agora" ? "Asahi" : p));
       // Merge with defaults and remove duplicates
-      const allProjects = [...new Set([...DEFAULT_PROJECTS, ...parsed])];
+      const allProjects = [...new Set([...DEFAULT_PROJECTS, ...migrated])];
       return allProjects.sort();
     }
   } catch (err) {

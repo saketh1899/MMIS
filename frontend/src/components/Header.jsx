@@ -4,21 +4,20 @@ import { useNavigate } from "react-router-dom";
 import API from "../api";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsInsideLayout } from "../contexts/LayoutContext";
+import { useNotifications } from "../contexts/NotificationContext";
 
 export default function Header({ showMMIS = true }) {
   const [userName, setUserName] = useState("");
   const [employeeId, setEmployeeId] = useState(null);
   const [employeeDesignation, setEmployeeDesignation] = useState("");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
   const menuRef = useRef(null);
+  const notificationRef = useRef(null);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const isInsideLayout = useIsInsideLayout();
-
-  // Pages inside the shared dashboard layout should not render a second page-level header.
-  if (isInsideLayout && showMMIS) {
-    return null;
-  }
+  const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
 
   // Load employee info from token
   useEffect(() => {
@@ -55,11 +54,14 @@ export default function Header({ showMMIS = true }) {
     return name.charAt(0).toUpperCase();
   };
 
-  // Close menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotificationPanel(false);
       }
     };
 
@@ -68,6 +70,24 @@ export default function Header({ showMMIS = true }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Pages inside the shared dashboard layout should not render a second page-level header.
+  if (isInsideLayout && showMMIS) {
+    return null;
+  }
+
+  const formatTime = (ts) => {
+    try {
+      return new Date(ts).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  };
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center transition-colors">
@@ -80,7 +100,77 @@ export default function Header({ showMMIS = true }) {
         </span>
       )}
       {!showMMIS && <div></div>}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Transfer notifications — left of theme toggle */}
+        <div className="relative" ref={notificationRef}>
+          <button
+            type="button"
+            onClick={() => {
+              setShowNotificationPanel((open) => {
+                const next = !open;
+                if (next) markAllRead();
+                return next;
+              });
+              setShowProfileMenu(false);
+            }}
+            className="relative p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[1.125rem] h-[1.125rem] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+          {showNotificationPanel && (
+            <div className="absolute right-0 mt-2 w-80 max-h-80 overflow-hidden flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+              <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Transfers</span>
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearAll();
+                      setShowNotificationPanel(false);
+                    }}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+              <div className="overflow-y-auto max-h-64">
+                {notifications.length === 0 ? (
+                  <p className="px-3 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                    No transfer notifications yet.
+                  </p>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className={`px-3 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0 ${
+                        !n.read ? "bg-blue-50/80 dark:bg-blue-900/20" : ""
+                      }`}
+                    >
+                      <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">{n.message}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{formatTime(n.ts)}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
@@ -137,6 +227,7 @@ export default function Header({ showMMIS = true }) {
               <button
                 onClick={() => {
                   setShowProfileMenu(false);
+                  clearAll();
                   localStorage.removeItem("token");
                   window.location.href = "/";
                 }}

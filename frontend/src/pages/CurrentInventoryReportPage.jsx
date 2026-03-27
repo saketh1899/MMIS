@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
+import SearchableSelect from "../components/SearchableSelect";
+import StickyBackBar from "../components/StickyBackBar";
 import { getProjects } from "../utils/projects";
 
 export default function CurrentInventoryReportPage() {
@@ -15,8 +17,6 @@ export default function CurrentInventoryReportPage() {
   const [viewMode, setViewMode] = useState("items"); // "items" or "fixtures"
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTestArea, setSelectedTestArea] = useState("");
-  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
-  const [showTestAreaDropdown, setShowTestAreaDropdown] = useState(false);
   const [accessLevel, setAccessLevel] = useState(null);
   const navigate = useNavigate();
 
@@ -210,10 +210,11 @@ export default function CurrentInventoryReportPage() {
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Current Inventory Report</h1>
       </div>
 
+      <StickyBackBar to="/dashboard/reports" label="Back to reports" />
 
       {/* VIEW MODE TOGGLE */}
       <div className="max-w-7xl mx-auto px-10 mb-6">
@@ -250,116 +251,36 @@ export default function CurrentInventoryReportPage() {
       {/* FILTERS */}
       <div className="max-w-7xl mx-auto px-10 mb-6">
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 flex gap-6 items-end transition-colors">
-          {/* Project Name Filter */}
-          <div className="flex-1 relative">
-            <label className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">Project Name</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={selectedProject}
-                onChange={(e) => {
-                  setSelectedProject(e.target.value);
-                  setShowProjectDropdown(true);
-                }}
-                onFocus={() => setShowProjectDropdown(true)}
-                onBlur={() => setTimeout(() => setShowProjectDropdown(false), 200)}
-                placeholder="Search with Dropdown"
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded pr-8 text-base transition-colors"
-              />
-              <svg
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {showProjectDropdown && (
-                <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
-                  <div
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                    onClick={() => {
-                      setSelectedProject("");
-                      setShowProjectDropdown(false);
-                    }}
-                  >
-                    Clear Filter
-                  </div>
-                  {projects
-                    .filter((proj) =>
-                      proj.toLowerCase().includes(selectedProject.toLowerCase())
-                    )
-                    .map((proj) => (
-                      <div
-                        key={proj}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                        onClick={() => {
-                          setSelectedProject(proj);
-                          setShowProjectDropdown(false);
-                        }}
-                      >
-                        {proj}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+          <div className="flex-1">
+            <label htmlFor="current-inv-filter-project" className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">
+              Project Name
+            </label>
+            <SearchableSelect
+              id="current-inv-filter-project"
+              options={projects}
+              value={selectedProject}
+              onChange={setSelectedProject}
+              placeholder="Type to filter, then pick a project or leave as typed"
+              inputMode="live"
+              showInlineClear={false}
+              size="md"
+            />
           </div>
 
-          {/* Test Area Filter */}
-          <div className="flex-1 relative">
-            <label className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">Test Area</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={selectedTestArea}
-                onChange={(e) => {
-                  setSelectedTestArea(e.target.value);
-                  setShowTestAreaDropdown(true);
-                }}
-                onFocus={() => setShowTestAreaDropdown(true)}
-                onBlur={() => setTimeout(() => setShowTestAreaDropdown(false), 200)}
-                placeholder="Search with Dropdown"
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded pr-8 text-base transition-colors"
-              />
-              <svg
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {showTestAreaDropdown && (
-                <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
-                  <div
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                    onClick={() => {
-                      setSelectedTestArea("");
-                      setShowTestAreaDropdown(false);
-                    }}
-                  >
-                    Clear Filter
-                  </div>
-                  {testAreas
-                    .filter((area) =>
-                      area.toLowerCase().includes(selectedTestArea.toLowerCase())
-                    )
-                    .map((area) => (
-                      <div
-                        key={area}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                        onClick={() => {
-                          setSelectedTestArea(area);
-                          setShowTestAreaDropdown(false);
-                        }}
-                      >
-                        {area}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+          <div className="flex-1">
+            <label htmlFor="current-inv-filter-test-area" className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">
+              Test Area
+            </label>
+            <SearchableSelect
+              id="current-inv-filter-test-area"
+              options={testAreas}
+              value={selectedTestArea}
+              onChange={setSelectedTestArea}
+              placeholder="Type to filter, then pick a test area or leave as typed"
+              inputMode="live"
+              showInlineClear={false}
+              size="md"
+            />
           </div>
 
           {/* Clear Filters Button */}
@@ -559,13 +480,13 @@ export default function CurrentInventoryReportPage() {
         </div>
       </div>
 
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-10 mb-8">
+      <div className="flex justify-center py-6 pb-8">
         <button
-          className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
+          type="button"
+          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
           onClick={() => navigate("/dashboard/reports")}
         >
-          Back
+          ← Back to reports
         </button>
       </div>
     </div>

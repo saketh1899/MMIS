@@ -24,6 +24,19 @@ export default function ItemRequestPage() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [fixtureSearch, setFixtureSearch] = useState("");
   const [showFixtureDropdown, setShowFixtureDropdown] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setIsAdmin(payload.role === "admin");
+      }
+    } catch {
+      setIsAdmin(false);
+    }
+  }, []);
 
   // Load item details
   useEffect(() => {
@@ -246,12 +259,16 @@ export default function ItemRequestPage() {
                           {altItem.item_current_quantity} {altItem.item_unit || ""}
                         </td>
                         <td className="p-2">
-                          <button
-                            onClick={() => navigate(`/dashboard/transfer?source_item_id=${altItem.item_id}&dest_item_id=${item.item_id}`)}
-                            className="px-3 py-1.5 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-xs transition-colors"
-                          >
-                            Transfer
-                          </button>
+                          {isAdmin ? (
+                            <button
+                              onClick={() => navigate(`/dashboard/transfer?source_item_id=${altItem.item_id}&dest_item_id=${item.item_id}`)}
+                              className="px-3 py-1.5 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-xs transition-colors"
+                            >
+                              Transfer
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Admin only</span>
+                          )}
                         </td>
                       </tr>
                     ))}

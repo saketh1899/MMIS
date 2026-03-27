@@ -1,13 +1,30 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from .. import crud, schemas, models
 from ..database import get_db
+from ..utils.jwt_handler import verify_access_token
 import os
 import shutil
 from pathlib import Path
 from typing import Optional
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
+
+
+def _require_admin_for_transfer(request: Request):
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization token")
+    token = auth_header.split(" ", 1)[1].strip()
+    payload = verify_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if str(payload.get("role", "")).lower() != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Only admins can transfer inventory between projects",
+        )
+    return payload
 
 
 @router.get("/", response_model=list[schemas.InventoryOut])
@@ -429,8 +446,9 @@ def get_alternative_items(item_id: int, db: Session = Depends(get_db)):
 
 # New endpoint for explicit transfer between projects
 @router.post("/transfer")
-def transfer_item(data: dict, db: Session = Depends(get_db)):
-    """Explicitly transfer items from one project to another."""
+def transfer_item(data: dict, request: Request, db: Session = Depends(get_db)):
+    """Explicitly transfer items from one project to another (admin only)."""
+    _require_admin_for_transfer(request)
     source_item_id = data.get("source_item_id")
     dest_item_id = data.get("dest_item_id")
     quantity = data.get("quantity")

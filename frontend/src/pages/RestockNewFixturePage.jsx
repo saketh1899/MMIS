@@ -30,7 +30,7 @@ export default function RestockNewFixturePage() {
     "Mandolin Beach",
     "Gulp",
     "Xena",
-    "Agora",
+    "Asahi",
     "Humu Beach",
   ];
 

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Header from "../components/Header";
 import ProjectSelector from "../components/ProjectSelector";
+import SearchableSelect from "../components/SearchableSelect";
+import StickyBackBar from "../components/StickyBackBar";
 import { getProjects } from "../utils/projects";
 
 export default function LowStockReportPage() {
@@ -19,9 +21,20 @@ export default function LowStockReportPage() {
   const [itemsWithAlternatives, setItemsWithAlternatives] = useState({}); // item_id -> alternatives count
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTestArea, setSelectedTestArea] = useState("");
-  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
-  const [showTestAreaDropdown, setShowTestAreaDropdown] = useState(false);
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setIsAdmin(payload.role === "admin");
+      }
+    } catch {
+      setIsAdmin(false);
+    }
+  }, []);
 
   // Get projects from shared utility
   const [projects, setProjects] = useState(getProjects());
@@ -221,92 +234,38 @@ export default function LowStockReportPage() {
       <Header />
 
       {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
+      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 shadow-md transition-colors">
         <h1 className="text-3xl font-bold">Low Stock Report</h1>
       </div>
 
+      <StickyBackBar to="/dashboard/reports" label="Back to reports" />
 
       {/* FILTERS */}
       <div className="max-w-7xl mx-auto px-10 mb-6">
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 flex gap-6 items-end transition-colors">
-          {/* Project Name Filter */}
-          <div className="flex-1 relative">
+          <div className="flex-1">
             <label className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">Project Name</label>
-            <div className="relative">
-              <ProjectSelector
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                placeholder="Search with Dropdown"
-                className="w-full p-3 pr-8 text-base"
-              />
-              {selectedProject && (
-                <button
-                  onClick={() => setSelectedProject("")}
-                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400"
-                  title="Clear filter"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
+            <ProjectSelector
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              placeholder="Search or select project…"
+              className="w-full p-3 pr-8 text-base"
+            />
           </div>
 
-          {/* Test Area Filter */}
-          <div className="flex-1 relative">
-            <label className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">Test Area</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={selectedTestArea}
-                onChange={(e) => {
-                  setSelectedTestArea(e.target.value);
-                  setShowTestAreaDropdown(true);
-                }}
-                onFocus={() => setShowTestAreaDropdown(true)}
-                onBlur={() => setTimeout(() => setShowTestAreaDropdown(false), 200)}
-                placeholder="Search with Dropdown"
-                className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded pr-8 text-base transition-colors"
-              />
-              <svg
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {showTestAreaDropdown && (
-                <div className="dropdown-menu absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50 transition-colors">
-                  <div
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                    onClick={() => {
-                      setSelectedTestArea("");
-                      setShowTestAreaDropdown(false);
-                    }}
-                  >
-                    Clear Filter
-                  </div>
-                  {testAreas
-                    .filter((area) =>
-                      area.toLowerCase().includes(selectedTestArea.toLowerCase())
-                    )
-                    .map((area) => (
-                      <div
-                        key={area}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
-                        onClick={() => {
-                          setSelectedTestArea(area);
-                          setShowTestAreaDropdown(false);
-                        }}
-                      >
-                        {area}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+          <div className="flex-1">
+            <label htmlFor="low-stock-filter-test-area" className="block mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">
+              Test Area
+            </label>
+            <SearchableSelect
+              id="low-stock-filter-test-area"
+              options={testAreas}
+              value={selectedTestArea}
+              onChange={setSelectedTestArea}
+              placeholder="Search or select test area…"
+              inputMode="commit"
+              size="md"
+            />
           </div>
 
           {/* Clear Filters Button */}
@@ -506,12 +465,16 @@ export default function LowStockReportPage() {
                           {altItem.item_current_quantity} {altItem.item_unit || ""}
                         </td>
                         <td className="p-3">
-                          <button
-                            onClick={() => navigate(`/dashboard/transfer?source_item_id=${altItem.item_id}&dest_item_id=${selectedItem.item_id}`)}
-                            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-sm transition-colors"
-                          >
-                            Transfer to {selectedItem.project_name}
-                          </button>
+                          {isAdmin ? (
+                            <button
+                              onClick={() => navigate(`/dashboard/transfer?source_item_id=${altItem.item_id}&dest_item_id=${selectedItem.item_id}`)}
+                              className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-sm transition-colors"
+                            >
+                              Transfer to {selectedItem.project_name}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Admin only</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -525,13 +488,13 @@ export default function LowStockReportPage() {
         </div>
       )}
 
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-10 mb-8">
+      <div className="flex justify-center py-6 pb-8">
         <button
-          className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
+          type="button"
+          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
           onClick={() => navigate("/dashboard/reports")}
         >
-          Back
+          ← Back to reports
         </button>
       </div>
     </div>
