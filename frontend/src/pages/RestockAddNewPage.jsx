@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AccessDenied from "../components/AccessDenied";
 import Header from "../components/Header";
+import PageHeaderWithBack from "../components/PageHeaderWithBack";
 
 export default function RestockAddNewPage() {
   const navigate = useNavigate();
@@ -40,10 +41,7 @@ export default function RestockAddNewPage() {
     <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
-      {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
-        <h1 className="text-3xl font-bold">Add New Stock</h1>
-      </div>
+      <PageHeaderWithBack title="Add New Stock" onBack={() => navigate("/dashboard/restock/project")} />
 
       <p className="text-center font-semibold text-gray-700 dark:text-gray-300 mb-6 text-lg">
         Select what you want to add
@@ -74,16 +72,6 @@ export default function RestockAddNewPage() {
             <p className="text-gray-600 dark:text-gray-400">Add a new fixture</p>
           </div>
         </div>
-      </div>
-
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-12 mb-8">
-        <button
-          className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
-          onClick={() => navigate("/dashboard/restock/project")}
-        >
-          Back
-        </button>
       </div>
     </div>
   );

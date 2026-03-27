@@ -103,7 +103,7 @@ export default function RestockItemPage() {
             onClick={() => navigate("/dashboard/restock")}
             className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
-            Go Back to Projects
+            Continue to Restock
           </button>
         </div>
       </div>
@@ -124,14 +124,6 @@ export default function RestockItemPage() {
     const apiBaseUrl =
       import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://127.0.0.1:8000");
     return `${apiBaseUrl}${imageUrl}`;
-  };
-
-  const goBack = () => {
-    if (skipTestAreaProjects.includes(project)) {
-      navigate("/dashboard/restock");
-    } else {
-      navigate(`/dashboard/restock/test-area?project=${encodeURIComponent(project)}`);
-    }
   };
 
   const renderRow = (item) => (
@@ -195,20 +187,7 @@ export default function RestockItemPage() {
         <h1 className="text-2xl sm:text-3xl font-bold">Restock — select item</h1>
       </div>
 
-      <div className="sticky top-0 z-20 w-full max-w-4xl mx-auto px-4 pt-4 pb-2 flex justify-center sm:justify-start bg-[#e8f0fe]/95 dark:bg-gray-950/90 backdrop-blur-sm border-b border-blue-100/80 dark:border-gray-800">
-        <button
-          type="button"
-          onClick={goBack}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 font-medium shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors border border-gray-300 dark:border-gray-600"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
-        </button>
-      </div>
-
-      <p className="text-center mt-2 text-gray-700 dark:text-gray-300 font-semibold text-base sm:text-lg px-4">
+      <p className="text-center mt-4 text-gray-700 dark:text-gray-300 font-semibold text-base sm:text-lg px-4">
         Project: <span className="text-blue-600 dark:text-blue-400">{project}</span>
         {test_area && (
           <>
@@ -219,14 +198,11 @@ export default function RestockItemPage() {
       </p>
 
       <div className="p-4 sm:p-6 pt-2 rounded-lg w-full max-w-4xl mx-auto mt-2 flex-1 min-h-0 flex flex-col">
-        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2" htmlFor="restock-item-filter">
-          Filter by name, part number, or ID
-        </label>
         <input
-          id="restock-item-filter"
           type="search"
           className="w-full p-3 border-2 border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          placeholder="Search items…"
+          placeholder="Search"
+          aria-label="Search box"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           autoComplete="off"
@@ -259,14 +235,14 @@ export default function RestockItemPage() {
                   onClick={() => setSearchInput("")}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  Clear filter
+                  Clear search
                 </button>
               )}
             </div>
             <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg shadow-md overflow-hidden flex flex-col min-h-0 max-h-[min(70vh,560px)]">
               {displayItems.length === 0 ? (
                 <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                  No items match &quot;{searchInput.trim()}&quot;. Clear the filter to see all items.
+                  No items match &quot;{searchInput.trim()}&quot;. Clear search to see all items.
                 </div>
               ) : (
                 <div className="overflow-y-auto overscroll-contain">{displayItems.map((item) => renderRow(item))}</div>
@@ -274,16 +250,6 @@ export default function RestockItemPage() {
             </div>
           </div>
         )}
-      </div>
-
-      <div className="flex justify-center py-4 pb-8">
-        <button
-          type="button"
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
-          onClick={goBack}
-        >
-          ← Back to test area / project
-        </button>
       </div>
     </div>
   );

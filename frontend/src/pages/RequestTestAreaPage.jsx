@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
+import PageHeaderWithBack from "../components/PageHeaderWithBack";
 
 export default function RequestTestAreaPage() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function RequestTestAreaPage() {
     "BSI_Mobo",
     "FBT_Mobo",
     "ICT_Agora",
-    "FBT_Agora",
+    "FBT_Asahi",
     "TOOLS",
     "ORT",
     "L10_Racks",
@@ -23,10 +24,7 @@ export default function RequestTestAreaPage() {
     <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
-      {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
-        <h1 className="text-3xl font-bold">Request</h1>
-      </div>
+      <PageHeaderWithBack title="Request" onBack={() => navigate("/dashboard/request")} />
 
       {/* SUBTITLE */}
       <p className="text-center font-semibold text-gray-700 dark:text-gray-300 mb-2 text-lg">
@@ -52,17 +50,6 @@ export default function RequestTestAreaPage() {
           </div>
         ))}
       </div>
-
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-12">
-        <button
-          className="px-8 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 shadow transition-colors"
-          onClick={() => navigate("/dashboard/request")}
-        >
-          Back
-        </button>
-      </div>
-
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useIsInsideLayout } from "../contexts/LayoutContext";
 import { useNotifications } from "../contexts/NotificationContext";
 
-export default function Header({ showMMIS = true }) {
+export default function Header({ showMMIS = true, brandLogo = false }) {
   const [userName, setUserName] = useState("");
   const [employeeId, setEmployeeId] = useState(null);
   const [employeeDesignation, setEmployeeDesignation] = useState("");
@@ -91,15 +91,23 @@ export default function Header({ showMMIS = true }) {
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center transition-colors">
-      {showMMIS && (
-        <span 
-          className="text-2xl font-bold text-blue-600 dark:text-blue-400 cursor-pointer" 
+      {brandLogo ? (
+        <span
+          className="text-2xl font-bold text-blue-600 dark:text-blue-400 cursor-pointer shrink-0"
           onClick={() => navigate("/dashboard")}
         >
           MMIS
         </span>
+      ) : showMMIS ? (
+        <span
+          className="text-2xl font-bold text-blue-600 dark:text-blue-400 cursor-pointer"
+          onClick={() => navigate("/dashboard")}
+        >
+          MMIS
+        </span>
+      ) : (
+        <div />
       )}
-      {!showMMIS && <div></div>}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Transfer notifications — left of theme toggle */}
         <div className="relative" ref={notificationRef}>

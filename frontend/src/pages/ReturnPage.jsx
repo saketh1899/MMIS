@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../api";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/Header";
+import PageHeaderWithBack from "../components/PageHeaderWithBack";
 
 export default function ReturnPage() {
   const [transactions, setTransactions] = useState([]);
@@ -54,10 +55,7 @@ export default function ReturnPage() {
     <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
-      {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
-        <h1 className="text-3xl font-bold">Return</h1>
-      </div>
+      <PageHeaderWithBack title="Return" onBack={() => navigate("/dashboard")} />
 
       <div className="max-w-xl mx-auto px-4">
 
@@ -120,16 +118,6 @@ export default function ReturnPage() {
             </div>
           ))}
         </div>
-
-        <div className="flex justify-center mt-12">
-          <button
-            className="px-8 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 shadow transition-colors"
-            onClick={() => navigate(`/dashboard`)}
-          >
-            Back
-          </button>
-        </div>
-
       </div>
     </div>
   );

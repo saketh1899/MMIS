@@ -2,6 +2,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AccessDenied from "../components/AccessDenied";
 import Header from "../components/Header";
+import PageHeaderWithBack from "../components/PageHeaderWithBack";
 
 export default function RestockTestAreaPage() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function RestockTestAreaPage() {
     "BSI_Mobo",
     "FBT_Mobo",
     "ICT_Agora",
-    "FBT_Agora",
+    "FBT_Asahi",
     "TOOLS",
     "ORT",
     "L10_Racks",
@@ -52,10 +53,7 @@ export default function RestockTestAreaPage() {
     <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
-      {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
-        <h1 className="text-3xl font-bold">Restock</h1>
-      </div>
+      <PageHeaderWithBack title="Restock" onBack={() => navigate("/dashboard/restock")} />
 
       {/* SUBTITLE */}
       <p className="text-center font-semibold text-gray-700 dark:text-gray-300 mb-2 text-lg">
@@ -81,17 +79,6 @@ export default function RestockTestAreaPage() {
           </div>
         ))}
       </div>
-
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-12 mb-8">
-        <button
-          className="px-8 py-2 bg-blue-200 dark:bg-blue-700 dark:text-white rounded hover:bg-blue-300 dark:hover:bg-blue-600 shadow transition-colors"
-          onClick={() => navigate("/dashboard/restock")}
-        >
-          Back
-        </button>
-      </div>
-
     </div>
   );
 }

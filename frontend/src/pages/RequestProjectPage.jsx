@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
+import PageHeaderWithBack from "../components/PageHeaderWithBack";
 import { getProjects } from "../utils/projects";
 
 export default function RequestProjectPage() {
@@ -48,10 +49,7 @@ export default function RequestProjectPage() {
     <div className="min-h-screen bg-transparent transition-colors">
       <Header />
 
-      {/* BLUE HEADER */}
-      <div className="w-full bg-blue-600 dark:bg-blue-800 text-white text-center py-4 mb-8 shadow-md transition-colors">
-        <h1 className="text-3xl font-bold">Request</h1>
-      </div>
+      <PageHeaderWithBack title="Request" onBack={() => navigate("/dashboard")} />
 
       <p className="text-center font-semibold text-gray-700 dark:text-gray-300 mb-6 text-lg">
         Select Project Name
@@ -86,16 +84,6 @@ export default function RequestProjectPage() {
             </div>
           ))
         )}
-      </div>
-
-      {/* BACK BUTTON */}
-      <div className="flex justify-center mt-12">
-        <button
-          className="px-8 py-2 bg-gray-300 dark:bg-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 shadow transition-colors"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back
-        </button>
       </div>
     </div>
   );
