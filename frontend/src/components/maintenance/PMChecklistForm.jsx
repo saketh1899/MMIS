@@ -3,6 +3,12 @@ import API from "../../api";
 import { formatDateTime } from "./formatDate";
 import { describeDue } from "./pmStatus";
 import PMPartsPicker from "./PMPartsPicker";
+import { COMMODITY_QUESTION, DOWNTIME_QUESTION, NO_COMMODITY, formatMinutes } from "./pmDetails";
+
+const EMPTY_DETAILS = { maintenanceType: "", activationCounter: "", commodityChoice: "", commodityText: "", downtime: "" };
+const WHOLE_NUMBER = /^\d+$/;
+const INPUT_CLASS =
+  "w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white";
 
 const RESULT_OPTIONS = [
   { value: "passed", label: "Passed", active: "bg-green-600 text-white border-green-600" },
@@ -27,6 +33,7 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
   const [notes, setNotes] = useState("");
   const [partsReplaced, setPartsReplaced] = useState("");
   const [stockParts, setStockParts] = useState([]);
+  const [details, setDetails] = useState(EMPTY_DETAILS);
   const [draftRestored, setDraftRestored] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -48,9 +55,12 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
           setNotes(draft.notes || "");
           setPartsReplaced(draft.partsReplaced || "");
           setStockParts(Array.isArray(draft.stockParts) ? draft.stockParts : []);
+          const restoredDetails = { ...EMPTY_DETAILS, ...(draft.details || {}) };
+          setDetails(restoredDetails);
           setDraftRestored(
             Object.keys(restored).length > 0 ||
-              Boolean(draft.notes || draft.partsReplaced || draft.stockParts?.length)
+              Boolean(draft.notes || draft.partsReplaced || draft.stockParts?.length) ||
+              Object.values(restoredDetails).some(Boolean)
           );
         }
       })
@@ -64,19 +74,26 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
   useEffect(() => {
     if (!checklist) return;
     const hasContent =
-      Object.keys(results).length > 0 || notes.trim() || partsReplaced.trim() || stockParts.length > 0;
+      Object.keys(results).length > 0 ||
+      notes.trim() ||
+      partsReplaced.trim() ||
+      stockParts.length > 0 ||
+      Object.values(details).some(Boolean);
     if (hasContent) {
-      localStorage.setItem(draftKey, JSON.stringify({ results, notes, partsReplaced, stockParts }));
+      localStorage.setItem(draftKey, JSON.stringify({ results, notes, partsReplaced, stockParts, details }));
     } else {
       localStorage.removeItem(draftKey);
     }
-  }, [checklist, draftKey, results, notes, partsReplaced, stockParts]);
+  }, [checklist, draftKey, results, notes, partsReplaced, stockParts, details]);
+
+  const setDetail = (field, value) => setDetails((prev) => ({ ...prev, [field]: value }));
 
   const resetForm = () => {
     setResults({});
     setNotes("");
     setPartsReplaced("");
     setStockParts([]);
+    setDetails(EMPTY_DETAILS);
     setDraftRestored(false);
     setSubmitError("");
     localStorage.removeItem(draftKey);
@@ -99,6 +116,17 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
   const totalItems = checklist?.items.length || 0;
   const answered = Object.keys(results).length;
   const hasFailure = Object.values(results).includes("failed");
+  const requiresDetails = Boolean(checklist?.requires_details);
+
+  const detailsError = () => {
+    if (!details.maintenanceType) return "Select the maintenance type: Preventive or Corrective.";
+    if (!WHOLE_NUMBER.test(details.activationCounter.trim())) return "Enter the activation counter (whole number).";
+    if (!details.commodityChoice) return "Answer whether any commodity was replaced.";
+    if (details.commodityChoice === "yes" && !details.commodityText.trim())
+      return "Describe the condition and location of the replaced commodity.";
+    if (!WHOLE_NUMBER.test(details.downtime.trim())) return "Enter the downtime in minutes (0 if there was none).";
+    return "";
+  };
 
   const markAllPassed = () => {
     if (!checklist) return;
@@ -109,6 +137,11 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
     e.preventDefault();
     setSubmitError("");
 
+    const missingDetail = requiresDetails ? detailsError() : "";
+    if (missingDetail) {
+      setSubmitError(missingDetail);
+      return;
+    }
     if (answered < totalItems) {
       setSubmitError(`Select a result for every task (${totalItems - answered} remaining).`);
       return;
@@ -124,6 +157,12 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
       notes: notes.trim() || null,
       parts_replaced: partsReplaced.trim() || null,
       parts: stockParts,
+      ...(requiresDetails && {
+        maintenance_type: details.maintenanceType,
+        activation_counter: Number(details.activationCounter.trim()),
+        commodity_replacement: details.commodityChoice === "yes" ? details.commodityText.trim() : NO_COMMODITY,
+        downtime_minutes: Number(details.downtime.trim()),
+      }),
     };
     const url = `/maintenance/fixtures/${fixture.fixture_id}/pm-records`;
 
@@ -185,6 +224,103 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
           <button type="button" onClick={resetForm} className="font-semibold hover:underline">
             Start over
           </button>
+        </div>
+      )}
+
+      {requiresDetails && (
+        <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-900/40 dark:text-gray-300">
+            Maintenance details
+          </div>
+          <div className="grid grid-cols-1 gap-3 p-3 md:grid-cols-2">
+            <label className="block md:col-span-2 md:max-w-sm">
+              <span className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Maintenance type <span className="text-red-500">*</span>
+              </span>
+              <select
+                value={details.maintenanceType}
+                onChange={(e) => setDetail("maintenanceType", e.target.value)}
+                className={INPUT_CLASS}
+              >
+                <option value="">Select…</option>
+                {(checklist.maintenance_types || []).map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Activation counter <span className="text-red-500">*</span>
+              </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                value={details.activationCounter}
+                onChange={(e) => setDetail("activationCounter", e.target.value)}
+                placeholder="Number shown on the fixture counter"
+                className={INPUT_CLASS}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                {DOWNTIME_QUESTION} (minutes) <span className="text-red-500">*</span>
+              </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                value={details.downtime}
+                onChange={(e) => setDetail("downtime", e.target.value)}
+                placeholder="0 if there was no downtime"
+                className={INPUT_CLASS}
+              />
+              {WHOLE_NUMBER.test(details.downtime.trim()) && Number(details.downtime) >= 60 && (
+                <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
+                  = {formatMinutes(Number(details.downtime))}
+                </span>
+              )}
+            </label>
+            <div className="md:col-span-2">
+              <span className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                {COMMODITY_QUESTION} <span className="text-red-500">*</span>
+              </span>
+              <div className="flex gap-1">
+                {[
+                  { value: "no", label: "No commodity replaced" },
+                  { value: "yes", label: "Yes, a commodity was replaced" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setDetail("commodityChoice", opt.value)}
+                    className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                      details.commodityChoice === opt.value
+                        ? "border-blue-600 bg-blue-600 text-white"
+                        : "border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {details.commodityChoice === "yes" && (
+                <textarea
+                  value={details.commodityText}
+                  onChange={(e) => setDetail("commodityText", e.target.value)}
+                  rows={3}
+                  maxLength={2000}
+                  placeholder="Which commodity, its condition, and where on the fixture (e.g. Pogo pin worn out, DIMM slot 3)"
+                  className={`mt-2 ${INPUT_CLASS}`}
+                  autoFocus
+                />
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -257,7 +393,7 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
 
       {checklist.note && <p className="text-xs text-gray-600 dark:text-gray-400">{checklist.note}</p>}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className={`grid grid-cols-1 gap-3 ${requiresDetails ? "" : "md:grid-cols-2"}`}>
         <div>
           <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
             Notes {hasFailure && <span className="text-red-500">*</span>}
@@ -270,18 +406,20 @@ export default function PMChecklistForm({ fixture, pmType, lastEntry, onSaved })
             className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           />
         </div>
-        <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Parts replaced
-          </label>
-          <textarea
-            value={partsReplaced}
-            onChange={(e) => setPartsReplaced(e.target.value)}
-            rows={3}
-            placeholder="Parts not tracked in MMIS inventory"
-            className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
-        </div>
+        {!requiresDetails && (
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Parts replaced
+            </label>
+            <textarea
+              value={partsReplaced}
+              onChange={(e) => setPartsReplaced(e.target.value)}
+              rows={3}
+              placeholder="Parts not tracked in MMIS inventory"
+              className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        )}
       </div>
 
       <PMPartsPicker fixture={fixture} parts={stockParts} onChange={setStockParts} />

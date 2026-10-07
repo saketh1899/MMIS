@@ -295,6 +295,10 @@ def get_pm_report(
             "failed_tasks": _failed_tasks(record),
             "notes": record.notes,
             "parts_replaced": record.parts_replaced,
+            "maintenance_type": record.maintenance_type,
+            "activation_counter": record.activation_counter,
+            "commodity_replacement": record.commodity_replacement,
+            "downtime_minutes": record.downtime_minutes,
         }
         for record, employee_name, fixture_name, line in query.order_by(record_model.performed_at.desc())
         .limit(RECORD_LIMIT)

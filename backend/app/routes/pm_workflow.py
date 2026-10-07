@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, aliased
 
 from .. import models
@@ -19,6 +19,7 @@ from ..utils.roles import ROLE_LABELS, can_edit, is_admin, normalize_role
 from ..utils.pm_checklists import PM_COVERS, get_pm_types
 from ..utils.pm_schedule import pm_due_at
 from .maintenance import (
+    DETAIL_FIELDS,
     STATE_RANK,
     _active_records,
     _as_utc,
@@ -29,6 +30,7 @@ from .maintenance import (
     _pm_tracking_start,
     _serialize_fixture,
     assignee_names,
+    clean_detail,
     pm_baseline,
 )
 
@@ -56,6 +58,10 @@ class RecordVoid(BaseModel):
 class RecordEdit(BaseModel):
     notes: str | None = None
     parts_replaced: str | None = None
+    maintenance_type: str | None = None
+    activation_counter: int | None = None
+    commodity_replacement: str | None = Field(default=None, max_length=2000)
+    downtime_minutes: int | None = None
 
 
 def _clean(value: str | None) -> str | None:
@@ -507,7 +513,8 @@ def delete_pm_record(pm_id: int, request: Request, db: Session = Depends(get_db)
 
 @router.patch("/pm-records/{pm_id}")
 def edit_pm_record(pm_id: int, payload: RecordEdit, request: Request, db: Session = Depends(get_db)):
-    """Correct notes / parts text (the person who recorded it, or an admin). Results can't be edited."""
+    """Correct notes, parts text and maintenance details (the person who recorded it, or an admin).
+    Task results can't be edited."""
     user = require_editor(request)
     employee_id = employee_id_from_token(user)
     record = _get_record_or_404(db, pm_id)
@@ -519,7 +526,12 @@ def edit_pm_record(pm_id: int, payload: RecordEdit, request: Request, db: Sessio
     fields = payload.model_dump(exclude_unset=True) if hasattr(payload, "model_dump") else payload.dict(exclude_unset=True)
     changes = {}
     for field, value in fields.items():
-        new_value = _clean(value)
+        if field in DETAIL_FIELDS:
+            new_value = clean_detail(field, value)
+            if new_value is None and getattr(record, field) is not None:
+                raise HTTPException(status_code=400, detail=f"{DETAIL_FIELDS[field]} can't be empty")
+        else:
+            new_value = _clean(value)
         old_value = getattr(record, field)
         if new_value != old_value:
             changes[field] = {"from": old_value, "to": new_value}

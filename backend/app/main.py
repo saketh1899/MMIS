@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
+from sqlalchemy.exc import ProgrammingError
 from .database import Base, engine
 from .routes import admin, notifications, employees, inventory, transactions, reports, alerts, activity, fixtures, documents, maintenance, pm_workflow, pm_dashboard, pm_report
 from . import auth
@@ -16,8 +17,8 @@ import atexit
 
 app = FastAPI(title="Machine Maintenance Inventory System (MMIS)")
 
-# Auto-create tables if not exist
-Base.metadata.create_all(bind=engine)
+# Must not equal a job lock key in utils/pm_jobs.py (crc32 of the job id).
+MIGRATION_LOCK_ID = 73_210_001
 
 
 def ensure_project_documents_columns():
@@ -56,9 +57,6 @@ def ensure_project_documents_columns():
             pass
 
 
-ensure_project_documents_columns()
-
-
 def ensure_fixture_descriptor_columns():
     """Backward-compatible migration for fixture manufacturer / production line."""
     inspector = inspect(engine)
@@ -74,9 +72,6 @@ def ensure_fixture_descriptor_columns():
             conn.execute(text("ALTER TABLE fixtures ADD COLUMN production_line VARCHAR(50)"))
 
 
-ensure_fixture_descriptor_columns()
-
-
 def _add_missing_columns(table: str, definitions: dict[str, str]):
     """ALTER TABLE ... ADD COLUMN for each column not present yet."""
     inspector = inspect(engine)
@@ -84,10 +79,24 @@ def _add_missing_columns(table: str, definitions: dict[str, str]):
         columns = {col["name"] for col in inspector.get_columns(table)}
     except Exception:
         return
-    with engine.begin() as conn:
-        for name, ddl in definitions.items():
-            if name not in columns:
-                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
+    missing = [
+        f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {name} {ddl};"
+        for name, ddl in definitions.items()
+        if name not in columns
+    ]
+    if not missing:
+        return
+    try:
+        with engine.begin() as conn:
+            for statement in missing:
+                conn.execute(text(statement))
+    except ProgrammingError as exc:
+        if "must be owner" not in str(exc):
+            raise
+        raise RuntimeError(
+            f"The MMIS database user doesn't own the '{table}' table, so it can't add new columns. "
+            f"Run this once as the postgres user, then restart mmis-backend:\n" + "\n".join(missing)
+        ) from None
 
 
 def ensure_pm_workflow_columns():
@@ -125,6 +134,10 @@ def ensure_pm_workflow_columns():
             "void_reason": "TEXT",
             "edited_at": "TIMESTAMP WITH TIME ZONE",
             "edited_by_employee_id": "INTEGER REFERENCES employees(employee_id)",
+            "maintenance_type": "VARCHAR(20)",
+            "activation_counter": "BIGINT",
+            "commodity_replacement": "TEXT",
+            "downtime_minutes": "INTEGER",
         },
     )
     _add_missing_columns(
@@ -140,9 +153,6 @@ def ensure_pm_workflow_columns():
                 "ON fixture_pm_records (performed_at)"
             )
         )
-
-
-ensure_pm_workflow_columns()
 
 
 def ensure_super_admin_columns():
@@ -171,7 +181,22 @@ def ensure_super_admin_columns():
         )
 
 
-ensure_super_admin_columns()
+def run_startup_migrations():
+    """Create missing tables and columns. Every uvicorn worker imports this module at the same
+    time, so they take turns under a Postgres advisory lock instead of racing on CREATE/ALTER."""
+    with engine.connect() as lock_conn:
+        lock_conn.execute(text("SELECT pg_advisory_lock(:id)"), {"id": MIGRATION_LOCK_ID})
+        try:
+            Base.metadata.create_all(bind=engine)
+            ensure_project_documents_columns()
+            ensure_fixture_descriptor_columns()
+            ensure_pm_workflow_columns()
+            ensure_super_admin_columns()
+        finally:
+            lock_conn.execute(text("SELECT pg_advisory_unlock(:id)"), {"id": MIGRATION_LOCK_ID})
+
+
+run_startup_migrations()
 
 # Create uploads directory if it doesn't exist (relative to backend directory)
 # Get the backend directory (parent of app directory)

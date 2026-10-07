@@ -5,6 +5,13 @@ import { formatDateTime } from "./formatDate";
 import { pmTypeLabel } from "./pmTypes";
 import { printPMRecord } from "./printPMRecord";
 import { downloadPMRecordPdf, exportPMHistoryCsv } from "./downloadPM";
+import {
+  COMMODITY_QUESTION,
+  DOWNTIME_QUESTION,
+  MAINTENANCE_TYPE_LABELS,
+  detailRows,
+  hasDetails,
+} from "./pmDetails";
 
 const RESULT_BADGE = {
   passed: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
@@ -13,7 +20,17 @@ const RESULT_BADGE = {
 };
 
 const RESULT_LABEL = { passed: "PASSED", failed: "FAILED", na: "N/A" };
-const FIELD_LABEL = { notes: "Notes", parts_replaced: "Parts replaced" };
+const FIELD_LABEL = {
+  notes: "Notes",
+  parts_replaced: "Parts replaced",
+  maintenance_type: "Maintenance type",
+  activation_counter: "Activation counter",
+  commodity_replacement: "Commodity replaced",
+  downtime_minutes: "Downtime (min)",
+};
+const WHOLE_NUMBER = /^\d+$/;
+const EDIT_INPUT =
+  "mt-1 w-full rounded-lg border border-gray-300 p-2 text-sm font-normal dark:border-gray-600 dark:bg-gray-900 dark:text-white";
 
 function AuditLog({ entries }) {
   if (!entries.length) {
@@ -28,7 +45,7 @@ function AuditLog({ entries }) {
           {entry.action === "edit" &&
             Object.entries(entry.details?.changes || {}).map(([field, change]) => (
               <div key={field} className="ml-3 text-gray-500 dark:text-gray-400">
-                {FIELD_LABEL[field] || field}: “{change.from || "(empty)"}” → “{change.to || "(empty)"}”
+                {FIELD_LABEL[field] || field}: “{change.from ?? "(empty)"}” → “{change.to ?? "(empty)"}”
               </div>
             ))}
         </li>
@@ -44,6 +61,13 @@ function RecordDetails({ record, fixture, session, onChanged, onDownload, downlo
   const [mode, setMode] = useState(null); // "edit" | "void" | null
   const [notes, setNotes] = useState(record.notes || "");
   const [partsText, setPartsText] = useState(record.parts_replaced || "");
+  const withDetails = hasDetails(record);
+  const [detailEdit, setDetailEdit] = useState({
+    maintenance_type: record.maintenance_type || "",
+    activation_counter: record.activation_counter != null ? String(record.activation_counter) : "",
+    commodity_replacement: record.commodity_replacement || "",
+    downtime_minutes: record.downtime_minutes != null ? String(record.downtime_minutes) : "",
+  });
   const [voidReason, setVoidReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -64,8 +88,28 @@ function RecordDetails({ record, fixture, session, onChanged, onDownload, downlo
     }
   };
 
-  const saveEdit = () =>
-    run(() => API.patch(`/maintenance/pm-records/${record.pm_id}`, { notes, parts_replaced: partsText }));
+  const saveEdit = () => {
+    const payload = { notes, parts_replaced: partsText };
+    if (withDetails) {
+      const counter = detailEdit.activation_counter.trim();
+      const downtime = detailEdit.downtime_minutes.trim();
+      if (!WHOLE_NUMBER.test(counter) || !WHOLE_NUMBER.test(downtime)) {
+        setError("Activation counter and downtime must be whole numbers.");
+        return;
+      }
+      if (!detailEdit.commodity_replacement.trim()) {
+        setError("Describe the replaced commodity, or write None.");
+        return;
+      }
+      Object.assign(payload, {
+        maintenance_type: detailEdit.maintenance_type,
+        activation_counter: Number(counter),
+        commodity_replacement: detailEdit.commodity_replacement,
+        downtime_minutes: Number(downtime),
+      });
+    }
+    run(() => API.patch(`/maintenance/pm-records/${record.pm_id}`, payload));
+  };
   const saveVoid = () =>
     run(() => API.post(`/maintenance/pm-records/${record.pm_id}/void`, { reason: voidReason }));
 
@@ -99,6 +143,16 @@ function RecordDetails({ record, fixture, session, onChanged, onDownload, downlo
           <b>Voided</b> {formatDateTime(record.voided_at)} · {record.void_reason}. This PM no longer counts toward status.
         </p>
       )}
+      {withDetails && mode !== "edit" && (
+        <dl className="mb-3 grid grid-cols-1 gap-x-4 gap-y-2 rounded-lg bg-gray-50 p-3 text-sm dark:bg-gray-900/40 md:grid-cols-2">
+          {detailRows(record).map(([label, value]) => (
+            <div key={label} className={label === COMMODITY_QUESTION ? "md:col-span-2" : ""}>
+              <dt className="text-xs font-semibold text-gray-500 dark:text-gray-400">{label}</dt>
+              <dd className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
@@ -122,6 +176,56 @@ function RecordDetails({ record, fixture, session, onChanged, onDownload, downlo
 
       {mode === "edit" ? (
         <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+          {withDetails && (
+            <>
+              <label className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                Maintenance type
+                <select
+                  value={detailEdit.maintenance_type}
+                  onChange={(e) => setDetailEdit((prev) => ({ ...prev, maintenance_type: e.target.value }))}
+                  className={EDIT_INPUT}
+                >
+                  {Object.entries(MAINTENANCE_TYPE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                Activation counter
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={detailEdit.activation_counter}
+                  onChange={(e) => setDetailEdit((prev) => ({ ...prev, activation_counter: e.target.value }))}
+                  className={EDIT_INPUT}
+                />
+              </label>
+              <label className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                {DOWNTIME_QUESTION} (minutes)
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={detailEdit.downtime_minutes}
+                  onChange={(e) => setDetailEdit((prev) => ({ ...prev, downtime_minutes: e.target.value }))}
+                  className={EDIT_INPUT}
+                />
+              </label>
+              <label className="text-xs font-semibold text-gray-600 dark:text-gray-300 md:col-span-2">
+                {COMMODITY_QUESTION}
+                <textarea
+                  value={detailEdit.commodity_replacement}
+                  onChange={(e) => setDetailEdit((prev) => ({ ...prev, commodity_replacement: e.target.value }))}
+                  rows={2}
+                  maxLength={2000}
+                  className={EDIT_INPUT}
+                />
+              </label>
+            </>
+          )}
           <label className="text-xs font-semibold text-gray-600 dark:text-gray-300">
             Notes
             <textarea
@@ -131,15 +235,17 @@ function RecordDetails({ record, fixture, session, onChanged, onDownload, downlo
               className="mt-1 w-full rounded-lg border border-gray-300 p-2 text-sm font-normal dark:border-gray-600 dark:bg-gray-900 dark:text-white"
             />
           </label>
-          <label className="text-xs font-semibold text-gray-600 dark:text-gray-300">
-            Parts replaced
-            <textarea
-              value={partsText}
-              onChange={(e) => setPartsText(e.target.value)}
-              rows={3}
-              className="mt-1 w-full rounded-lg border border-gray-300 p-2 text-sm font-normal dark:border-gray-600 dark:bg-gray-900 dark:text-white"
-            />
-          </label>
+          {(!withDetails || record.parts_replaced) && (
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+              Parts replaced
+              <textarea
+                value={partsText}
+                onChange={(e) => setPartsText(e.target.value)}
+                rows={3}
+                className="mt-1 w-full rounded-lg border border-gray-300 p-2 text-sm font-normal dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+              />
+            </label>
+          )}
           <p className="text-[11px] text-gray-500 dark:text-gray-400 md:col-span-2">
             Task results can&apos;t be changed. If they were wrong, void this PM and record it again.
           </p>
@@ -151,8 +257,15 @@ function RecordDetails({ record, fixture, session, onChanged, onDownload, downlo
             <p className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">{record.notes || "(none)"}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Parts replaced</p>
-            <p className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">{record.parts_replaced || "(none)"}</p>
+            {(!withDetails || record.parts_replaced) && (
+              <>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Parts replaced</p>
+                <p className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">{record.parts_replaced || "(none)"}</p>
+              </>
+            )}
+            {withDetails && !record.parts_replaced && record.parts?.length > 0 && (
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Parts taken from stock</p>
+            )}
             {record.parts?.length > 0 && (
               <ul className="mt-1 space-y-0.5 text-xs text-gray-700 dark:text-gray-300">
                 {record.parts.map((part) => (
@@ -260,7 +373,7 @@ function RecordDetails({ record, fixture, session, onChanged, onDownload, downlo
                 onClick={() => setMode("edit")}
                 className="rounded-md border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
               >
-                Edit notes
+                {withDetails ? "Edit" : "Edit notes"}
               </button>
             )}
             {fixture && (
@@ -375,6 +488,11 @@ export default function PMHistory({ records, fixture, onChanged }) {
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${RESULT_BADGE[record.overall_result]}`}>
                           {RESULT_LABEL[record.overall_result]}
                         </span>
+                        {record.maintenance_type === "corrective" && (
+                          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-800 dark:bg-orange-900/40 dark:text-orange-200">
+                            Corrective
+                          </span>
+                        )}
                         {record.voided && (
                           <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">VOIDED</span>
                         )}

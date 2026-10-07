@@ -10,7 +10,9 @@ from fastapi import HTTPException
 from app.utils.app_settings import clean_setting, setting_int
 from app.utils.audit import changed_fields
 from app.utils.auth_deps import _password_change_allowed
+from app.routes.maintenance import clean_detail
 from app.utils.notifications import fixture_list
+from app.utils.pm_checklists import get_checklist
 from app.utils.roles import can_edit, is_admin, is_super_admin, normalize_role
 
 
@@ -115,6 +117,31 @@ class TestPasswordChangeAllowed(unittest.TestCase):
         self.assertFalse(self._allowed("POST", "/api/notifications/read-all"))
         self.assertFalse(self._allowed("GET", "/api/inventory/items"))
         self.assertFalse(self._allowed("GET", "/api/maintenance/my-fixtures"))
+
+
+class TestMaintenanceDetails(unittest.TestCase):
+    def test_only_fbt_weekly_and_biweekly_ask_for_details(self):
+        self.assertTrue(get_checklist("weekly", "FBT")["requires_details"])
+        self.assertTrue(get_checklist("biweekly", "FBT-2")["requires_details"])
+        self.assertFalse(get_checklist("monthly", "ICT")["requires_details"])
+
+    def test_maintenance_type(self):
+        self.assertEqual(clean_detail("maintenance_type", " Corrective "), "corrective")
+        self.assertIsNone(clean_detail("maintenance_type", ""))
+        with self.assertRaises(HTTPException):
+            clean_detail("maintenance_type", "routine")
+
+    def test_numbers(self):
+        self.assertEqual(clean_detail("activation_counter", 0), 0)
+        self.assertEqual(clean_detail("downtime_minutes", 45), 45)
+        self.assertIsNone(clean_detail("activation_counter", None))
+        for field, bad in (("activation_counter", -1), ("activation_counter", True), ("downtime_minutes", 10**6)):
+            with self.assertRaises(HTTPException):
+                clean_detail(field, bad)
+
+    def test_commodity_text(self):
+        self.assertEqual(clean_detail("commodity_replacement", "  Pogo pin, slot 3 "), "Pogo pin, slot 3")
+        self.assertIsNone(clean_detail("commodity_replacement", "   "))
 
 
 class TestFixtureList(unittest.TestCase):

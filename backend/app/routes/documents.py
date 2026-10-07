@@ -2,6 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 import os
 import shutil
+import zipfile
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
@@ -29,6 +30,7 @@ ALLOWED_EXTENSIONS = {
     ".png",
     ".jpg",
     ".jpeg",
+    ".zip",
 }
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
@@ -177,6 +179,11 @@ async def upload_document(
     file.file.seek(0)
     if size > MAX_FILE_SIZE_BYTES:
         raise HTTPException(status_code=400, detail="File too large. Max size is 10MB")
+    if file_extension == ".zip":
+        is_zip = zipfile.is_zipfile(file.file)
+        file.file.seek(0)
+        if not is_zip:
+            raise HTTPException(status_code=400, detail="This file is not a valid ZIP archive")
 
     safe_name = f"{uuid4().hex}{file_extension}"
     upload_dir = _get_upload_directory()

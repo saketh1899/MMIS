@@ -7,6 +7,18 @@ import PageHeaderWithBack from "../components/PageHeaderWithBack";
 import { getProjects } from "../utils/projects";
 import { DEFAULT_TEST_AREAS } from "../utils/testAreas";
 
+// Plant time for everyone, whatever time zone their computer is set to (CST, or CDT in summer).
+const CENTRAL_TIME = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Chicago",
+  month: "2-digit",
+  day: "2-digit",
+  year: "2-digit",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZoneName: "short",
+});
+
 export default function ActivityPage() {
   const TRANSACTIONS_PER_PAGE = 20;
   const [history, setHistory] = useState([]);
@@ -167,15 +179,13 @@ export default function ActivityPage() {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "—";
     const date = new Date(dateString);
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    const year = date.getFullYear().toString().slice(-2);
-    const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`;
+    if (Number.isNaN(date.getTime())) return "—";
+    const parts = Object.fromEntries(
+      CENTRAL_TIME.formatToParts(date).map((part) => [part.type, part.value])
+    );
+    return `${parts.month}/${parts.day}/${parts.year} ${parts.hour}:${parts.minute} ${parts.dayPeriod} ${parts.timeZoneName}`;
   };
 
   // Calculate statistics

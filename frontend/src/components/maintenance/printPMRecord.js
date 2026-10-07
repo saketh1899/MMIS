@@ -1,5 +1,6 @@
 import { formatDateTime } from "./formatDate";
 import { pmTypeLabel } from "./pmTypes";
+import { detailRows } from "./pmDetails";
 
 const RESULT_TEXT = { passed: "PASSED", failed: "FAILED", na: "N/A" };
 
@@ -23,6 +24,12 @@ export function printPMRecord(record, fixture) {
         </tr>`
     )
     .join("");
+  const details = detailRows(record);
+  const detailsTable = details.length
+    ? `<table class="details">${details
+        .map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`)
+        .join("")}</table>`
+    : "";
 
   const html = `<!doctype html>
 <html>
@@ -39,6 +46,9 @@ export function printPMRecord(record, fixture) {
   th.task { background: #d4f5c9; }
   th.result { background: #ccf5fb; width: 30%; }
   td.fail { color: #b91c1c; font-weight: bold; }
+  table.details { margin-bottom: 14px; }
+  table.details th { background: #d4f5c9; width: 40%; }
+  table.details td { white-space: pre-wrap; }
   .notes { border: 1px solid #555; border-top: none; padding: 6px; min-height: 90px; white-space: pre-wrap; }
   .footer { margin-top: 16px; line-height: 1.8; }
   @media print { body { margin: 12mm; } }
@@ -56,6 +66,7 @@ export function printPMRecord(record, fixture) {
     <div><b>Manufacturer:</b> ${escapeHtml(fixture.manufacturer || "—")}</div>
     <div><b>Line:</b> ${escapeHtml(fixture.production_line || "—")}</div>
   </div>
+  ${detailsTable}
   <table>
     <tr><th class="head" colspan="2">${escapeHtml(title)}</th></tr>
     <tr><th class="task">Task</th><th class="result">Result</th></tr>

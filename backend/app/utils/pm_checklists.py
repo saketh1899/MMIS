@@ -19,6 +19,11 @@ PM_COVERS = {"biweekly": ("weekly",)}
 RESULT_VALUES = ("passed", "failed", "na")
 PM_DIVISION = "SMC TEST ENG"
 
+# Asked on checklists with "details": True. Labels are shared by the form, PDF and exports.
+MAINTENANCE_TYPES = {"preventive": "Preventive", "corrective": "Corrective"}
+MAX_ACTIVATION_COUNTER = 10**12
+MAX_DOWNTIME_MINUTES = 7 * 24 * 60
+
 INDYSOFT_NOTE = (
     "Every replacement, performed activity, and PM must be registered in IndySoft "
     "and reported at the end of PMs."
@@ -86,6 +91,7 @@ _CHECKLISTS = {
             "summary": "Clean superficially, clean plate, validate commodities, and fill out in IndySoft.",
             "reference": None,
             "note": INDYSOFT_NOTE,
+            "details": True,
             "sections": [
                 (_FBT_REQUIRED_SECTION, _FBT_REQUIRED),
                 ("Weekly PM", _FBT_WEEKLY),
@@ -100,6 +106,7 @@ _CHECKLISTS = {
             ),
             "reference": None,
             "note": INDYSOFT_NOTE,
+            "details": True,
             "sections": [
                 (_FBT_REQUIRED_SECTION, _FBT_REQUIRED),
                 ("Biweekly PM", _FBT_BIWEEKLY),
@@ -176,4 +183,7 @@ def get_checklist(pm_type: str, test_area: str | None) -> dict | None:
         "indysoft_note": INDYSOFT_NOTE,
         "interval_days": PM_INTERVAL_DAYS[pm_type],
         "items": items,
+        # Maintenance type, activation counter, commodity replacement and downtime are required.
+        "requires_details": bool(config.get("details")),
+        "maintenance_types": [{"value": k, "label": v} for k, v in MAINTENANCE_TYPES.items()],
     }

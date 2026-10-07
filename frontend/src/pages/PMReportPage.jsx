@@ -8,6 +8,7 @@ import { formatDate, formatDateTime } from "../components/maintenance/formatDate
 import { formatRange, fromLocalInput, rangeToParams, toLocalInput } from "../components/maintenance/dateRanges";
 import { fixtureDetailUrl } from "../components/maintenance/links";
 import PMByPerson from "../components/maintenance/PMByPerson";
+import { DETAIL_CSV_HEADER, detailCsvCells } from "../components/maintenance/pmDetails";
 import { DEFAULT_TEST_AREAS } from "../utils/testAreas";
 
 const FIELD =
@@ -495,6 +496,7 @@ export default function PMReportPage() {
         "PM Type",
         "Result",
         "Completed By",
+        ...DETAIL_CSV_HEADER,
         "Failed Tasks",
         "Notes",
         "Parts Replaced",
@@ -512,6 +514,7 @@ export default function PMReportPage() {
         r.label,
         r.overall_result === "failed" ? "FAILED" : "PASSED",
         r.performed_by || "Unknown",
+        ...detailCsvCells(r),
         r.failed_tasks.join("; "),
         r.notes || "",
         r.parts_replaced || "",

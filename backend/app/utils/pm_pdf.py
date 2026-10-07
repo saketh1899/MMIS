@@ -11,7 +11,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from .pm_checklists import PM_DIVISION, PM_TYPE_LABELS, get_checklist
+from .pm_checklists import MAINTENANCE_TYPES, PM_DIVISION, PM_TYPE_LABELS, get_checklist
 
 RESULT_TEXT = {"passed": "PASSED", "failed": "FAILED", "na": "N/A"}
 HEADER_CYAN = colors.HexColor("#CCF5FB")
@@ -34,6 +34,14 @@ def _localize(value: datetime | None, tz) -> datetime | None:
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(tz)
+
+
+def format_minutes(minutes: int) -> str:
+    """90 -> '1 h 30 min'"""
+    hours, mins = divmod(int(minutes), 60)
+    if not hours:
+        return f"{mins} min"
+    return f"{hours} h {mins} min" if mins else f"{hours} h"
 
 
 def _p(text, style) -> Paragraph:
@@ -91,6 +99,41 @@ def build_pm_record_pdf(record: dict, fixture, tz_name: str | None = None) -> by
     )
     meta.setStyle(TableStyle([("BOTTOMPADDING", (0, 0), (-1, -1), 6), ("LEFTPADDING", (0, 0), (-1, -1), 0)]))
     story += [meta, Spacer(1, 0.15 * inch)]
+
+    if record.get("maintenance_type") or record.get("activation_counter") is not None:
+        downtime = record.get("downtime_minutes")
+        counter = record.get("activation_counter")
+        details = Table(
+            [
+                [
+                    Paragraph("<b>Maintenance Type</b>", cell),
+                    _p(MAINTENANCE_TYPES.get(record.get("maintenance_type"), "—"), cell),
+                ],
+                [
+                    Paragraph("<b>Activation Counter</b>", cell),
+                    _p(f"{counter:,}" if counter is not None else "—", cell),
+                ],
+                [
+                    Paragraph("<b>If any commodity is replaced, describe conditions and location</b>", cell),
+                    _p(record.get("commodity_replacement") or "—", cell),
+                ],
+                [
+                    Paragraph("<b>Downtime while performing maintenance</b>", cell),
+                    _p(format_minutes(downtime) if downtime is not None else "—", cell),
+                ],
+            ],
+            colWidths=[3.0 * inch, 4.0 * inch],
+        )
+        details.setStyle(
+            TableStyle(
+                [
+                    ("GRID", (0, 0), (-1, -1), 0.6, colors.black),
+                    ("BACKGROUND", (0, 0), (0, -1), HEADER_GREEN),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ]
+            )
+        )
+        story += [details, Spacer(1, 0.15 * inch)]
 
     if checklist.get("reference"):
         reference = Table([[_p(checklist["reference"], base)]], hAlign="LEFT")

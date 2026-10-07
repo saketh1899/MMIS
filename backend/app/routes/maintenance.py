@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,9 @@ from .. import models
 from ..database import get_db
 from ..utils.auth_deps import employee_id_from_token, get_current_user, require_editor
 from ..utils.pm_checklists import (
+    MAINTENANCE_TYPES,
+    MAX_ACTIVATION_COUNTER,
+    MAX_DOWNTIME_MINUTES,
     PM_COVERS,
     PM_DUE_SOON_DAYS,
     PM_DUPLICATE_WINDOW_HOURS,
@@ -55,6 +58,37 @@ class PMRecordCreate(BaseModel):
     parts: list[PartUsage] = []
     indysoft_recorded: bool = False
     confirm_duplicate: bool = False
+    maintenance_type: str | None = None
+    activation_counter: int | None = None
+    commodity_replacement: str | None = Field(default=None, max_length=2000)
+    downtime_minutes: int | None = None
+
+
+DETAIL_FIELDS = {
+    "maintenance_type": "Maintenance type (Preventive / Corrective)",
+    "activation_counter": "Activation counter",
+    "commodity_replacement": "Commodity replaced (condition and location)",
+    "downtime_minutes": "Downtime while performing maintenance",
+}
+
+
+def clean_detail(field: str, value):
+    """Validate one maintenance detail and return how it is stored (None when empty)."""
+    if field == "maintenance_type":
+        value = (value or "").strip().lower() or None
+        if value is not None and value not in MAINTENANCE_TYPES:
+            raise HTTPException(status_code=400, detail="Maintenance type must be Preventive or Corrective")
+        return value
+    if field in ("activation_counter", "downtime_minutes"):
+        if value is None:
+            return None
+        limit = MAX_ACTIVATION_COUNTER if field == "activation_counter" else MAX_DOWNTIME_MINUTES
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= limit:
+            raise HTTPException(
+                status_code=400, detail=f"{DETAIL_FIELDS[field]} must be a whole number from 0 to {limit:,}"
+            )
+        return value
+    return str(value or "").strip() or None
 
 
 def _get_fixture_or_404(db: Session, fixture_id: int) -> models.Fixture:
@@ -135,6 +169,10 @@ def _serialize_record(record: models.FixturePMRecord, employee_name: str | None)
         "notes": record.notes,
         "parts_replaced": record.parts_replaced,
         "indysoft_recorded": bool(record.indysoft_recorded),
+        "maintenance_type": record.maintenance_type,
+        "activation_counter": record.activation_counter,
+        "commodity_replacement": record.commodity_replacement,
+        "downtime_minutes": record.downtime_minutes,
         "project_name": record.project_name,
         "test_area": record.test_area,
         "performed_by_employee_id": record.performed_by_employee_id,
@@ -754,6 +792,13 @@ def create_pm_record(
     if has_failure and not notes:
         raise HTTPException(status_code=400, detail="Notes are required when any item failed")
 
+    details = {}
+    if checklist["requires_details"]:
+        details = {field: clean_detail(field, getattr(payload, field)) for field in DETAIL_FIELDS}
+        missing = [label for field, label in DETAIL_FIELDS.items() if details[field] is None]
+        if missing:
+            raise HTTPException(status_code=400, detail=f"Please fill in: {', '.join(missing)}")
+
     if not payload.confirm_duplicate:
         window_start = datetime.now(timezone.utc) - timedelta(hours=PM_DUPLICATE_WINDOW_HOURS)
         duplicate = (
@@ -825,6 +870,7 @@ def create_pm_record(
         project_name=fixture.project_name,
         test_area=fixture.test_area,
         performed_by_employee_id=employee_id,
+        **details,
     )
     db.add(record)
     db.flush()

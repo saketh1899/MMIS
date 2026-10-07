@@ -1,6 +1,6 @@
 
 # Import necessary SQLAlchemy components for defining database tables and relationships
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, Date, Boolean
+from sqlalchemy import BigInteger, Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, Date, Boolean
 from sqlalchemy.sql import func        # For automatic timestamps (e.g., created_at)
 from sqlalchemy.orm import relationship      # For defining relationships between tables
 from .database import Base   # Import the Base class from database.py
@@ -122,6 +122,11 @@ class FixturePMRecord(Base):
     notes = Column(Text, nullable=True)
     parts_replaced = Column(Text, nullable=True)
     indysoft_recorded = Column(Boolean, nullable=False, default=False)
+    # Required on checklists with details (FBT weekly / biweekly); NULL on older records and other checklists
+    maintenance_type = Column(String(20), nullable=True)  # preventive | corrective
+    activation_counter = Column(BigInteger, nullable=True)
+    commodity_replacement = Column(Text, nullable=True)  # condition and location, or "None"
+    downtime_minutes = Column(Integer, nullable=True)
     project_name = Column(String(100))
     test_area = Column(String(20))
     performed_by_employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=True)

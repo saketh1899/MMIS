@@ -1,6 +1,7 @@
 import API from "../../api";
 import { formatDateTime } from "./formatDate";
 import { pmTypeLabel } from "./pmTypes";
+import { DETAIL_CSV_HEADER, detailCsvCells } from "./pmDetails";
 
 const RESULT_TEXT = { passed: "PASSED", failed: "FAILED", na: "N/A" };
 
@@ -72,6 +73,7 @@ export function exportPMHistoryCsv(records, fixture, fileLabel) {
     "Date",
     "Result",
     "Entered By",
+    ...DETAIL_CSV_HEADER,
     "Failed Tasks",
     "Notes",
     "Parts Replaced",
@@ -87,6 +89,7 @@ export function exportPMHistoryCsv(records, fixture, fileLabel) {
     formatDateTime(record.performed_at),
     RESULT_TEXT[record.overall_result] || record.overall_result,
     record.performed_by || "Unknown",
+    ...detailCsvCells(record),
     record.checklist.filter((item) => item.result === "failed").map((item) => item.task).join("; "),
     record.notes || "",
     record.parts_replaced || "",

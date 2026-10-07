@@ -20,6 +20,7 @@ const DOC_TYPES = [
   { value: "doc", label: "Word (.doc)" },
   { value: "docx", label: "Word (.docx)" },
   { value: "txt", label: "Text (.txt)" },
+  { value: "zip", label: "ZIP (.zip)" },
 ];
 
 const getFileIcon = (type = "") => {
@@ -28,6 +29,7 @@ const getFileIcon = (type = "") => {
   if (["ppt", "pptx"].includes(lower)) return "📽️";
   if (["doc", "docx", "txt"].includes(lower)) return "📝";
   if (["png", "jpg", "jpeg"].includes(lower)) return "🖼️";
+  if (lower === "zip") return "🗜️";
   return "📄";
 };
 
@@ -498,7 +500,7 @@ export default function DocumentsPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.xls,.xlsx,.csv,.ppt,.pptx,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                  accept=".pdf,.xls,.xlsx,.csv,.ppt,.pptx,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip"
                   onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
                   className="hidden"
                 />
@@ -536,7 +538,7 @@ export default function DocumentsPage() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Allowed: PDF, Excel, PPT, Word, CSV, TXT, PNG, JPG (max 10MB)
+                  Allowed: PDF, Excel, PPT, Word, CSV, TXT, PNG, JPG, ZIP (max 10MB)
                 </p>
               </div>
 
