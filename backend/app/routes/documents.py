@@ -32,7 +32,10 @@ ALLOWED_EXTENSIONS = {
     ".jpeg",
     ".zip",
 }
-MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+MAX_FILE_SIZE_MB = 10
+# ZIP packages (software, fixture programs) are much bigger than single documents.
+# nginx client_max_body_size must be at least this large.
+MAX_ZIP_SIZE_MB = 200
 
 
 def _get_upload_directory() -> Path:
@@ -177,8 +180,13 @@ async def upload_document(
     file.file.seek(0, 2)
     size = file.file.tell()
     file.file.seek(0)
-    if size > MAX_FILE_SIZE_BYTES:
-        raise HTTPException(status_code=400, detail="File too large. Max size is 10MB")
+    limit_mb = MAX_ZIP_SIZE_MB if file_extension == ".zip" else MAX_FILE_SIZE_MB
+    if size > limit_mb * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large ({size / (1024 * 1024):.1f} MB). Max size is {limit_mb} MB"
+            + (" for ZIP files" if file_extension == ".zip" else f" ({MAX_ZIP_SIZE_MB} MB for ZIP files)"),
+        )
     if file_extension == ".zip":
         is_zip = zipfile.is_zipfile(file.file)
         file.file.seek(0)

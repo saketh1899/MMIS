@@ -7,7 +7,8 @@ import PageHeaderWithBack from "../components/PageHeaderWithBack";
 import { getProjects } from "../utils/projects";
 import { DEFAULT_TEST_AREAS } from "../utils/testAreas";
 
-// Plant time for everyone, whatever time zone their computer is set to (CST, or CDT in summer).
+// US Central (plant) time for everyone, whatever time zone their computer is set to.
+// "America/Chicago" is the IANA name for US Central; it follows daylight saving like the plant clocks.
 const CENTRAL_TIME = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/Chicago",
   month: "2-digit",
@@ -16,7 +17,6 @@ const CENTRAL_TIME = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
   hour12: true,
-  timeZoneName: "short",
 });
 
 export default function ActivityPage() {
@@ -185,7 +185,7 @@ export default function ActivityPage() {
     const parts = Object.fromEntries(
       CENTRAL_TIME.formatToParts(date).map((part) => [part.type, part.value])
     );
-    return `${parts.month}/${parts.day}/${parts.year} ${parts.hour}:${parts.minute} ${parts.dayPeriod} ${parts.timeZoneName}`;
+    return `${parts.month}/${parts.day}/${parts.year} ${parts.hour}:${parts.minute} ${parts.dayPeriod} CST`;
   };
 
   // Calculate statistics

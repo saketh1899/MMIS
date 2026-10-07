@@ -33,6 +33,11 @@ const getFileIcon = (type = "") => {
   return "📄";
 };
 
+// Keep in sync with MAX_FILE_SIZE_MB / MAX_ZIP_SIZE_MB in backend/app/routes/documents.py.
+const MAX_FILE_MB = 10;
+const MAX_ZIP_MB = 200;
+const uploadLimitMb = (file) => (/\.zip$/i.test(file?.name || "") ? MAX_ZIP_MB : MAX_FILE_MB);
+
 const formatFileSize = (bytes = 0) => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -60,6 +65,7 @@ export default function DocumentsPage() {
   const [showUploadPanel, setShowUploadPanel] = useState(() => hasAdminAccess(getTokenSession()?.role));
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadScope, setUploadScope] = useState("project");
   const [uploadProject, setUploadProject] = useState("");
@@ -196,6 +202,15 @@ export default function DocumentsPage() {
 
   const handleFileSelect = (file) => {
     if (!file) return;
+    const limit = uploadLimitMb(file);
+    if (file.size > limit * 1024 * 1024) {
+      setSelectedFile(null);
+      setError(
+        `${file.name} is ${formatFileSize(file.size)}. The limit is ${limit} MB` +
+          (limit === MAX_ZIP_MB ? " for ZIP files." : ` (${MAX_ZIP_MB} MB for ZIP files).`)
+      );
+      return;
+    }
     setSelectedFile(file);
     setError("");
   };
@@ -224,7 +239,10 @@ export default function DocumentsPage() {
       if (uploadScope === "project" && uploadTestArea) formData.append("test_area", uploadTestArea);
       if (uploadRemarks.trim()) formData.append("remarks", uploadRemarks.trim());
 
-      await API.post("/documents/upload", formData);
+      setUploadProgress(0);
+      await API.post("/documents/upload", formData, {
+        onUploadProgress: (e) => e.total && setUploadProgress(Math.round((e.loaded * 100) / e.total)),
+      });
       setSuccess("Document uploaded successfully.");
       resetUploadForm();
       setShowUploadPanel(false);
@@ -237,11 +255,14 @@ export default function DocumentsPage() {
         setError("Your session expired. Please log out and sign in again, then retry the upload.");
       } else if (status === 403) {
         setError("Only admin users can upload documents.");
+      } else if (status === 413) {
+        setError("The file is larger than the web server allows. Ask IT to raise nginx client_max_body_size.");
       } else {
         setError(detail || "Upload failed.");
       }
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -538,7 +559,7 @@ export default function DocumentsPage() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Allowed: PDF, Excel, PPT, Word, CSV, TXT, PNG, JPG, ZIP (max 10MB)
+                  Allowed: PDF, Excel, PPT, Word, CSV, TXT, PNG, JPG (max {MAX_FILE_MB} MB) and ZIP (max {MAX_ZIP_MB} MB)
                 </p>
               </div>
 
@@ -610,6 +631,11 @@ export default function DocumentsPage() {
               </div>
             </div>
 
+            {error && (
+              <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700/30 dark:bg-red-900/20 dark:text-red-300">
+                {error}
+              </p>
+            )}
             <div className="flex justify-end gap-3 mt-4">
               <button
                 type="button"
@@ -626,7 +652,11 @@ export default function DocumentsPage() {
                 disabled={uploading}
                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-60"
               >
-                {uploading ? "Uploading..." : "Upload Document"}
+                {uploading
+                  ? uploadProgress !== null && uploadProgress < 100
+                    ? `Uploading... ${uploadProgress}%`
+                    : "Saving..."
+                  : "Upload Document"}
               </button>
             </div>
           </form>
